@@ -28,6 +28,9 @@
 
 #include <librtmp/rtmp.h>
 #include <librtmp/log.h>
+#if HAVE_POLL_H
+#include <poll.h>
+#endif
 
 static void rtmp_log(int level, const char *fmt, va_list args)
 {
@@ -112,8 +115,16 @@ fail:
 static int rtmp_write(URLContext *s, const uint8_t *buf, int size)
 {
     RTMP *r = s->priv_data;
+    struct pollfd p = { RTMP_Socket(r), POLLOUT };
+    int ret = poll(&p, 1, 100);
 
-    return RTMP_Write(r, buf, size);
+    if (ret && p.revents & POLLOUT) {
+        av_log(NULL, AV_LOG_INFO, "Sending packet\n");
+        return RTMP_Write(r, buf, size);
+    } else {
+        av_log(NULL, AV_LOG_ERROR, "Dopping packet\n");
+        return 0;
+    }
 }
 
 static int rtmp_read(URLContext *s, uint8_t *buf, int size)
