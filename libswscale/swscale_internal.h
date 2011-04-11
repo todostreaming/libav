@@ -470,4 +470,12 @@ int ff_hardcodedcpuflags(void);
  */
 SwsFunc ff_getSwsFunc(SwsContext *c);
 
+/**
+ * Arch-specific initializers
+ *
+ */
+
+void rgb2rgb_init_x86(int flags);
+
+
 #endif /* SWSCALE_SWSCALE_INTERNAL_H */
