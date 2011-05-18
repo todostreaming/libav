@@ -394,14 +394,11 @@ static int flv_data_packet(AVFormatContext *s, AVPacket *pkt,
         goto out;
     avio_seek(pb, 4, SEEK_CUR);
     amf_get_string(pb, buf, sizeof(buf));
-    if (strcmp(buf,"codecid"))
-        goto out;
-    type = avio_r8(pb);
-    if (type != AMF_DATA_TYPE_NUMBER)
+    if (strcmp(buf,"codecid") || avio_r8(pb) != AMF_DATA_TYPE_NUMBER)
         goto out;
     codec_id = av_int2dbl(avio_rb64(pb));
     amf_get_string(pb, buf, sizeof(buf));
-    if (strcmp(buf,"data") && avio_r8(pb) != AMF_DATA_TYPE_STRING)
+    if (strcmp(buf,"data") || avio_r8(pb) != AMF_DATA_TYPE_STRING)
         goto out;
     length = avio_rb16(pb);
     ret = av_get_packet(s->pb, pkt, length);
