@@ -290,7 +290,7 @@ static int flv_read_metabody(AVFormatContext *s, int64_t next_pos) {
     AVStream *stream, *astream, *vstream;
     AVIOContext *ioc;
     int i;
-    char buffer[12]; //only needs to hold the string "data-stream". Anything longer is something we don't want.
+    char buffer[13]; //only needs to hold the string "onDataStream". Anything longer is something we don't want.
 
     astream = NULL;
     vstream = NULL;
@@ -302,7 +302,7 @@ static int flv_read_metabody(AVFormatContext *s, int64_t next_pos) {
         amf_get_string(ioc, buffer, sizeof(buffer)) < 0)
         return -1;
 
-    if(!strcmp(buffer, "data-stream"))
+    if(!strcmp(buffer, "onDataStream"))
         return 1;
 
     if(strcmp(buffer, "onMetaData"))
