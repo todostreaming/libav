@@ -302,7 +302,7 @@ static int flv_read_metabody(AVFormatContext *s, int64_t next_pos) {
         amf_get_string(ioc, buffer, sizeof(buffer)) < 0)
         return -1;
 
-    if(!strcmp(buffer, "onDataStream"))
+    if(!strcmp(buffer, "onFI"))
         return 1;
 
     if(strcmp(buffer, "onMetaData"))
@@ -394,11 +394,12 @@ static int flv_data_packet(AVFormatContext *s, AVPacket *pkt,
         goto out;
     avio_seek(pb, 4, SEEK_CUR);
     amf_get_string(pb, buf, sizeof(buf));
-    if (strcmp(buf,"codecid") || avio_r8(pb) != AMF_DATA_TYPE_NUMBER)
+    if (strcmp(buf,"sd") || avio_r8(pb) != AMF_DATA_TYPE_STRING)
         goto out;
-    codec_id = av_int2dbl(avio_rb64(pb));
     amf_get_string(pb, buf, sizeof(buf));
-    if (strcmp(buf,"data") || avio_r8(pb) != AMF_DATA_TYPE_STRING)
+    //FIXME parse it as codec_id
+    amf_get_string(pb, buf, sizeof(buf));
+    if (strcmp(buf,"st") || avio_r8(pb) != AMF_DATA_TYPE_STRING)
         goto out;
     length = avio_rb16(pb);
     ret = av_get_packet(s->pb, pkt, length);
@@ -411,6 +412,14 @@ static int flv_data_packet(AVFormatContext *s, AVPacket *pkt,
         st = s->streams[i];
         if (st->id == 2) //XXX
             break;
+    }
+    if (st->id != 2) {
+        st = av_new_stream(s, 2);
+        if (!st)
+            goto out;
+        st->codec->codec_type = AVMEDIA_TYPE_DATA;
+        st->codec->codec_id = CODEC_ID_TEXT;
+        av_set_pts_info(st, 32, 1, 1000);
     }
 
     pkt->size = ret;
