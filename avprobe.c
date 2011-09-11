@@ -35,6 +35,7 @@ const int program_birth_year = 2007;
 static int do_show_format  = 0;
 static int do_show_packets = 0;
 static int do_show_streams = 0;
+static int do_json_output = 0;
 
 static int show_value_unit              = 0;
 static int use_value_prefix             = 0;
@@ -130,6 +131,25 @@ static const char *media_type_string(enum AVMediaType media_type)
     }
 }
 
+static void show_packet_json(AVFormatContext *fmt_ctx, AVPacket *pkt)
+{
+    char val_str[128];
+    AVStream *st = fmt_ctx->streams[pkt->stream_index];
+
+    printf("{");
+    printf("\"codec_type\":\"%s\", "   , media_type_string(st->codec->codec_type));
+    printf("\"stream_index\":%d, " , pkt->stream_index);
+    printf("\"pts\":%s, "          , ts_value_string  (val_str, sizeof(val_str), pkt->pts));
+    printf("\"pts_time\":%s, "     , time_value_string(val_str, sizeof(val_str), pkt->pts, &st->time_base));
+    printf("\"dts\":%s, "          , ts_value_string  (val_str, sizeof(val_str), pkt->dts));
+    printf("\"dts_time\":%s, "     , time_value_string(val_str, sizeof(val_str), pkt->dts, &st->time_base));
+    printf("\"duration\":%s, "     , ts_value_string  (val_str, sizeof(val_str), pkt->duration));
+    printf("\"duration_time\":%s, ", time_value_string(val_str, sizeof(val_str), pkt->duration, &st->time_base));
+    printf("\"size\":%s, "         , value_string     (val_str, sizeof(val_str), pkt->size, unit_byte_str));
+    printf("\"pos\":%"PRId64", "   , pkt->pos);
+    printf("\"flags\":\"%c\""        , pkt->flags & AV_PKT_FLAG_KEY ? 'K' : '_');
+    printf("}\n");
+}
 static void show_packet(AVFormatContext *fmt_ctx, AVPacket *pkt)
 {
     char val_str[128];
@@ -156,8 +176,92 @@ static void show_packets(AVFormatContext *fmt_ctx)
 
     av_init_packet(&pkt);
 
-    while (!av_read_frame(fmt_ctx, &pkt))
-        show_packet(fmt_ctx, &pkt);
+    if (!do_json_output)
+        while (!av_read_frame(fmt_ctx, &pkt))
+            show_packet(fmt_ctx, &pkt);
+    else
+        while (!av_read_frame(fmt_ctx, &pkt))
+            show_packet_json(fmt_ctx, &pkt);
+
+}
+
+static void show_stream_json(AVFormatContext *fmt_ctx, int stream_idx)
+{
+    AVStream *stream = fmt_ctx->streams[stream_idx];
+    AVCodecContext *dec_ctx;
+    AVCodec *dec;
+    char val_str[128];
+    AVDictionaryEntry *tag = NULL;
+    AVRational display_aspect_ratio;
+
+    printf("{ ");
+
+    printf("\"index\":%d, ",        stream->index);
+
+    if ((dec_ctx = stream->codec)) {
+        if ((dec = dec_ctx->codec)) {
+            printf("\"codec_name\":\"%s\", ",         dec->name);
+            printf("\"codec_long_name\":\"%s\", ",    dec->long_name);
+        } else {
+            printf("\"codec_name\":\"unknown\", ");
+        }
+
+        printf("\"codec_type\":\"%s\", ",         media_type_string(dec_ctx->codec_type));
+        printf("\"codec_time_base\":\"%d/%d\", ", dec_ctx->time_base.num, dec_ctx->time_base.den);
+
+        /* print AVI/FourCC tag */
+        av_get_codec_tag_string(val_str, sizeof(val_str), dec_ctx->codec_tag);
+        printf("\"codec_tag_string\":\"%s\", ", val_str);
+        printf("\"codec_tag\":\"0x%04x\", ", dec_ctx->codec_tag);
+
+        switch (dec_ctx->codec_type) {
+        case AVMEDIA_TYPE_VIDEO:
+            printf("\"width\":%d, ",                   dec_ctx->width);
+            printf("\"height\":%d, ",                  dec_ctx->height);
+            printf("\"has_b_frames\":%d, ",            dec_ctx->has_b_frames);
+            if (dec_ctx->sample_aspect_ratio.num) {
+                printf("\"sample_aspect_ratio\":\"%d:%d\", ", dec_ctx->sample_aspect_ratio.num,
+                                                      dec_ctx->sample_aspect_ratio.den);
+                av_reduce(&display_aspect_ratio.num, &display_aspect_ratio.den,
+                          dec_ctx->width  * dec_ctx->sample_aspect_ratio.num,
+                          dec_ctx->height * dec_ctx->sample_aspect_ratio.den,
+                          1024*1024);
+                printf("\"display_aspect_ratio\":\"%d:%d\", ", display_aspect_ratio.num,
+                                                       display_aspect_ratio.den);
+            }
+            printf("\"pix_fmt\":\"%s\", ",                 dec_ctx->pix_fmt != PIX_FMT_NONE ?
+                   av_pix_fmt_descriptors[dec_ctx->pix_fmt].name : "unknown");
+            printf("\"level\":\%d, ",                   dec_ctx->level);
+            break;
+
+        case AVMEDIA_TYPE_AUDIO:
+            printf("\"sample_rate\":\"%s\", ",             value_string(val_str, sizeof(val_str),
+                                                                dec_ctx->sample_rate,
+                                                                unit_hertz_str));
+            printf("\"channels\":%d, ",                dec_ctx->channels);
+            printf("\"bits_per_sample\":%d, ",         av_get_bits_per_sample(dec_ctx->codec_id));
+            break;
+        }
+    } else {
+        printf("\"codec_type\":\"unknown\",");
+    }
+
+    if (fmt_ctx->iformat->flags & AVFMT_SHOW_IDS)
+        printf("\"id\":\"0x%x\", ", stream->id);
+    printf("\"r_frame_rate\":\"%d/%d\", ",         stream->r_frame_rate.num,   stream->r_frame_rate.den);
+    printf("\"avg_frame_rate\":\"%d/%d\", ",       stream->avg_frame_rate.num, stream->avg_frame_rate.den);
+    printf("\"time_base\":\"%d/%d\", ",            stream->time_base.num,      stream->time_base.den);
+    printf("\"start_time\":\"%s\", ",   time_value_string(val_str, sizeof(val_str), stream->start_time,
+                                                  &stream->time_base));
+    printf("\"duration\":\"%s\", ",     time_value_string(val_str, sizeof(val_str), stream->duration,
+                                                  &stream->time_base));
+    if (stream->nb_frames)
+        printf("\"nb_frames\":%"PRId64", ",    stream->nb_frames);
+
+    while ((tag = av_dict_get(stream->metadata, "", tag, AV_DICT_IGNORE_SUFFIX)))
+        printf("\"TAG:%s\"=\"%s\", ", tag->key, tag->value);
+
+    printf("}");
 }
 
 static void show_stream(AVFormatContext *fmt_ctx, int stream_idx)
@@ -239,6 +343,31 @@ static void show_stream(AVFormatContext *fmt_ctx, int stream_idx)
     printf("[/STREAM]\n");
 }
 
+static void show_format_json(AVFormatContext *fmt_ctx)
+{
+    AVDictionaryEntry *tag = NULL;
+    char val_str[128];
+
+    printf("{");
+
+    printf("\"filename\":\"%s\", ",         fmt_ctx->filename);
+    printf("\"nb_streams\":%d, ",       fmt_ctx->nb_streams);
+    printf("\"format_name\":\"%s\", ",      fmt_ctx->iformat->name);
+    printf("\"format_long_name\":\"%s\", ", fmt_ctx->iformat->long_name);
+    printf("\"start_time\":\"%s\", ",       time_value_string(val_str, sizeof(val_str), fmt_ctx->start_time,
+                                                      &AV_TIME_BASE_Q));
+    printf("\"duration\":\"%s\", ",         time_value_string(val_str, sizeof(val_str), fmt_ctx->duration,
+                                                      &AV_TIME_BASE_Q));
+    printf("\"size\":\"%s\", ",             value_string(val_str, sizeof(val_str), fmt_ctx->file_size,
+                                                 unit_byte_str));
+    printf("\"bit_rate\":\"%s\", ",         value_string(val_str, sizeof(val_str), fmt_ctx->bit_rate,
+                                                 unit_bit_per_second_str));
+
+    while ((tag = av_dict_get(fmt_ctx->metadata, "", tag, AV_DICT_IGNORE_SUFFIX)))
+        printf("\"TAG:%s\":\"%s\", ", tag->key, tag->value);
+
+    printf("}\n");
+}
 static void show_format(AVFormatContext *fmt_ctx)
 {
     AVDictionaryEntry *tag = NULL;
@@ -319,11 +448,20 @@ static int probe_file(const char *filename)
         show_packets(fmt_ctx);
 
     if (do_show_streams)
-        for (i = 0; i < fmt_ctx->nb_streams; i++)
-            show_stream(fmt_ctx, i);
+        if (!do_json_output)
+            for (i = 0; i < fmt_ctx->nb_streams; i++)
+                show_stream(fmt_ctx, i);
+        else
+           for (i = 0; i < fmt_ctx->nb_streams; i++)
+                show_stream_json(fmt_ctx, i);
+
 
     if (do_show_format)
-        show_format(fmt_ctx);
+        if (!do_json_output)
+            show_format(fmt_ctx);
+        else
+            show_format_json(fmt_ctx);
+
 
     av_close_input_file(fmt_ctx);
     return 0;
@@ -391,6 +529,7 @@ static const OptionDef options[] = {
     { "show_format",  OPT_BOOL, {(void*)&do_show_format} , "show format/container info" },
     { "show_packets", OPT_BOOL, {(void*)&do_show_packets}, "show packets info" },
     { "show_streams", OPT_BOOL, {(void*)&do_show_streams}, "show streams info" },
+    { "json", OPT_BOOL, {(void*)&do_json_output}, "output in json format" },
     { "default", HAS_ARG | OPT_AUDIO | OPT_VIDEO | OPT_EXPERT, {(void*)opt_default}, "generic catch all option", "" },
     { NULL, },
 };
