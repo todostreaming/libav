@@ -3,6 +3,8 @@ OBJS-$(CONFIG_TRUEHD_DECODER)          += x86/mlpdsp.o
 
 YASM-OBJS-$(CONFIG_DCT)                += x86/dct32_sse.o
 
+YASM-OBJS-$(CONFIG_DWT)                += x86/dwt_yasm.o
+
 YASM-OBJS-FFT-$(HAVE_AMD3DNOW)         += x86/fft_3dn.o
 YASM-OBJS-FFT-$(HAVE_AMD3DNOWEXT)      += x86/fft_3dn2.o
 YASM-OBJS-FFT-$(HAVE_SSE)              += x86/fft_sse.o
@@ -49,7 +51,8 @@ YASM-OBJS-$(CONFIG_PRORES_DECODER)     += x86/proresdsp.o
 MMX-OBJS-$(CONFIG_PRORES_DECODER)      += x86/proresdsp-init.o
 MMX-OBJS-$(CONFIG_AAC_DECODER)         += x86/sbrdsp_init.o
 YASM-OBJS-$(CONFIG_AAC_DECODER)        += x86/sbrdsp.o
-MMX-OBJS-$(CONFIG_DWT)                 += x86/snowdsp_mmx.o
+MMX-OBJS-$(CONFIG_DWT)                 += x86/snowdsp_mmx.o \
+                                          x86/dwt.o
 MMX-OBJS-$(CONFIG_VC1_DECODER)         += x86/vc1dsp_mmx.o
 YASM-OBJS-$(CONFIG_VP3_DECODER)        += x86/vp3dsp.o
 YASM-OBJS-$(CONFIG_VP5_DECODER)        += x86/vp3dsp.o
