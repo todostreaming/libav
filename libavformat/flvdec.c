@@ -294,6 +294,14 @@ static int amf_parse_object(AVFormatContext *s, AVStream *astream, AVStream *vst
                 vcodec->bit_rate = num_val * 1024.0;
             else if (!strcmp(key, "audiodatarate") && acodec && 0 <= (int)(num_val * 1024.0))
                 acodec->bit_rate = num_val * 1024.0;
+            else if(!strcmp(key, "data-stream")) {
+                AVStream *st = av_new_stream(s, 2);
+                if (!st)
+                    return -1;
+                st->codec->codec_type = AVMEDIA_TYPE_DATA;
+                st->codec->codec_id = num_val;
+                av_set_pts_info(st, 32, 1, 1000);
+            }
         }
 
         if (!strcmp(key, "duration")        ||
@@ -328,7 +336,7 @@ static int flv_read_metabody(AVFormatContext *s, int64_t next_pos) {
     AVStream *stream, *astream, *vstream;
     AVIOContext *ioc;
     int i;
-    char buffer[11]; //only needs to hold the string "onMetaData". Anything longer is something we don't want.
+    char buffer[13]; //only needs to hold the string "onDataStream". Anything longer is something we don't want.
 
     astream = NULL;
     vstream = NULL;
@@ -336,7 +344,15 @@ static int flv_read_metabody(AVFormatContext *s, int64_t next_pos) {
 
     //first object needs to be "onMetaData" string
     type = avio_r8(ioc);
-    if(type != AMF_DATA_TYPE_STRING || amf_get_string(ioc, buffer, sizeof(buffer)) < 0 || strcmp(buffer, "onMetaData"))
+
+    if (type != AMF_DATA_TYPE_STRING ||
+        amf_get_string(ioc, buffer, sizeof(buffer)) < 0)
+        return -1;
+
+    if(!strcmp(buffer, "onFI"))
+        return 1;
+
+    if(strcmp(buffer, "onMetaData"))
         return -1;
 
     //find the streams now so that amf_parse_object doesn't need to do the lookup every time it is called.
@@ -409,6 +425,60 @@ static int flv_get_extradata(AVFormatContext *s, AVStream *st, int size)
     return 0;
 }
 
+static int flv_data_packet(AVFormatContext *s, AVPacket *pkt,
+                           int64_t dts, int64_t next)
+{
+    AVIOContext *pb = s->pb;
+    AVStream *st = NULL;
+    AMFDataType type;
+    char buf[20];
+    int length;
+    int ret = AVERROR_INVALIDDATA, i;
+
+    type = avio_r8(pb);
+    if (type != AMF_DATA_TYPE_MIXEDARRAY)
+        goto out;
+    avio_seek(pb, 4, SEEK_CUR);
+    amf_get_string(pb, buf, sizeof(buf));
+    if (strcmp(buf,"sd") || avio_r8(pb) != AMF_DATA_TYPE_STRING)
+        goto out;
+    amf_get_string(pb, buf, sizeof(buf));
+    //FIXME parse it as codec_id
+    amf_get_string(pb, buf, sizeof(buf));
+    if (strcmp(buf,"st") || avio_r8(pb) != AMF_DATA_TYPE_STRING)
+        goto out;
+    length = avio_rb16(pb);
+    ret = av_get_packet(s->pb, pkt, length);
+    if (ret < 0) {
+        ret = AVERROR(EIO);
+        goto out;
+    }
+
+    for(i=0;i<s->nb_streams;i++) {
+        st = s->streams[i];
+        if (st->id == 2) //XXX
+            break;
+    }
+    if (st->id != 2) {
+        st = av_new_stream(s, 2);
+        if (!st)
+            goto out;
+        st->codec->codec_type = AVMEDIA_TYPE_DATA;
+        st->codec->codec_id = CODEC_ID_TEXT;
+        av_set_pts_info(st, 32, 1, 1000);
+    }
+
+    pkt->size = ret;
+    pkt->dts = dts;
+    pkt->pts = dts;
+    pkt->stream_index = st->index;
+    pkt->flags |= AV_PKT_FLAG_KEY;
+
+    avio_seek(s->pb, next + 4, SEEK_SET);
+out:
+    return ret;
+}
+
 static int flv_read_packet(AVFormatContext *s, AVPacket *pkt)
 {
     FLVContext *flv = s->priv_data;
@@ -446,7 +516,9 @@ static int flv_read_packet(AVFormatContext *s, AVPacket *pkt)
             goto skip;
     } else {
         if (type == FLV_TAG_TYPE_META && size > 13+1+4)
-            flv_read_metabody(s, next);
+            if (flv_read_metabody(s, next) > 0) {
+                return flv_data_packet(s, pkt, dts, next);
+            }
         else /* skip packet */
             av_log(s, AV_LOG_DEBUG, "skipping flv packet: type %d, size %d, flags %d\n", type, size, flags);
     skip:
