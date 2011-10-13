@@ -424,6 +424,64 @@ static void close_video(AVFormatContext *oc, AVStream *st)
     av_free(video_outbuf);
 }
 
+static AVStream *add_data_stream(AVFormatContext *oc, enum CodecID codec_id)
+{
+    AVCodecContext *c;
+    AVStream *st;
+
+    st = av_new_stream(oc, 0);
+    if (!st) {
+        fprintf(stderr, "Could not alloc stream\n");
+        exit(1);
+    }
+
+    c = st->codec;
+    c->codec_id = codec_id;
+    c->codec_type = AVMEDIA_TYPE_DATA;
+
+    c->time_base.den = STREAM_FRAME_RATE;
+    c->time_base.num = 1;
+
+    // some formats want stream headers to be separate
+    if(oc->oformat->flags & AVFMT_GLOBALHEADER)
+        c->flags |= CODEC_FLAG_GLOBAL_HEADER;
+
+    return st;
+}
+
+static void open_data(AVFormatContext *oc, AVStream *st)
+{
+    AVCodec *codec;
+    AVCodecContext *c;
+
+    c = st->codec;
+
+    /* find the video encoder */
+    codec = av_malloc(sizeof(AVCodec));
+    memset(codec, 0, sizeof(AVCodec));
+    codec->id = c->codec_id;
+
+    /* open the codec */
+    c->codec = codec;
+}
+
+static void write_data_frame(AVFormatContext *oc, AVStream *st, char *text)
+{
+    AVPacket pkt;
+    av_init_packet(&pkt);
+    pkt.flags |= AV_PKT_FLAG_KEY;
+    pkt.stream_index = st->index;
+    pkt.data = text;
+    pkt.size = strlen(text);
+
+    av_interleaved_write_frame(oc, &pkt);
+}
+
+static void close_data(AVFormatContext *oc, AVStream *st)
+{
+    avcodec_close(st->codec);
+}
+
 /**************************************************************/
 /* media file output */
 
@@ -432,7 +490,7 @@ int main(int argc, char **argv)
     const char *filename;
     AVOutputFormat *fmt;
     AVFormatContext *oc;
-    AVStream *audio_st, *video_st;
+    AVStream *audio_st, *video_st, *data_st;
     double audio_pts, video_pts;
     int i;
 
@@ -482,6 +540,8 @@ int main(int argc, char **argv)
         audio_st = add_audio_stream(oc, fmt->audio_codec);
     }
 
+    data_st = add_data_stream(oc, CODEC_ID_TEXT);
+
     /* set the output parameters (must be done even if no
        parameters). */
     if (av_set_parameters(oc, NULL) < 0) {
@@ -497,6 +557,8 @@ int main(int argc, char **argv)
         open_video(oc, video_st);
     if (audio_st)
         open_audio(oc, audio_st);
+    if (data_st)
+        open_data(oc, data_st);
 
     /* open the output file, if needed */
     if (!(fmt->flags & AVFMT_NOFILE)) {
@@ -530,6 +592,7 @@ int main(int argc, char **argv)
             write_audio_frame(oc, audio_st);
         } else {
             write_video_frame(oc, video_st);
+            write_data_frame(oc, data_st, "Test");
         }
     }
 
@@ -544,6 +607,8 @@ int main(int argc, char **argv)
         close_video(oc, video_st);
     if (audio_st)
         close_audio(oc, audio_st);
+    if (data_st)
+        close_data(oc, data_st);
 
     /* free the streams */
     for(i = 0; i < oc->nb_streams; i++) {
