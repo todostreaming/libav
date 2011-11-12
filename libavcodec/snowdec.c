@@ -588,151 +588,6 @@ static int decode_header(SnowContext *s){
     return 0;
 }
 
-#define USE_HALFPEL_PLANE 0
-
-static void halfpel_interpol(SnowContext *s, uint8_t *halfpel[4][4], AVFrame *frame){
-    int p,x,y;
-
-    for(p=0; p<3; p++){
-        int is_chroma= !!p;
-        int w= s->avctx->width  >>is_chroma;
-        int h= s->avctx->height >>is_chroma;
-        int ls= frame->linesize[p];
-        uint8_t *src= frame->data[p];
-
-        halfpel[1][p]= (uint8_t*)av_malloc(ls * (h+2*EDGE_WIDTH)) + EDGE_WIDTH*(1+ls);
-        halfpel[2][p]= (uint8_t*)av_malloc(ls * (h+2*EDGE_WIDTH)) + EDGE_WIDTH*(1+ls);
-        halfpel[3][p]= (uint8_t*)av_malloc(ls * (h+2*EDGE_WIDTH)) + EDGE_WIDTH*(1+ls);
-
-        halfpel[0][p]= src;
-        for(y=0; y<h; y++){
-            for(x=0; x<w; x++){
-                int i= y*ls + x;
-
-                halfpel[1][p][i]= (20*(src[i] + src[i+1]) - 5*(src[i-1] + src[i+2]) + (src[i-2] + src[i+3]) + 16 )>>5;
-            }
-        }
-        for(y=0; y<h; y++){
-            for(x=0; x<w; x++){
-                int i= y*ls + x;
-
-                halfpel[2][p][i]= (20*(src[i] + src[i+ls]) - 5*(src[i-ls] + src[i+2*ls]) + (src[i-2*ls] + src[i+3*ls]) + 16 )>>5;
-            }
-        }
-        src= halfpel[1][p];
-        for(y=0; y<h; y++){
-            for(x=0; x<w; x++){
-                int i= y*ls + x;
-
-                halfpel[3][p][i]= (20*(src[i] + src[i+ls]) - 5*(src[i-ls] + src[i+2*ls]) + (src[i-2*ls] + src[i+3*ls]) + 16 )>>5;
-            }
-        }
-
-//FIXME border!
-    }
-}
-
-static void release_buffer(AVCodecContext *avctx){
-    SnowContext *s = avctx->priv_data;
-    int i;
-
-    if(s->last_picture[s->max_ref_frames-1].data[0]){
-        avctx->release_buffer(avctx, &s->last_picture[s->max_ref_frames-1]);
-        for(i=0; i<9; i++)
-            if(s->halfpel_plane[s->max_ref_frames-1][1+i/3][i%3])
-                av_free(s->halfpel_plane[s->max_ref_frames-1][1+i/3][i%3] - EDGE_WIDTH*(1+s->current_picture.linesize[i%3]));
-    }
-}
-
-static int frame_start(SnowContext *s){
-   AVFrame tmp;
-   int w= s->avctx->width; //FIXME round up to x16 ?
-   int h= s->avctx->height;
-
-    if (s->current_picture.data[0] && !(s->avctx->flags&CODEC_FLAG_EMU_EDGE)) {
-        s->dsp.draw_edges(s->current_picture.data[0],
-                          s->current_picture.linesize[0], w   , h   ,
-                          EDGE_WIDTH  , EDGE_WIDTH  , EDGE_TOP | EDGE_BOTTOM);
-        s->dsp.draw_edges(s->current_picture.data[1],
-                          s->current_picture.linesize[1], w>>1, h>>1,
-                          EDGE_WIDTH/2, EDGE_WIDTH/2, EDGE_TOP | EDGE_BOTTOM);
-        s->dsp.draw_edges(s->current_picture.data[2],
-                          s->current_picture.linesize[2], w>>1, h>>1,
-                          EDGE_WIDTH/2, EDGE_WIDTH/2, EDGE_TOP | EDGE_BOTTOM);
-    }
-
-    release_buffer(s->avctx);
-
-    tmp= s->last_picture[s->max_ref_frames-1];
-    memmove(s->last_picture+1, s->last_picture, (s->max_ref_frames-1)*sizeof(AVFrame));
-    memmove(s->halfpel_plane+1, s->halfpel_plane, (s->max_ref_frames-1)*sizeof(void*)*4*4);
-    if(USE_HALFPEL_PLANE && s->current_picture.data[0])
-        halfpel_interpol(s, s->halfpel_plane[0], &s->current_picture);
-    s->last_picture[0]= s->current_picture;
-    s->current_picture= tmp;
-
-    if(s->keyframe){
-        s->ref_frames= 0;
-    }else{
-        int i;
-        for(i=0; i<s->max_ref_frames && s->last_picture[i].data[0]; i++)
-            if(i && s->last_picture[i-1].key_frame)
-                break;
-        s->ref_frames= i;
-        if(s->ref_frames==0){
-            av_log(s->avctx,AV_LOG_ERROR, "No reference frames\n");
-            return -1;
-        }
-    }
-
-    s->current_picture.reference= 1;
-    if(s->avctx->get_buffer(s->avctx, &s->current_picture) < 0){
-        av_log(s->avctx, AV_LOG_ERROR, "get_buffer() failed\n");
-        return -1;
-    }
-
-    s->current_picture.key_frame= s->keyframe;
-
-    return 0;
-}
-
-static av_cold void common_end(SnowContext *s){
-    int plane_index, level, orientation, i;
-
-    av_freep(&s->spatial_dwt_buffer);
-    av_freep(&s->spatial_idwt_buffer);
-
-    s->m.me.temp= NULL;
-    av_freep(&s->m.me.scratchpad);
-    av_freep(&s->m.me.map);
-    av_freep(&s->m.me.score_map);
-    av_freep(&s->m.obmc_scratchpad);
-
-    av_freep(&s->block);
-    av_freep(&s->scratchbuf);
-
-    for(i=0; i<MAX_REF_FRAMES; i++){
-        av_freep(&s->ref_mvs[i]);
-        av_freep(&s->ref_scores[i]);
-        if(s->last_picture[i].data[0])
-            s->avctx->release_buffer(s->avctx, &s->last_picture[i]);
-    }
-
-    for(plane_index=0; plane_index<3; plane_index++){
-        for(level=s->spatial_decomposition_count-1; level>=0; level--){
-            for(orientation=level ? 1 : 0; orientation<4; orientation++){
-                SubBand *b= &s->plane[plane_index].band[level][orientation];
-
-                av_freep(&b->x_coeff);
-            }
-        }
-    }
-    if (s->mconly_picture.data[0])
-        s->avctx->release_buffer(s->avctx, &s->mconly_picture);
-    if (s->current_picture.data[0])
-        s->avctx->release_buffer(s->avctx, &s->current_picture);
-}
-
 static av_cold int decode_init(AVCodecContext *avctx)
 {
     avctx->pix_fmt= PIX_FMT_YUV420P;
@@ -784,7 +639,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
 
     snow_alloc_blocks(s);
 
-    if(frame_start(s) < 0)
+    if(snow_frame_start(s) < 0)
         return -1;
     //keyframe flag duplication mess FIXME
     if(avctx->debug&FF_DEBUG_PICT_INFO)
@@ -900,7 +755,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
 
     emms_c();
 
-    release_buffer(avctx);
+    snow_release_buffer(avctx);
 
     if(!(s->avctx->debug&2048))
         *picture= s->current_picture;
@@ -921,7 +776,7 @@ static av_cold int decode_end(AVCodecContext *avctx)
 
     ff_slice_buffer_destroy(&s->sb);
 
-    common_end(s);
+    snow_common_end(s);
 
     return 0;
 }

@@ -213,13 +213,16 @@ static av_always_inline void snow_horizontal_compose_liftS_lead_out(int i, IDWTE
 
 /* common code */
 
+int snow_common_init(AVCodecContext *avctx);
+int snow_common_init_after_header(AVCodecContext *avctx);
+void snow_common_end(SnowContext *s);
+void snow_release_buffer(AVCodecContext *avctx);
 void snow_reset_contexts(SnowContext *s);
 int snow_alloc_blocks(SnowContext *s);
-int snow_common_init(AVCodecContext *avctx);
+int snow_frame_start(SnowContext *s);
 void snow_pred_block(SnowContext *s, uint8_t *dst, uint8_t *tmp, int stride,
                      int sx, int sy, int b_w, int b_h, BlockNode *block,
                      int plane_index, int w, int h);
-int snow_common_init_after_header(AVCodecContext *avctx);
 /* common inline functions */
 //XXX doublecheck all of them should stay inlined
 
