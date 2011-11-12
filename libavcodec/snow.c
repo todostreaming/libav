@@ -25,6 +25,7 @@
 #include "dsputil.h"
 #include "dwt.h"
 #include "snow.h"
+#include "snowdata.h"
 
 #include "rangecoder.h"
 #include "mathops.h"
@@ -64,4 +65,30 @@ void ff_snow_inner_add_yblock(const uint8_t *obmc, const int obmc_stride, uint8_
             }
         }
     }
+}
+
+void snow_reset_contexts(SnowContext *s){ //FIXME better initial contexts
+    int plane_index, level, orientation;
+
+    for(plane_index=0; plane_index<3; plane_index++){
+        for(level=0; level<MAX_DECOMPOSITIONS; level++){
+            for(orientation=level ? 1:0; orientation<4; orientation++){
+                memset(s->plane[plane_index].band[level][orientation].state, MID_STATE, sizeof(s->plane[plane_index].band[level][orientation].state));
+            }
+        }
+    }
+    memset(s->header_state, MID_STATE, sizeof(s->header_state));
+    memset(s->block_state, MID_STATE, sizeof(s->block_state));
+}
+
+int snow_alloc_blocks(SnowContext *s){
+    int w= -((-s->avctx->width )>>LOG2_MB_SIZE);
+    int h= -((-s->avctx->height)>>LOG2_MB_SIZE);
+
+    s->b_width = w;
+    s->b_height= h;
+
+    av_free(s->block);
+    s->block= av_mallocz(w * h * sizeof(BlockNode) << (s->block_max_depth*2));
+    return 0;
 }

@@ -54,212 +54,7 @@ static const int8_t quant3bA[256]={
  1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1, 1,-1,
 };
 
-static const uint8_t obmc32[1024]={
-  0,  0,  0,  0,  4,  4,  4,  4,  4,  4,  4,  4,  8,  8,  8,  8,  8,  8,  8,  8,  4,  4,  4,  4,  4,  4,  4,  4,  0,  0,  0,  0,
-  0,  4,  4,  4,  8,  8,  8, 12, 12, 16, 16, 16, 20, 20, 20, 24, 24, 20, 20, 20, 16, 16, 16, 12, 12,  8,  8,  8,  4,  4,  4,  0,
-  0,  4,  8,  8, 12, 12, 16, 20, 20, 24, 28, 28, 32, 32, 36, 40, 40, 36, 32, 32, 28, 28, 24, 20, 20, 16, 12, 12,  8,  8,  4,  0,
-  0,  4,  8, 12, 16, 20, 24, 28, 28, 32, 36, 40, 44, 48, 52, 56, 56, 52, 48, 44, 40, 36, 32, 28, 28, 24, 20, 16, 12,  8,  4,  0,
-  4,  8, 12, 16, 20, 24, 28, 32, 40, 44, 48, 52, 56, 60, 64, 68, 68, 64, 60, 56, 52, 48, 44, 40, 32, 28, 24, 20, 16, 12,  8,  4,
-  4,  8, 12, 20, 24, 32, 36, 40, 48, 52, 56, 64, 68, 76, 80, 84, 84, 80, 76, 68, 64, 56, 52, 48, 40, 36, 32, 24, 20, 12,  8,  4,
-  4,  8, 16, 24, 28, 36, 44, 48, 56, 60, 68, 76, 80, 88, 96,100,100, 96, 88, 80, 76, 68, 60, 56, 48, 44, 36, 28, 24, 16,  8,  4,
-  4, 12, 20, 28, 32, 40, 48, 56, 64, 72, 80, 88, 92,100,108,116,116,108,100, 92, 88, 80, 72, 64, 56, 48, 40, 32, 28, 20, 12,  4,
-  4, 12, 20, 28, 40, 48, 56, 64, 72, 80, 88, 96,108,116,124,132,132,124,116,108, 96, 88, 80, 72, 64, 56, 48, 40, 28, 20, 12,  4,
-  4, 16, 24, 32, 44, 52, 60, 72, 80, 92,100,108,120,128,136,148,148,136,128,120,108,100, 92, 80, 72, 60, 52, 44, 32, 24, 16,  4,
-  4, 16, 28, 36, 48, 56, 68, 80, 88,100,112,120,132,140,152,164,164,152,140,132,120,112,100, 88, 80, 68, 56, 48, 36, 28, 16,  4,
-  4, 16, 28, 40, 52, 64, 76, 88, 96,108,120,132,144,156,168,180,180,168,156,144,132,120,108, 96, 88, 76, 64, 52, 40, 28, 16,  4,
-  8, 20, 32, 44, 56, 68, 80, 92,108,120,132,144,156,168,180,192,192,180,168,156,144,132,120,108, 92, 80, 68, 56, 44, 32, 20,  8,
-  8, 20, 32, 48, 60, 76, 88,100,116,128,140,156,168,184,196,208,208,196,184,168,156,140,128,116,100, 88, 76, 60, 48, 32, 20,  8,
-  8, 20, 36, 52, 64, 80, 96,108,124,136,152,168,180,196,212,224,224,212,196,180,168,152,136,124,108, 96, 80, 64, 52, 36, 20,  8,
-  8, 24, 40, 56, 68, 84,100,116,132,148,164,180,192,208,224,240,240,224,208,192,180,164,148,132,116,100, 84, 68, 56, 40, 24,  8,
-  8, 24, 40, 56, 68, 84,100,116,132,148,164,180,192,208,224,240,240,224,208,192,180,164,148,132,116,100, 84, 68, 56, 40, 24,  8,
-  8, 20, 36, 52, 64, 80, 96,108,124,136,152,168,180,196,212,224,224,212,196,180,168,152,136,124,108, 96, 80, 64, 52, 36, 20,  8,
-  8, 20, 32, 48, 60, 76, 88,100,116,128,140,156,168,184,196,208,208,196,184,168,156,140,128,116,100, 88, 76, 60, 48, 32, 20,  8,
-  8, 20, 32, 44, 56, 68, 80, 92,108,120,132,144,156,168,180,192,192,180,168,156,144,132,120,108, 92, 80, 68, 56, 44, 32, 20,  8,
-  4, 16, 28, 40, 52, 64, 76, 88, 96,108,120,132,144,156,168,180,180,168,156,144,132,120,108, 96, 88, 76, 64, 52, 40, 28, 16,  4,
-  4, 16, 28, 36, 48, 56, 68, 80, 88,100,112,120,132,140,152,164,164,152,140,132,120,112,100, 88, 80, 68, 56, 48, 36, 28, 16,  4,
-  4, 16, 24, 32, 44, 52, 60, 72, 80, 92,100,108,120,128,136,148,148,136,128,120,108,100, 92, 80, 72, 60, 52, 44, 32, 24, 16,  4,
-  4, 12, 20, 28, 40, 48, 56, 64, 72, 80, 88, 96,108,116,124,132,132,124,116,108, 96, 88, 80, 72, 64, 56, 48, 40, 28, 20, 12,  4,
-  4, 12, 20, 28, 32, 40, 48, 56, 64, 72, 80, 88, 92,100,108,116,116,108,100, 92, 88, 80, 72, 64, 56, 48, 40, 32, 28, 20, 12,  4,
-  4,  8, 16, 24, 28, 36, 44, 48, 56, 60, 68, 76, 80, 88, 96,100,100, 96, 88, 80, 76, 68, 60, 56, 48, 44, 36, 28, 24, 16,  8,  4,
-  4,  8, 12, 20, 24, 32, 36, 40, 48, 52, 56, 64, 68, 76, 80, 84, 84, 80, 76, 68, 64, 56, 52, 48, 40, 36, 32, 24, 20, 12,  8,  4,
-  4,  8, 12, 16, 20, 24, 28, 32, 40, 44, 48, 52, 56, 60, 64, 68, 68, 64, 60, 56, 52, 48, 44, 40, 32, 28, 24, 20, 16, 12,  8,  4,
-  0,  4,  8, 12, 16, 20, 24, 28, 28, 32, 36, 40, 44, 48, 52, 56, 56, 52, 48, 44, 40, 36, 32, 28, 28, 24, 20, 16, 12,  8,  4,  0,
-  0,  4,  8,  8, 12, 12, 16, 20, 20, 24, 28, 28, 32, 32, 36, 40, 40, 36, 32, 32, 28, 28, 24, 20, 20, 16, 12, 12,  8,  8,  4,  0,
-  0,  4,  4,  4,  8,  8,  8, 12, 12, 16, 16, 16, 20, 20, 20, 24, 24, 20, 20, 20, 16, 16, 16, 12, 12,  8,  8,  8,  4,  4,  4,  0,
-  0,  0,  0,  0,  4,  4,  4,  4,  4,  4,  4,  4,  8,  8,  8,  8,  8,  8,  8,  8,  4,  4,  4,  4,  4,  4,  4,  4,  0,  0,  0,  0,
- //error:0.000020
-};
-static const uint8_t obmc16[256]={
-  0,  4,  4,  8,  8, 12, 12, 16, 16, 12, 12,  8,  8,  4,  4,  0,
-  4,  8, 16, 20, 28, 32, 40, 44, 44, 40, 32, 28, 20, 16,  8,  4,
-  4, 16, 24, 36, 44, 56, 64, 76, 76, 64, 56, 44, 36, 24, 16,  4,
-  8, 20, 36, 48, 64, 76, 92,104,104, 92, 76, 64, 48, 36, 20,  8,
-  8, 28, 44, 64, 80,100,116,136,136,116,100, 80, 64, 44, 28,  8,
- 12, 32, 56, 76,100,120,144,164,164,144,120,100, 76, 56, 32, 12,
- 12, 40, 64, 92,116,144,168,196,196,168,144,116, 92, 64, 40, 12,
- 16, 44, 76,104,136,164,196,224,224,196,164,136,104, 76, 44, 16,
- 16, 44, 76,104,136,164,196,224,224,196,164,136,104, 76, 44, 16,
- 12, 40, 64, 92,116,144,168,196,196,168,144,116, 92, 64, 40, 12,
- 12, 32, 56, 76,100,120,144,164,164,144,120,100, 76, 56, 32, 12,
-  8, 28, 44, 64, 80,100,116,136,136,116,100, 80, 64, 44, 28,  8,
-  8, 20, 36, 48, 64, 76, 92,104,104, 92, 76, 64, 48, 36, 20,  8,
-  4, 16, 24, 36, 44, 56, 64, 76, 76, 64, 56, 44, 36, 24, 16,  4,
-  4,  8, 16, 20, 28, 32, 40, 44, 44, 40, 32, 28, 20, 16,  8,  4,
-  0,  4,  4,  8,  8, 12, 12, 16, 16, 12, 12,  8,  8,  4,  4,  0,
-//error:0.000015
-};
-
-//linear *64
-static const uint8_t obmc8[64]={
-  4, 12, 20, 28, 28, 20, 12,  4,
- 12, 36, 60, 84, 84, 60, 36, 12,
- 20, 60,100,140,140,100, 60, 20,
- 28, 84,140,196,196,140, 84, 28,
- 28, 84,140,196,196,140, 84, 28,
- 20, 60,100,140,140,100, 60, 20,
- 12, 36, 60, 84, 84, 60, 36, 12,
-  4, 12, 20, 28, 28, 20, 12,  4,
-//error:0.000000
-};
-
-//linear *64
-static const uint8_t obmc4[16]={
- 16, 48, 48, 16,
- 48,144,144, 48,
- 48,144,144, 48,
- 16, 48, 48, 16,
-//error:0.000000
-};
-
-static const uint8_t * const obmc_tab[4]={
-    obmc32, obmc16, obmc8, obmc4
-};
-
 static int scale_mv_ref[MAX_REF_FRAMES][MAX_REF_FRAMES];
-
-typedef struct BlockNode{
-    int16_t mx;
-    int16_t my;
-    uint8_t ref;
-    uint8_t color[3];
-    uint8_t type;
-//#define TYPE_SPLIT    1
-#define BLOCK_INTRA   1
-#define BLOCK_OPT     2
-//#define TYPE_NOCOLOR  4
-    uint8_t level; //FIXME merge into type?
-}BlockNode;
-
-static const BlockNode null_block= { //FIXME add border maybe
-    .color= {128,128,128},
-    .mx= 0,
-    .my= 0,
-    .ref= 0,
-    .type= 0,
-    .level= 0,
-};
-
-#define LOG2_MB_SIZE 4
-#define MB_SIZE (1<<LOG2_MB_SIZE)
-#define ENCODER_EXTRA_BITS 4
-#define HTAPS_MAX 8
-
-typedef struct x_and_coeff{
-    int16_t x;
-    uint16_t coeff;
-} x_and_coeff;
-
-typedef struct SubBand{
-    int level;
-    int stride;
-    int width;
-    int height;
-    int qlog;        ///< log(qscale)/log[2^(1/6)]
-    DWTELEM *buf;
-    IDWTELEM *ibuf;
-    int buf_x_offset;
-    int buf_y_offset;
-    int stride_line; ///< Stride measured in lines, not pixels.
-    x_and_coeff * x_coeff;
-    struct SubBand *parent;
-    uint8_t state[/*7*2*/ 7 + 512][32];
-}SubBand;
-
-typedef struct Plane{
-    int width;
-    int height;
-    SubBand band[MAX_DECOMPOSITIONS][4];
-
-    int htaps;
-    int8_t hcoeff[HTAPS_MAX/2];
-    int diag_mc;
-    int fast_mc;
-
-    int last_htaps;
-    int8_t last_hcoeff[HTAPS_MAX/2];
-    int last_diag_mc;
-}Plane;
-
-typedef struct SnowContext{
-    AVClass *class;
-    AVCodecContext *avctx;
-    RangeCoder c;
-    DSPContext dsp;
-    DWTContext dwt;
-    AVFrame new_picture;
-    AVFrame input_picture;              ///< new_picture with the internal linesizes
-    AVFrame current_picture;
-    AVFrame last_picture[MAX_REF_FRAMES];
-    uint8_t *halfpel_plane[MAX_REF_FRAMES][4][4];
-    AVFrame mconly_picture;
-//     uint8_t q_context[16];
-    uint8_t header_state[32];
-    uint8_t block_state[128 + 32*128];
-    int keyframe;
-    int always_reset;
-    int version;
-    int spatial_decomposition_type;
-    int last_spatial_decomposition_type;
-    int temporal_decomposition_type;
-    int spatial_decomposition_count;
-    int last_spatial_decomposition_count;
-    int temporal_decomposition_count;
-    int max_ref_frames;
-    int ref_frames;
-    int16_t (*ref_mvs[MAX_REF_FRAMES])[2];
-    uint32_t *ref_scores[MAX_REF_FRAMES];
-    DWTELEM *spatial_dwt_buffer;
-    IDWTELEM *spatial_idwt_buffer;
-    int colorspace_type;
-    int chroma_h_shift;
-    int chroma_v_shift;
-    int spatial_scalability;
-    int qlog;
-    int last_qlog;
-    int lambda;
-    int lambda2;
-    int pass1_rc;
-    int mv_scale;
-    int last_mv_scale;
-    int qbias;
-    int last_qbias;
-#define QBIAS_SHIFT 3
-    int b_width;
-    int b_height;
-    int block_max_depth;
-    int last_block_max_depth;
-    Plane plane[MAX_PLANES];
-    BlockNode *block;
-#define ME_CACHE_SIZE 1024
-    int me_cache[ME_CACHE_SIZE];
-    int me_cache_generation;
-    slice_buffer sb;
-    int memc_only;
-
-    MpegEncContext m; // needed for motion estimation, should not be used for anything else, the idea is to eventually make the motion estimation independent of MpegEncContext, so this will be removed then (FIXME/XXX)
-
-    uint8_t *scratchbuf;
-}SnowContext;
 
 #ifdef __sgi
 // Avoid a name clash on SGI IRIX
@@ -457,73 +252,6 @@ static inline void unpack_coeffs(SnowContext *s, SubBand *b, SubBand * parent, i
     (xc++)->x= w+1; //end marker
 }
 
-static inline void decode_subband_slice_buffered(SnowContext *s, SubBand *b, slice_buffer * sb, int start_y, int h, int save_state[1]){
-    const int w= b->width;
-    int y;
-    const int qlog= av_clip(s->qlog + b->qlog, 0, QROOT*16);
-    int qmul= qexp[qlog&(QROOT-1)]<<(qlog>>QSHIFT);
-    int qadd= (s->qbias*qmul)>>QBIAS_SHIFT;
-    int new_index = 0;
-
-    if(b->ibuf == s->spatial_idwt_buffer || s->qlog == LOSSLESS_QLOG){
-        qadd= 0;
-        qmul= 1<<QEXPSHIFT;
-    }
-
-    /* If we are on the second or later slice, restore our index. */
-    if (start_y != 0)
-        new_index = save_state[0];
-
-
-    for(y=start_y; y<h; y++){
-        int x = 0;
-        int v;
-        IDWTELEM * line = slice_buffer_get_line(sb, y * b->stride_line + b->buf_y_offset) + b->buf_x_offset;
-        memset(line, 0, b->width*sizeof(IDWTELEM));
-        v = b->x_coeff[new_index].coeff;
-        x = b->x_coeff[new_index++].x;
-        while(x < w){
-            register int t= ( (v>>1)*qmul + qadd)>>QEXPSHIFT;
-            register int u= -(v&1);
-            line[x] = (t^u) - u;
-
-            v = b->x_coeff[new_index].coeff;
-            x = b->x_coeff[new_index++].x;
-        }
-    }
-
-    /* Save our variables for the next slice. */
-    save_state[0] = new_index;
-
-    return;
-}
-
-static void reset_contexts(SnowContext *s){ //FIXME better initial contexts
-    int plane_index, level, orientation;
-
-    for(plane_index=0; plane_index<3; plane_index++){
-        for(level=0; level<MAX_DECOMPOSITIONS; level++){
-            for(orientation=level ? 1:0; orientation<4; orientation++){
-                memset(s->plane[plane_index].band[level][orientation].state, MID_STATE, sizeof(s->plane[plane_index].band[level][orientation].state));
-            }
-        }
-    }
-    memset(s->header_state, MID_STATE, sizeof(s->header_state));
-    memset(s->block_state, MID_STATE, sizeof(s->block_state));
-}
-
-static int alloc_blocks(SnowContext *s){
-    int w= -((-s->avctx->width )>>LOG2_MB_SIZE);
-    int h= -((-s->avctx->height)>>LOG2_MB_SIZE);
-
-    s->b_width = w;
-    s->b_height= h;
-
-    av_free(s->block);
-    s->block= av_mallocz(w * h * sizeof(BlockNode) << (s->block_max_depth*2));
-    return 0;
-}
-
 static inline void set_blocks(SnowContext *s, int level, int x, int y, int l, int cb, int cr, int mx, int my, int ref, int type){
     const int w= s->b_width << s->block_max_depth;
     const int rem_depth= s->block_max_depth - level;
@@ -583,67 +311,6 @@ static av_always_inline int same_block(BlockNode *a, BlockNode *b){
         return !((a->color[0] - b->color[0]) | (a->color[1] - b->color[1]) | (a->color[2] - b->color[2]));
     }else{
         return !((a->mx - b->mx) | (a->my - b->my) | (a->ref - b->ref) | ((a->type ^ b->type)&BLOCK_INTRA));
-    }
-}
-
-static void decode_q_branch(SnowContext *s, int level, int x, int y){
-    const int w= s->b_width << s->block_max_depth;
-    const int rem_depth= s->block_max_depth - level;
-    const int index= (x + y*w) << rem_depth;
-    int trx= (x+1)<<rem_depth;
-    const BlockNode *left  = x ? &s->block[index-1] : &null_block;
-    const BlockNode *top   = y ? &s->block[index-w] : &null_block;
-    const BlockNode *tl    = y && x ? &s->block[index-w-1] : left;
-    const BlockNode *tr    = y && trx<w && ((x&1)==0 || level==0) ? &s->block[index-w+(1<<rem_depth)] : tl; //FIXME use lt
-    int s_context= 2*left->level + 2*top->level + tl->level + tr->level;
-
-    if(s->keyframe){
-        set_blocks(s, level, x, y, null_block.color[0], null_block.color[1], null_block.color[2], null_block.mx, null_block.my, null_block.ref, BLOCK_INTRA);
-        return;
-    }
-
-    if(level==s->block_max_depth || get_rac(&s->c, &s->block_state[4 + s_context])){
-        int type, mx, my;
-        int l = left->color[0];
-        int cb= left->color[1];
-        int cr= left->color[2];
-        int ref = 0;
-        int ref_context= av_log2(2*left->ref) + av_log2(2*top->ref);
-        int mx_context= av_log2(2*FFABS(left->mx - top->mx)) + 0*av_log2(2*FFABS(tr->mx - top->mx));
-        int my_context= av_log2(2*FFABS(left->my - top->my)) + 0*av_log2(2*FFABS(tr->my - top->my));
-
-        type= get_rac(&s->c, &s->block_state[1 + left->type + top->type]) ? BLOCK_INTRA : 0;
-
-        if(type){
-            pred_mv(s, &mx, &my, 0, left, top, tr);
-            l += get_symbol(&s->c, &s->block_state[32], 1);
-            cb+= get_symbol(&s->c, &s->block_state[64], 1);
-            cr+= get_symbol(&s->c, &s->block_state[96], 1);
-        }else{
-            if(s->ref_frames > 1)
-                ref= get_symbol(&s->c, &s->block_state[128 + 1024 + 32*ref_context], 0);
-            pred_mv(s, &mx, &my, ref, left, top, tr);
-            mx+= get_symbol(&s->c, &s->block_state[128 + 32*(mx_context + 16*!!ref)], 1);
-            my+= get_symbol(&s->c, &s->block_state[128 + 32*(my_context + 16*!!ref)], 1);
-        }
-        set_blocks(s, level, x, y, l, cb, cr, mx, my, ref, type);
-    }else{
-        decode_q_branch(s, level+1, 2*x+0, 2*y+0);
-        decode_q_branch(s, level+1, 2*x+1, 2*y+0);
-        decode_q_branch(s, level+1, 2*x+0, 2*y+1);
-        decode_q_branch(s, level+1, 2*x+1, 2*y+1);
-    }
-}
-
-static void decode_blocks(SnowContext *s){
-    int x, y;
-    int w= s->b_width;
-    int h= s->b_height;
-
-    for(y=0; y<h; y++){
-        for(x=0; x<w; x++){
-            decode_q_branch(s, 0, x, y);
-        }
     }
 }
 
@@ -1162,6 +829,96 @@ static av_always_inline void predict_plane(SnowContext *s, IDWTELEM *buf, int pl
         predict_slice(s, buf, plane_index, add, mb_y);
 }
 
+static inline void decode_subband_slice_buffered(SnowContext *s, SubBand *b, slice_buffer * sb, int start_y, int h, int save_state[1]){
+    const int w= b->width;
+    int y;
+    const int qlog= av_clip(s->qlog + b->qlog, 0, QROOT*16);
+    int qmul= qexp[qlog&(QROOT-1)]<<(qlog>>QSHIFT);
+    int qadd= (s->qbias*qmul)>>QBIAS_SHIFT;
+    int new_index = 0;
+
+    if(b->ibuf == s->spatial_idwt_buffer || s->qlog == LOSSLESS_QLOG){
+        qadd= 0;
+        qmul= 1<<QEXPSHIFT;
+    }
+
+    /* If we are on the second or later slice, restore our index. */
+    if (start_y != 0)
+        new_index = save_state[0];
+
+
+    for(y=start_y; y<h; y++){
+        int x = 0;
+        int v;
+        IDWTELEM * line = slice_buffer_get_line(sb, y * b->stride_line + b->buf_y_offset) + b->buf_x_offset;
+        memset(line, 0, b->width*sizeof(IDWTELEM));
+        v = b->x_coeff[new_index].coeff;
+        x = b->x_coeff[new_index++].x;
+        while(x < w){
+            register int t= ( (v>>1)*qmul + qadd)>>QEXPSHIFT;
+            register int u= -(v&1);
+            line[x] = (t^u) - u;
+
+            v = b->x_coeff[new_index].coeff;
+            x = b->x_coeff[new_index++].x;
+        }
+    }
+
+    /* Save our variables for the next slice. */
+    save_state[0] = new_index;
+
+    return;
+}
+
+static void decode_q_branch(SnowContext *s, int level, int x, int y){
+    const int w= s->b_width << s->block_max_depth;
+    const int rem_depth= s->block_max_depth - level;
+    const int index= (x + y*w) << rem_depth;
+    int trx= (x+1)<<rem_depth;
+    const BlockNode *left  = x ? &s->block[index-1] : &null_block;
+    const BlockNode *top   = y ? &s->block[index-w] : &null_block;
+    const BlockNode *tl    = y && x ? &s->block[index-w-1] : left;
+    const BlockNode *tr    = y && trx<w && ((x&1)==0 || level==0) ? &s->block[index-w+(1<<rem_depth)] : tl; //FIXME use lt
+    int s_context= 2*left->level + 2*top->level + tl->level + tr->level;
+
+    if(s->keyframe){
+        set_blocks(s, level, x, y, null_block.color[0], null_block.color[1], null_block.color[2], null_block.mx, null_block.my, null_block.ref, BLOCK_INTRA);
+        return;
+    }
+
+    if(level==s->block_max_depth || get_rac(&s->c, &s->block_state[4 + s_context])){
+        int type, mx, my;
+        int l = left->color[0];
+        int cb= left->color[1];
+        int cr= left->color[2];
+        int ref = 0;
+        int ref_context= av_log2(2*left->ref) + av_log2(2*top->ref);
+        int mx_context= av_log2(2*FFABS(left->mx - top->mx)) + 0*av_log2(2*FFABS(tr->mx - top->mx));
+        int my_context= av_log2(2*FFABS(left->my - top->my)) + 0*av_log2(2*FFABS(tr->my - top->my));
+
+        type= get_rac(&s->c, &s->block_state[1 + left->type + top->type]) ? BLOCK_INTRA : 0;
+
+        if(type){
+            pred_mv(s, &mx, &my, 0, left, top, tr);
+            l += get_symbol(&s->c, &s->block_state[32], 1);
+            cb+= get_symbol(&s->c, &s->block_state[64], 1);
+            cr+= get_symbol(&s->c, &s->block_state[96], 1);
+        }else{
+            if(s->ref_frames > 1)
+                ref= get_symbol(&s->c, &s->block_state[128 + 1024 + 32*ref_context], 0);
+            pred_mv(s, &mx, &my, ref, left, top, tr);
+            mx+= get_symbol(&s->c, &s->block_state[128 + 32*(mx_context + 16*!!ref)], 1);
+            my+= get_symbol(&s->c, &s->block_state[128 + 32*(my_context + 16*!!ref)], 1);
+        }
+        set_blocks(s, level, x, y, l, cb, cr, mx, my, ref, type);
+    }else{
+        decode_q_branch(s, level+1, 2*x+0, 2*y+0);
+        decode_q_branch(s, level+1, 2*x+1, 2*y+0);
+        decode_q_branch(s, level+1, 2*x+0, 2*y+1);
+        decode_q_branch(s, level+1, 2*x+1, 2*y+1);
+    }
+}
+
 static void dequantize_slice_buffered(SnowContext *s, slice_buffer * sb, SubBand *b, IDWTELEM *src, int stride, int start_y, int end_y){
     const int w= b->width;
     const int qlog= av_clip(s->qlog + b->qlog, 0, QROOT*16);
@@ -1247,7 +1004,7 @@ static int decode_header(SnowContext *s){
 
     s->keyframe= get_rac(&s->c, kstate);
     if(s->keyframe || s->always_reset){
-        reset_contexts(s);
+        snow_reset_contexts(s);
         s->spatial_decomposition_type=
         s->qlog=
         s->qbias=
@@ -1725,6 +1482,18 @@ static av_cold int decode_init(AVCodecContext *avctx)
     return 0;
 }
 
+static void decode_blocks(SnowContext *s){
+    int x, y;
+    int w= s->b_width;
+    int h= s->b_height;
+
+    for(y=0; y<h; y++){
+        for(x=0; x<w; x++){
+            decode_q_branch(s, 0, x, y);
+        }
+    }
+}
+
 static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPacket *avpkt){
     const uint8_t *buf = avpkt->data;
     int buf_size = avpkt->size;
@@ -1753,7 +1522,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
                                               && p->hcoeff[2]==2;
     }
 
-    alloc_blocks(s);
+    snow_alloc_blocks(s);
 
     if(frame_start(s) < 0)
         return -1;
