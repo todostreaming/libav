@@ -283,14 +283,6 @@ static inline void init_ref(MotionEstContext *c, uint8_t *src[3], uint8_t *ref[3
     assert(!ref_index);
 }
 
-static av_always_inline int same_block(BlockNode *a, BlockNode *b){
-    if((a->type&BLOCK_INTRA) && (b->type&BLOCK_INTRA)){
-        return !((a->color[0] - b->color[0]) | (a->color[1] - b->color[1]) | (a->color[2] - b->color[2]));
-    }else{
-        return !((a->mx - b->mx) | (a->my - b->my) | (a->ref - b->ref) | ((a->type ^ b->type)&BLOCK_INTRA));
-    }
-}
-
 //FIXME name cleanup (b_w, block_w, b_width stuff)
 static av_always_inline void add_yblock(SnowContext *s, int sliced, slice_buffer *sb, IDWTELEM *dst, uint8_t *dst8, const uint8_t *obmc, int src_x, int src_y, int b_w, int b_h, int w, int h, int dst_stride, int src_stride, int obmc_stride, int b_x, int b_y, int add, int offset_dst, int plane_index){
     const int b_width = s->b_width  << s->block_max_depth;
