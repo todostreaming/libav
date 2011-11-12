@@ -588,54 +588,6 @@ static int decode_header(SnowContext *s){
     return 0;
 }
 
-#define QUANTIZE2 0
-
-#if QUANTIZE2==1
-#define Q2_STEP 8
-
-static void find_sse(SnowContext *s, Plane *p, int *score, int score_stride, IDWTELEM *r0, IDWTELEM *r1, int level, int orientation){
-    SubBand *b= &p->band[level][orientation];
-    int x, y;
-    int xo=0;
-    int yo=0;
-    int step= 1 << (s->spatial_decomposition_count - level);
-
-    if(orientation&1)
-        xo= step>>1;
-    if(orientation&2)
-        yo= step>>1;
-
-    //FIXME bias for nonzero ?
-    //FIXME optimize
-    memset(score, 0, sizeof(*score)*score_stride*((p->height + Q2_STEP-1)/Q2_STEP));
-    for(y=0; y<p->height; y++){
-        for(x=0; x<p->width; x++){
-            int sx= (x-xo + step/2) / step / Q2_STEP;
-            int sy= (y-yo + step/2) / step / Q2_STEP;
-            int v= r0[x + y*p->width] - r1[x + y*p->width];
-            assert(sx>=0 && sy>=0 && sx < score_stride);
-            v= ((v+8)>>4)<<4;
-            score[sx + sy*score_stride] += v*v;
-            assert(score[sx + sy*score_stride] >= 0);
-        }
-    }
-}
-
-static void dequantize_all(SnowContext *s, Plane *p, IDWTELEM *buffer, int width, int height){
-    int level, orientation;
-
-    for(level=0; level<s->spatial_decomposition_count; level++){
-        for(orientation=level ? 1 : 0; orientation<4; orientation++){
-            SubBand *b= &p->band[level][orientation];
-            IDWTELEM *dst= buffer + (b->ibuf - s->spatial_idwt_buffer);
-
-            dequantize(s, b, dst, b->stride);
-        }
-    }
-}
-
-#endif /* QUANTIZE2==1 */
-
 #define USE_HALFPEL_PLANE 0
 
 static void halfpel_interpol(SnowContext *s, uint8_t *halfpel[4][4], AVFrame *frame){
