@@ -219,7 +219,7 @@ int snow_common_init(AVCodecContext *avctx);
 void snow_pred_block(SnowContext *s, uint8_t *dst, uint8_t *tmp, int stride,
                      int sx, int sy, int b_w, int b_h, BlockNode *block,
                      int plane_index, int w, int h);
-
+int snow_common_init_after_header(AVCodecContext *avctx);
 /* common inline functions */
 //XXX doublecheck all of them should stay inlined
 
