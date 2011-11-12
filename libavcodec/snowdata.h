@@ -22,6 +22,8 @@
 #ifndef AVCODEC_SNOWDATA_H
 #define AVCODEC_SNOWDATA_H
 
+#include "snow.h"
+
 static const uint8_t obmc32[1024]={
   0,  0,  0,  0,  4,  4,  4,  4,  4,  4,  4,  4,  8,  8,  8,  8,  8,  8,  8,  8,  4,  4,  4,  4,  4,  4,  4,  4,  0,  0,  0,  0,
   0,  4,  4,  4,  8,  8,  8, 12, 12, 16, 16, 16, 20, 20, 20, 24, 24, 20, 20, 20, 16, 16, 16, 12, 12,  8,  8,  8,  4,  4,  4,  0,
@@ -102,5 +104,10 @@ static const uint8_t obmc4[16]={
 const uint8_t * const obmc_tab[4]= {
     obmc32, obmc16, obmc8, obmc4
 };
+
+/* runtime generated tables */
+uint8_t qexp[QROOT];
+int scale_mv_ref[MAX_REF_FRAMES][MAX_REF_FRAMES];
+
 
 #endif /* AVCODEC_SNOW_H */

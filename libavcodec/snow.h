@@ -166,6 +166,12 @@ typedef struct SnowContext{
 
 /* Tables */
 extern const uint8_t * const obmc_tab[4];
+#ifdef __sgi
+// Avoid a name clash on SGI IRIX
+#undef qexp
+#endif
+extern uint8_t qexp[QROOT];
+extern int scale_mv_ref[MAX_REF_FRAMES][MAX_REF_FRAMES];
 
 /* C bits used by mmx/sse2/altivec */
 
@@ -205,6 +211,9 @@ static av_always_inline void snow_horizontal_compose_liftS_lead_out(int i, IDWTE
         }
 }
 
+/* common inline functions */
+//XXX doublecheck all of them should stay inlined
+
 static inline void snow_set_blocks(SnowContext *s, int level, int x, int y, int l, int cb, int cr, int mx, int my, int ref, int type){
     const int w= s->b_width << s->block_max_depth;
     const int rem_depth= s->block_max_depth - level;
@@ -229,7 +238,28 @@ static inline void snow_set_blocks(SnowContext *s, int level, int x, int y, int 
     }
 }
 
+static inline void pred_mv(SnowContext *s, int *mx, int *my, int ref,
+                           const BlockNode *left, const BlockNode *top, const BlockNode *tr){
+    if(s->ref_frames == 1){
+        *mx = mid_pred(left->mx, top->mx, tr->mx);
+        *my = mid_pred(left->my, top->my, tr->my);
+    }else{
+        const int *scale = scale_mv_ref[ref];
+        *mx = mid_pred((left->mx * scale[left->ref] + 128) >>8,
+                       (top ->mx * scale[top ->ref] + 128) >>8,
+                       (tr  ->mx * scale[tr  ->ref] + 128) >>8);
+        *my = mid_pred((left->my * scale[left->ref] + 128) >>8,
+                       (top ->my * scale[top ->ref] + 128) >>8,
+                       (tr  ->my * scale[tr  ->ref] + 128) >>8);
+    }
+}
+
+/* common code */
+
 void snow_reset_contexts(SnowContext *s);
 int snow_alloc_blocks(SnowContext *s);
-
+int snow_common_init(AVCodecContext *avctx);
+void snow_pred_block(SnowContext *s, uint8_t *dst, uint8_t *tmp, int stride,
+                     int sx, int sy, int b_w, int b_h, BlockNode *block,
+                     int plane_index, int w, int h);
 #endif /* AVCODEC_SNOW_H */
