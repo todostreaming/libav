@@ -3140,19 +3140,39 @@ static int ff_interleave_compare_dts(AVFormatContext *s, AVPacket *next, AVPacke
     return comp > 0;
 }
 
-int av_interleave_packet_per_dts(AVFormatContext *s, AVPacket *out, AVPacket *pkt, int flush){
+int av_interleave_packet_per_dts(AVFormatContext *s,
+                                 AVPacket *out, AVPacket *pkt, int flush)
+{
+    AVPacket *last_pkt;
     AVPacketList *pktl;
-    int stream_count=0;
+    int stream_count = 0;
+    int64_t delta_dts = INT64_MIN;
+    int64_t last_dts;
     int i;
 
-    if(pkt){
+    if (pkt) {
         ff_interleave_add_packet(s, pkt, ff_interleave_compare_dts);
     }
 
-    for(i=0; i < s->nb_streams; i++)
-        stream_count+= !!s->streams[i]->last_in_packet_buffer;
+    last_pkt = &s->packet_buffer->pkt;
+    last_dts = av_rescale_q(last_pkt->dts,
+			    s->streams[last_pkt->stream_index]->time_base,
+                            AV_TIME_BASE_Q);
 
-    if(stream_count && (s->nb_streams == stream_count || flush)){
+    for (i=0; i < s->nb_streams; i++)
+        if (s->streams[i]->last_in_packet_buffer) {
+            delta_dts = FFMAX(delta_dts,
+                av_rescale_q(s->streams[i]->last_in_packet_buffer->pkt.dts,
+			     s->streams[i]->time_base,
+			     AV_TIME_BASE_Q) - last_dts);
+            stream_count++;
+        }
+    if (s->max_delay && delta_dts > s->max_delay) {
+        av_log(s, AV_LOG_DEBUG, "Sparse stream detected, forcing flush\n");
+        flush = 1;
+    }
+
+    if (stream_count && (s->nb_streams == stream_count || flush)) {
         pktl= s->packet_buffer;
         *out= pktl->pkt;
 
@@ -3164,7 +3184,7 @@ int av_interleave_packet_per_dts(AVFormatContext *s, AVPacket *out, AVPacket *pk
             s->streams[out->stream_index]->last_in_packet_buffer= NULL;
         av_freep(&pktl);
         return 1;
-    }else{
+    } else {
         av_init_packet(out);
         return 0;
     }

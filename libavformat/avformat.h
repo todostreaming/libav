@@ -853,6 +853,9 @@ typedef struct AVFormatContext {
 #if FF_API_PRELOAD
     attribute_deprecated int preload;
 #endif
+    /**
+     * maximum muxing/demuxing delay in microseconds
+     */
     int max_delay;
 
 #if FF_API_LOOP_OUTPUT
@@ -1004,7 +1007,6 @@ typedef struct AVFormatContext {
      * open the file.
      */
     AVIOInterruptCB interrupt_callback;
-
     /*****************************************************************
      * All fields below this line are not part of the public API. They
      * may not be used outside of libavformat and can be changed and
@@ -1040,6 +1042,7 @@ typedef struct AVFormatContext {
 
     /* av_seek_frame() support */
     int64_t data_offset; /**< offset of the first packet */
+
 #endif
 } AVFormatContext;
 
