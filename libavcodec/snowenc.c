@@ -185,8 +185,8 @@ static av_cold int encode_init(AVCodecContext *avctx)
         s->plane[plane_index].fast_mc= 1;
     }
 
-    snow_common_init(avctx);
-    snow_alloc_blocks(s);
+    ff_snow_common_init(avctx);
+    ff_snow_alloc_blocks(s);
 
     s->version=0;
 
@@ -689,7 +689,7 @@ static int get_block_rd(SnowContext *s, int mb_x, int mb_y, int plane_index, con
     int y1= FFMIN(block_w*2, h-sy);
     int i,x,y;
 
-    snow_pred_block(s, cur, tmp, ref_stride, sx, sy, block_w*2, block_w*2, &s->block[mb_x + mb_y*b_stride], plane_index, w, h);
+    ff_snow_pred_block(s, cur, tmp, ref_stride, sx, sy, block_w*2, block_w*2, &s->block[mb_x + mb_y*b_stride], plane_index, w, h);
 
     for(y=y0; y<y1; y++){
         const uint8_t *obmc1= obmc_edged + y*obmc_stride;
@@ -1432,7 +1432,7 @@ static void encode_header(SnowContext *s){
 
     put_rac(&s->c, kstate, s->keyframe);
     if(s->keyframe || s->always_reset){
-        snow_reset_contexts(s);
+        ff_snow_reset_contexts(s);
         s->last_spatial_decomposition_type=
         s->last_qlog=
         s->last_qbias=
@@ -1647,7 +1647,7 @@ static int encode_frame(AVCodecContext *avctx, unsigned char *buf, int buf_size,
         s->lambda = 0;
     }//else keep previous frame's qlog until after motion estimation
 
-    snow_frame_start(s);
+    ff_snow_frame_start(s);
 
     s->m.current_picture_ptr= &s->m.current_picture;
     s->m.last_picture.f.pts = s->m.current_picture.f.pts;
@@ -1709,7 +1709,7 @@ redo_frame:
     s->m.pict_type = pict->pict_type;
     s->qbias= pict->pict_type == AV_PICTURE_TYPE_P ? 2 : 0;
 
-    snow_common_init_after_header(avctx);
+    ff_snow_common_init_after_header(avctx);
 
     if(s->last_spatial_decomposition_count != s->spatial_decomposition_count){
         for(plane_index=0; plane_index<3; plane_index++){
@@ -1848,7 +1848,7 @@ redo_frame:
 
     update_last_header_values(s);
 
-    snow_release_buffer(avctx);
+    ff_snow_release_buffer(avctx);
 
     s->current_picture.coded_picture_number = avctx->frame_number;
     s->current_picture.pict_type = pict->pict_type;
@@ -1879,7 +1879,7 @@ static av_cold int encode_end(AVCodecContext *avctx)
 {
     SnowContext *s = avctx->priv_data;
 
-    snow_common_end(s);
+    ff_snow_common_end(s);
     if (s->input_picture.data[0])
         avctx->release_buffer(avctx, &s->input_picture);
     av_free(avctx->stats_out);

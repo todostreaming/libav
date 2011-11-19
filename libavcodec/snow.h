@@ -213,14 +213,14 @@ static av_always_inline void snow_horizontal_compose_liftS_lead_out(int i, IDWTE
 
 /* common code */
 
-int snow_common_init(AVCodecContext *avctx);
-int snow_common_init_after_header(AVCodecContext *avctx);
-void snow_common_end(SnowContext *s);
-void snow_release_buffer(AVCodecContext *avctx);
-void snow_reset_contexts(SnowContext *s);
-int snow_alloc_blocks(SnowContext *s);
-int snow_frame_start(SnowContext *s);
-void snow_pred_block(SnowContext *s, uint8_t *dst, uint8_t *tmp, int stride,
+int ff_snow_common_init(AVCodecContext *avctx);
+int ff_snow_common_init_after_header(AVCodecContext *avctx);
+void ff_snow_common_end(SnowContext *s);
+void ff_snow_release_buffer(AVCodecContext *avctx);
+void ff_snow_reset_contexts(SnowContext *s);
+int ff_snow_alloc_blocks(SnowContext *s);
+int ff_snow_frame_start(SnowContext *s);
+void ff_snow_pred_block(SnowContext *s, uint8_t *dst, uint8_t *tmp, int stride,
                      int sx, int sy, int b_w, int b_h, BlockNode *block,
                      int plane_index, int w, int h);
 /* common inline functions */
@@ -336,14 +336,14 @@ static av_always_inline void add_yblock(SnowContext *s, int sliced, slice_buffer
     ptmp= tmp + 3*tmp_step;
     block[0]= ptmp;
     ptmp+=tmp_step;
-    snow_pred_block(s, block[0], tmp, src_stride, src_x, src_y, b_w, b_h, lt, plane_index, w, h);
+    ff_snow_pred_block(s, block[0], tmp, src_stride, src_x, src_y, b_w, b_h, lt, plane_index, w, h);
 
     if(same_block(lt, rt)){
         block[1]= block[0];
     }else{
         block[1]= ptmp;
         ptmp+=tmp_step;
-        snow_pred_block(s, block[1], tmp, src_stride, src_x, src_y, b_w, b_h, rt, plane_index, w, h);
+        ff_snow_pred_block(s, block[1], tmp, src_stride, src_x, src_y, b_w, b_h, rt, plane_index, w, h);
     }
 
     if(same_block(lt, lb)){
@@ -353,7 +353,7 @@ static av_always_inline void add_yblock(SnowContext *s, int sliced, slice_buffer
     }else{
         block[2]= ptmp;
         ptmp+=tmp_step;
-        snow_pred_block(s, block[2], tmp, src_stride, src_x, src_y, b_w, b_h, lb, plane_index, w, h);
+        ff_snow_pred_block(s, block[2], tmp, src_stride, src_x, src_y, b_w, b_h, lb, plane_index, w, h);
     }
 
     if(same_block(lt, rb) ){
@@ -364,7 +364,7 @@ static av_always_inline void add_yblock(SnowContext *s, int sliced, slice_buffer
         block[3]= block[2];
     }else{
         block[3]= ptmp;
-        snow_pred_block(s, block[3], tmp, src_stride, src_x, src_y, b_w, b_h, rb, plane_index, w, h);
+        ff_snow_pred_block(s, block[3], tmp, src_stride, src_x, src_y, b_w, b_h, rb, plane_index, w, h);
     }
     if(sliced){
         s->dwt.inner_add_yblock(obmc, obmc_stride, block, b_w, b_h, src_x,src_y, src_stride, sb, add, dst8);

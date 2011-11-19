@@ -266,7 +266,7 @@ static int decode_header(SnowContext *s){
 
     s->keyframe= get_rac(&s->c, kstate);
     if(s->keyframe || s->always_reset){
-        snow_reset_contexts(s);
+        ff_snow_reset_contexts(s);
         s->spatial_decomposition_type=
         s->qlog=
         s->qbias=
@@ -344,7 +344,7 @@ static av_cold int decode_init(AVCodecContext *avctx)
 {
     avctx->pix_fmt= PIX_FMT_YUV420P;
 
-    snow_common_init(avctx);
+    ff_snow_common_init(avctx);
 
     return 0;
 }
@@ -376,7 +376,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
     s->current_picture.pict_type= AV_PICTURE_TYPE_I; //FIXME I vs. P
     if(decode_header(s)<0)
         return -1;
-    snow_common_init_after_header(avctx);
+    ff_snow_common_init_after_header(avctx);
 
     // realloc slice buffer for the case that spatial_decomposition_count changed
     ff_slice_buffer_destroy(&s->sb);
@@ -389,9 +389,9 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
                                               && p->hcoeff[2]==2;
     }
 
-    snow_alloc_blocks(s);
+    ff_snow_alloc_blocks(s);
 
-    if(snow_frame_start(s) < 0)
+    if(ff_snow_frame_start(s) < 0)
         return -1;
     //keyframe flag duplication mess FIXME
     if(avctx->debug&FF_DEBUG_PICT_INFO)
@@ -507,7 +507,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
 
     emms_c();
 
-    snow_release_buffer(avctx);
+    ff_snow_release_buffer(avctx);
 
     if(!(s->avctx->debug&2048))
         *picture= s->current_picture;
@@ -528,7 +528,7 @@ static av_cold int decode_end(AVCodecContext *avctx)
 
     ff_slice_buffer_destroy(&s->sb);
 
-    snow_common_end(s);
+    ff_snow_common_end(s);
 
     return 0;
 }

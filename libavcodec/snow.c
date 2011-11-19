@@ -68,7 +68,7 @@ void ff_snow_inner_add_yblock(const uint8_t *obmc, const int obmc_stride, uint8_
     }
 }
 
-void snow_reset_contexts(SnowContext *s){ //FIXME better initial contexts
+void ff_snow_reset_contexts(SnowContext *s){ //FIXME better initial contexts
     int plane_index, level, orientation;
 
     for(plane_index=0; plane_index<3; plane_index++){
@@ -82,7 +82,7 @@ void snow_reset_contexts(SnowContext *s){ //FIXME better initial contexts
     memset(s->block_state, MID_STATE, sizeof(s->block_state));
 }
 
-int snow_alloc_blocks(SnowContext *s){
+int ff_snow_alloc_blocks(SnowContext *s){
     int w= -((-s->avctx->width )>>LOG2_MB_SIZE);
     int h= -((-s->avctx->height)>>LOG2_MB_SIZE);
 
@@ -287,7 +287,7 @@ static void mc_block(Plane *p, uint8_t *dst, const uint8_t *src, int stride, int
     }
 }
 
-void snow_pred_block(SnowContext *s, uint8_t *dst, uint8_t *tmp, int stride, int sx, int sy, int b_w, int b_h, BlockNode *block, int plane_index, int w, int h){
+void ff_snow_pred_block(SnowContext *s, uint8_t *dst, uint8_t *tmp, int stride, int sx, int sy, int b_w, int b_h, BlockNode *block, int plane_index, int w, int h){
     if(block->type & BLOCK_INTRA){
         int x, y;
         const int color = block->color[plane_index];
@@ -382,7 +382,7 @@ mca( 8, 0,8)
 mca( 0, 8,8)
 mca( 8, 8,8)
 
-av_cold int snow_common_init(AVCodecContext *avctx){
+av_cold int ff_snow_common_init(AVCodecContext *avctx){
     SnowContext *s = avctx->priv_data;
     int width, height;
     int i, j;
@@ -451,7 +451,7 @@ av_cold int snow_common_init(AVCodecContext *avctx){
     return 0;
 }
 
-int snow_common_init_after_header(AVCodecContext *avctx) {
+int ff_snow_common_init_after_header(AVCodecContext *avctx) {
     SnowContext *s = avctx->priv_data;
     int plane_index, level, orientation;
 
@@ -548,7 +548,7 @@ static void halfpel_interpol(SnowContext *s, uint8_t *halfpel[4][4], AVFrame *fr
     }
 }
 
-void snow_release_buffer(AVCodecContext *avctx)
+void ff_snow_release_buffer(AVCodecContext *avctx)
 {
     SnowContext *s = avctx->priv_data;
     int i;
@@ -561,7 +561,7 @@ void snow_release_buffer(AVCodecContext *avctx)
     }
 }
 
-int snow_frame_start(SnowContext *s){
+int ff_snow_frame_start(SnowContext *s){
    AVFrame tmp;
    int w= s->avctx->width; //FIXME round up to x16 ?
    int h= s->avctx->height;
@@ -578,7 +578,7 @@ int snow_frame_start(SnowContext *s){
                           EDGE_WIDTH/2, EDGE_WIDTH/2, EDGE_TOP | EDGE_BOTTOM);
     }
 
-    snow_release_buffer(s->avctx);
+    ff_snow_release_buffer(s->avctx);
 
     tmp= s->last_picture[s->max_ref_frames-1];
     memmove(s->last_picture+1, s->last_picture, (s->max_ref_frames-1)*sizeof(AVFrame));
@@ -613,7 +613,7 @@ int snow_frame_start(SnowContext *s){
     return 0;
 }
 
-av_cold void snow_common_end(SnowContext *s)
+av_cold void ff_snow_common_end(SnowContext *s)
 {
     int plane_index, level, orientation, i;
 
