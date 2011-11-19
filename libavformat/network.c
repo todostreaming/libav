@@ -23,7 +23,7 @@
 
 #define THREADS (HAVE_PTHREADS || (defined(WIN32) && !defined(__MINGW32CE__)))
 
-#if THREADS
+#if (THREADS)
 #if HAVE_PTHREADS
 #include <pthread.h>
 #else
