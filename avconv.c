@@ -44,6 +44,7 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/avstring.h"
 #include "libavutil/libm.h"
+#include "libavutil/error.h"
 #include "libavformat/os_support.h"
 
 #if CONFIG_AVFILTER
@@ -2327,9 +2328,12 @@ static int transcode_init(OutputFile *output_files,
     for (i = 0; i < nb_output_files; i++) {
         oc = output_files[i].ctx;
         oc->interrupt_callback = int_cb;
-        if (avformat_write_header(oc, &output_files[i].opts) < 0) {
-            snprintf(error, sizeof(error), "Could not write header for output file #%d (incorrect codec parameters ?)", i);
-            ret = AVERROR(EINVAL);
+        if ((ret = avformat_write_header(oc, &output_files[i].opts)) < 0) {
+            char errbuf[128] = "Unknown";
+            av_strerror(ret, errbuf, sizeof(errbuf));
+            snprintf(error, sizeof(error),
+                     "Could not write header for output file #%d (%s)",
+                     i, errbuf);
             goto dump_format;
         }
         assert_avoptions(output_files[i].opts);
