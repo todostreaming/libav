@@ -84,6 +84,11 @@ const int program_birth_year = 2003;
 
 static int sws_flags = SWS_BICUBIC;
 
+typedef struct {
+    uint32_t frame_id;
+    uint64_t s_time;
+} AravisData;
+
 typedef struct PacketQueue {
     AVPacketList *first_pkt, *last_pkt;
     int nb_packets;
@@ -1463,9 +1468,18 @@ static int output_picture2(VideoState *is, AVFrame *src_frame, double pts1, int6
 static int get_video_frame(VideoState *is, AVFrame *frame, int64_t *pts, AVPacket *pkt)
 {
     int got_picture, i;
+    uint32_t *frame_id;
+    uint64_t *s_time;
 
     if (packet_queue_get(&is->videoq, pkt, 1) < 0)
         return -1;
+
+    frame_id = av_packet_get_side_data(pkt, 0, sizeof(uint32_t));
+
+    s_time = av_packet_new_side_data(pkt, 1, sizeof(uint64_t));
+
+    fprintf(stderr, "get_video_frame %d - %"PRId64"\n",
+            *frame_id, *s_time);
 
     if (pkt->data == flush_pkt.data) {
         avcodec_flush_buffers(is->video_st->codec);

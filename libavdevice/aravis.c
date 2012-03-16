@@ -39,6 +39,9 @@ typedef struct {
     ArvCamera *camera;
     ArvStream *stream;
     int payload;
+    uint64_t init;
+    uint64_t start;
+    uint64_t origin;
 } AravisContext;
 
 typedef struct {
@@ -62,6 +65,48 @@ static FormatMap fmt_conversion_table[] = {
         ARV_PIXEL_FORMAT_BGR_10_PACKED */
 };
 
+
+static void
+control_lost_cb (ArvDevice *device)
+{
+    av_log(NULL, AV_LOG_ERROR, "Control Lost\n");
+}
+
+static void stream_cb(void *user_data, ArvStreamCallbackType type,
+                              ArvBuffer *buffer)
+{
+    AravisContext *t = user_data;
+    uint64_t time_us = av_gettime();
+
+    switch (type) {
+    case ARV_STREAM_CALLBACK_TYPE_INIT:
+	t->init = time_us;
+	av_log(NULL, AV_LOG_INFO, "Init! %"G_GINT64_FORMAT"\n",
+		time_us-t->origin);
+//        av_log(NULL, AV_LOG_INFO, "%ld ARV Init\n", (time - g->start)/1000);
+    break;
+    case ARV_STREAM_CALLBACK_TYPE_EXIT:
+//        av_log(NULL, AV_LOG_INFO, "%ld ARV Exit\n", (time - g->start)/1000);
+    break;
+    case ARV_STREAM_CALLBACK_TYPE_START_BUFFER:
+        t->start = time_us;
+	av_log(NULL, AV_LOG_INFO, "Buffer start at %"G_GINT64_FORMAT"\n",
+               time_us-t->init);
+//        av_log(NULL, AV_LOG_INFO, "%ld ARV Start Buffer\n", (time - g->start)/1000);
+    break;
+    case ARV_STREAM_CALLBACK_TYPE_BUFFER_DONE:
+	 av_log(NULL, AV_LOG_INFO, "Buffer %d done at %"G_GINT64_FORMAT""
+                " timestamp %"G_GINT64_FORMAT" (%"G_GINT64_FORMAT")\n",
+                buffer->frame_id,
+                time_us-t->init,
+		buffer->timestamp_ns,
+		time_us-t->start);
+        //av_log(NULL, AV_LOG_INFO, "%ld ARV Buffer Done\n", (time - g->start)/1000);
+        //new_buffer_cb (buffer, g);
+     break;
+    }
+}
+
 static int aravis_read_header(AVFormatContext *s)
 {
     AravisContext *c = s->priv_data;
@@ -72,7 +117,10 @@ static int aravis_read_header(AVFormatContext *s)
     g_type_init();
 
     c->camera = arv_camera_new(s->filename);
-    c->stream = arv_camera_create_stream(c->camera, NULL, NULL);
+
+    arv_camera_stop_acquisition (c->camera);
+
+    c->stream = arv_camera_create_stream(c->camera, stream_cb, c);
 
     c->payload = arv_camera_get_payload(c->camera);
 
@@ -80,7 +128,6 @@ static int aravis_read_header(AVFormatContext *s)
         arv_stream_push_buffer(c->stream, arv_buffer_new(c->payload, NULL));
 
     arv_camera_set_acquisition_mode(c->camera, ARV_ACQUISITION_MODE_CONTINUOUS);
-
 
     st = avformat_new_stream(s, NULL);
 
@@ -91,6 +138,8 @@ static int aravis_read_header(AVFormatContext *s)
     st->codec->codec_id = CODEC_ID_RAWVIDEO;
     st->codec->width = 1280;
     st->codec->height = 720;
+
+    c->origin = av_gettime();
 
     arv_camera_start_acquisition(c->camera);
 
@@ -114,6 +163,8 @@ static int aravis_read_packet(AVFormatContext *s, AVPacket *pkt)
     AravisContext *c = s->priv_data;
     ArvBuffer *buffer = arv_stream_timed_pop_buffer(c->stream, 2000000);
     DestructContext *des = av_malloc(sizeof(DestructContext));
+    uint32_t *frame_id;
+    uint64_t *start;
 
     if (!buffer || buffer->status != ARV_BUFFER_STATUS_SUCCESS)
         return AVERROR(EAGAIN);
@@ -124,6 +175,17 @@ static int aravis_read_packet(AVFormatContext *s, AVPacket *pkt)
     pkt->size = buffer->size;
     pkt->pts  = buffer->timestamp_ns;
     pkt->destruct = aravis_free_buffer;
+
+    frame_id = av_packet_new_side_data(pkt, 0, sizeof(uint32_t));
+
+    *frame_id = buffer->frame_id;
+
+    start = av_packet_new_side_data(pkt, 1, sizeof(uint64_t));
+
+    *start = c->start;
+
+    av_log(NULL, AV_LOG_INFO, "Got frame %d - %"PRId64"\n",
+           buffer->frame_id, av_gettime() - c->start);
 
     des->buffer = buffer;
     des->stream = c->stream;
