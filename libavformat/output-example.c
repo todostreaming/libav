@@ -114,8 +114,9 @@ static void open_audio(AVFormatContext *oc, AVStream *st)
         audio_input_frame_size = 10000;
     else
         audio_input_frame_size = c->frame_size;
-    samples = av_malloc(audio_input_frame_size * av_get_bytes_per_sample(c->sample_fmt)
-                        * c->channels);
+    samples = av_malloc(audio_input_frame_size *
+                        av_get_bytes_per_sample(c->sample_fmt) *
+                        c->channels);
 }
 
 /* prepare a 16 bit dummy audio frame of 'frame_size' samples and
@@ -147,8 +148,10 @@ static void write_audio_frame(AVFormatContext *oc, AVStream *st)
 
     get_audio_frame(samples, audio_input_frame_size, c->channels);
     frame->nb_samples = audio_input_frame_size;
-    avcodec_fill_audio_frame(frame, c->channels, c->sample_fmt, (uint8_t *)samples,
-                             audio_input_frame_size * av_get_bytes_per_sample(c->sample_fmt)
+    avcodec_fill_audio_frame(frame, c->channels,
+                             c->sample_fmt, (uint8_t *)samples,
+                             audio_input_frame_size *
+                             av_get_bytes_per_sample(c->sample_fmt)
                              * c->channels, 1);
 
     avcodec_encode_audio2(c, &pkt, frame, &got_packet);
@@ -345,8 +348,11 @@ static void write_video_frame(AVFormatContext *oc, AVStream *st)
                 }
             }
             fill_yuv_image(tmp_picture, frame_count, c->width, c->height);
-            sws_scale(img_convert_ctx, tmp_picture->data, tmp_picture->linesize,
-                      0, c->height, picture->data, picture->linesize);
+
+            sws_scale(img_convert_ctx,
+                      tmp_picture->data, tmp_picture->linesize,
+                      0, c->height,
+                      picture->data, picture->linesize);
         } else {
             fill_yuv_image(picture, frame_count, c->width, c->height);
         }
@@ -374,7 +380,8 @@ static void write_video_frame(AVFormatContext *oc, AVStream *st)
             av_init_packet(&pkt);
 
             if (c->coded_frame->pts != AV_NOPTS_VALUE)
-                pkt.pts= av_rescale_q(c->coded_frame->pts, c->time_base, st->time_base);
+                pkt.pts = av_rescale_q(c->coded_frame->pts,
+                                       c->time_base, st->time_base);
             if(c->coded_frame->key_frame)
                 pkt.flags |= AV_PKT_FLAG_KEY;
             pkt.stream_index= st->index;
@@ -487,12 +494,14 @@ int main(int argc, char **argv)
     for(;;) {
         /* compute current audio and video time */
         if (audio_st)
-            audio_pts = (double)audio_st->pts.val * audio_st->time_base.num / audio_st->time_base.den;
+            audio_pts = (double)audio_st->pts.val *
+                        audio_st->time_base.num / audio_st->time_base.den;
         else
             audio_pts = 0.0;
 
         if (video_st)
-            video_pts = (double)video_st->pts.val * video_st->time_base.num / video_st->time_base.den;
+            video_pts = (double)video_st->pts.val *
+                        video_st->time_base.num / video_st->time_base.den;
         else
             video_pts = 0.0;
 
