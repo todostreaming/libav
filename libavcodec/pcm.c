@@ -479,6 +479,9 @@ static int pcm_decode_frame(AVCodecContext *avctx, void *data,
 
 #if CONFIG_ENCODERS
 #define PCM_ENCODER(id_, sample_fmt_, name_, long_name_)                    \
+static const enum AVSampleFormat name_ ## _encoder_sample_fmts[] = {        \
+    sample_fmt_, AV_SAMPLE_FMT_NONE,                                        \
+};                                                                          \
 AVCodec ff_ ## name_ ## _encoder = {                                        \
     .name         = #name_,                                                 \
     .type         = AVMEDIA_TYPE_AUDIO,                                     \
@@ -487,8 +490,7 @@ AVCodec ff_ ## name_ ## _encoder = {                                        \
     .encode2      = pcm_encode_frame,                                       \
     .close        = pcm_encode_close,                                       \
     .capabilities = CODEC_CAP_VARIABLE_FRAME_SIZE,                          \
-    .sample_fmts  = (const enum AVSampleFormat[]){ sample_fmt_,             \
-                                                   AV_SAMPLE_FMT_NONE },    \
+	.sample_fmts  = name_ ## _encoder_sample_fmts,                          \
     .long_name    = NULL_IF_CONFIG_SMALL(long_name_),                       \
 }
 #else
@@ -497,6 +499,9 @@ AVCodec ff_ ## name_ ## _encoder = {                                        \
 
 #if CONFIG_DECODERS
 #define PCM_DECODER(id_, sample_fmt_, name_, long_name_)                    \
+static const enum AVSampleFormat name_ ## _decoder_sample_fmts[] = {        \
+    sample_fmt_, AV_SAMPLE_FMT_NONE                                         \
+};                                                                          \
 AVCodec ff_ ## name_ ## _decoder = {                                        \
     .name           = #name_,                                               \
     .type           = AVMEDIA_TYPE_AUDIO,                                   \
@@ -505,8 +510,7 @@ AVCodec ff_ ## name_ ## _decoder = {                                        \
     .init           = pcm_decode_init,                                      \
     .decode         = pcm_decode_frame,                                     \
     .capabilities   = CODEC_CAP_DR1,                                        \
-    .sample_fmts    = (const enum AVSampleFormat[]){ sample_fmt_,           \
-                                                     AV_SAMPLE_FMT_NONE },  \
+	.sample_fmts    = name_ ## _decoder_sample_fmts,                        \
     .long_name      = NULL_IF_CONFIG_SMALL(long_name_),                     \
 }
 #else

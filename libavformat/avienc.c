@@ -333,9 +333,11 @@ static int avi_write_header(AVFormatContext *s)
            && s->streams[i]->sample_aspect_ratio.num>0
            && s->streams[i]->sample_aspect_ratio.den>0){
             int vprp= ff_start_tag(pb, "vprp");
-            AVRational dar = av_mul_q(s->streams[i]->sample_aspect_ratio,
-                                      (AVRational){stream->width, stream->height});
+            AVRational dar;
             int num, den;
+
+            dar = av_mul_q(s->streams[i]->sample_aspect_ratio,
+                           (AVRational){stream->width, stream->height});
             av_reduce(&num, &den, dar.num, dar.den, 0xFFFF);
 
             avio_wl32(pb, 0); //video format  = unknown
@@ -645,11 +647,7 @@ AVOutputFormat ff_avi_muxer = {
     .mime_type         = "video/x-msvideo",
     .extensions        = "avi",
     .priv_data_size    = sizeof(AVIContext),
-#if CONFIG_LIBMP3LAME_ENCODER
-    .audio_codec       = CODEC_ID_MP3,
-#else
-    .audio_codec       = CODEC_ID_AC3,
-#endif
+	.audio_codec       = CONFIG_LIBMP3LAME_ENCODER ? CODEC_ID_MP3 : CODEC_ID_AC3,
     .video_codec       = CODEC_ID_MPEG4,
     .write_header      = avi_write_header,
     .write_packet      = avi_write_packet,

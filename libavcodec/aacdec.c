@@ -1257,9 +1257,10 @@ static inline float *VMUL4S(float *dst, const float *v, unsigned idx,
                             unsigned sign, const float *scale)
 {
     unsigned nz = idx >> 12;
-    union av_intfloat32 s = { .f = *scale };
+    union av_intfloat32 s;
     union av_intfloat32 t;
 
+    s.f = *scale;
     t.i = s.i ^ (sign & 1U<<31);
     *dst++ = v[idx    & 3] * t.f;
 

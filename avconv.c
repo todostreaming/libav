@@ -1813,9 +1813,10 @@ static int check_output_constraints(InputStream *ist, OutputStream *ost)
 static void do_streamcopy(InputStream *ist, OutputStream *ost, const AVPacket *pkt)
 {
     OutputFile *of = output_files[ost->file_index];
-    int64_t ost_tb_start_time = av_rescale_q(of->start_time, AV_TIME_BASE_Q, ost->st->time_base);
+    int64_t ost_tb_start_time;
     AVPacket opkt;
 
+    ost_tb_start_time = av_rescale_q(of->start_time, AV_TIME_BASE_Q, ost->st->time_base);
     av_init_packet(&opkt);
 
     if ((!ost->frame_number && !(pkt->flags & AV_PKT_FLAG_KEY)) &&
@@ -2479,11 +2480,13 @@ static int transcode_init(void)
                 codec->height             = icodec->height;
                 codec->has_b_frames       = icodec->has_b_frames;
                 if (!codec->sample_aspect_ratio.num) {
-                    codec->sample_aspect_ratio   =
-                    ost->st->sample_aspect_ratio =
-                        ist->st->sample_aspect_ratio.num ? ist->st->sample_aspect_ratio :
-                        ist->st->codec->sample_aspect_ratio.num ?
-                        ist->st->codec->sample_aspect_ratio : (AVRational){0, 1};
+                    if (ist->st->sample_aspect_ratio.num)
+                        codec->sample_aspect_ratio = ist->st->sample_aspect_ratio;
+					else if (ist->st->codec->sample_aspect_ratio.num)
+                        codec->sample_aspect_ratio = ist->st->codec->sample_aspect_ratio;
+					else
+						codec->sample_aspect_ratio = (AVRational) { 0, 1 };
+                    ost->st->sample_aspect_ratio = codec->sample_aspect_ratio;
                 }
                 break;
             case AVMEDIA_TYPE_SUBTITLE:
@@ -3046,8 +3049,10 @@ static int transcode(void)
         //        ist->st->codec->codec_type);
         if (pkt.dts != AV_NOPTS_VALUE && ist->next_dts != AV_NOPTS_VALUE
             && (is->iformat->flags & AVFMT_TS_DISCONT)) {
-            int64_t pkt_dts = av_rescale_q(pkt.dts, ist->st->time_base, AV_TIME_BASE_Q);
-            int64_t delta   = pkt_dts - ist->next_dts;
+            int64_t pkt_dts, delta;
+
+            pkt_dts = av_rescale_q(pkt.dts, ist->st->time_base, AV_TIME_BASE_Q);
+            delta   = pkt_dts - ist->next_dts;
             if ((FFABS(delta) > 1LL * dts_delta_threshold * AV_TIME_BASE || pkt_dts + 1 < ist->last_dts) && !copy_ts) {
                 input_files[ist->file_index]->ts_offset -= delta;
                 av_log(NULL, AV_LOG_DEBUG,
@@ -4088,11 +4093,12 @@ static int copy_chapters(InputFile *ifile, OutputFile *ofile, int copy_metadata)
 
     for (i = 0; i < is->nb_chapters; i++) {
         AVChapter *in_ch = is->chapters[i], *out_ch;
-        int64_t ts_off   = av_rescale_q(ofile->start_time - ifile->ts_offset,
-                                       AV_TIME_BASE_Q, in_ch->time_base);
-        int64_t rt       = (ofile->recording_time == INT64_MAX) ? INT64_MAX :
-                           av_rescale_q(ofile->recording_time, AV_TIME_BASE_Q, in_ch->time_base);
+        int64_t ts_off, rt;
 
+        ts_off   = av_rescale_q(ofile->start_time - ifile->ts_offset,
+                                AV_TIME_BASE_Q, in_ch->time_base);
+        rt       = (ofile->recording_time == INT64_MAX) ? INT64_MAX :
+                    av_rescale_q(ofile->recording_time, AV_TIME_BASE_Q, in_ch->time_base);
 
         if (in_ch->end < ts_off)
             continue;
