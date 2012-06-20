@@ -7,9 +7,9 @@ fi
 
 echo "Converting ${file}"
 if test `basename $file` = vorbisenc.c; then
-    ~/test ${file} 20 2>/dev/null | sed -e "s/\r\n/\n/" > ${file}.2
+    ./test ${file} 20 2>/dev/null | sed -e "s/\r\n/\n/" > ${file}.2
 else
-	~/test ${file} 2>/dev/null | sed -e "s/\r\n/\n/" > ${file}.2
+	./test ${file} 2>/dev/null | sed -e "s/\r\n/\n/" > ${file}.2
 fi
 diff -u ${file} ${file}.2
 
