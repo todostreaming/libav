@@ -59,7 +59,7 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#define LINELEN 256
+#define LINELEN 350
 #define N_LINES 11000 /* for twinvq_data.h; was 1024 */
 #define S_ENTRIES 150 /* for id3v1 array */
 #define TVALLEN (LINELEN * LINELEN)
