@@ -2362,6 +2362,10 @@ static void replace_compound_initializer(struct state *s)
         int endpos, n_cnt = s->named_initializer_cache.n_contents, n, varlen[4], m;
         const struct s_layout *str =
             find_struct(strncmp(cast_name, "struct ", 7) ? cast_name : cast_name + 7);
+        if (!str) {
+            fprintf(stderr, "Unable to find matching struct for \"%s\"\n", cast_name);
+            exit(1);
+        }
 
         if (s->parent->parent->parent->named_initializer_cache.qmark.lnum != -1) {
             if (s->parent->parent->parent->named_initializer_cache.colon.lnum == -1) {
