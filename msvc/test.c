@@ -106,6 +106,7 @@ enum {
     STRUCT_AVINPUTFORMAT,
     STRUCT_AVOUTPUTFORMAT,
     STRUCT_AVPROBEDATA,
+    STRUCT_PROBEELEMENT,
     STRUCT_URLPROTOCOL,
     STRUCT_EBMLSYNTAX,
     STRUCT_EBMLSYNTAX_DEFAULTVAL,
@@ -1110,6 +1111,20 @@ static const struct s_layout known_structs[N_STRUCTS] = {
 		.contents = {
 			{
 				.tag = "off",
+			},
+		},
+	}, [STRUCT_PROBEELEMENT] = {
+		.name = "ProbeElement",
+		.n_contents = 4,
+		.contents = {
+			{
+				.tag = "name",
+			}, {
+				.tag = "type",
+			}, {
+				.tag = "index",
+			}, {
+				.tag = "nb_elems",
 			},
 		},
 	},
