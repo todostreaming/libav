@@ -178,30 +178,37 @@ const uint8_t *ff_h264_decode_nal(H264Context *h, const uint8_t *src,
 #if HAVE_FAST_UNALIGNED
 #if HAVE_FAST_64BIT
 #define RS 7
-    for (i = 0; i + 1 < length; i += 9) {
-        if (!((~AV_RN64A(src + i) &
-               (AV_RN64A(src + i) - 0x0100010001000101ULL)) &
+#define INC 9
+#define MASKCHECK \
+        if (!((~AV_RN64A(src + i) & \
+               (AV_RN64A(src + i) - 0x0100010001000101ULL)) & \
               0x8000800080008080ULL))
 #else
 #define RS 3
-    for (i = 0; i + 1 < length; i += 5) {
-        if (!((~AV_RN32A(src + i) &
-               (AV_RN32A(src + i) - 0x01000101U)) &
+#define INC 5
+#define MASKCHECK \
+        if (!((~AV_RN32A(src + i) & \
+               (AV_RN32A(src + i) - 0x01000101U)) & \
               0x80008080U))
 #endif
-            continue;
-        if (i > 0 && !src[i])
-            i--;
-        while (src[i])
-            i++;
+#define LOOPCHECK \
+        MASKCHECK \
+            continue; \
+        if (i > 0 && !src[i]) \
+            i--; \
+        while (src[i]) \
+            i++
 #else
 #define RS 0
-    for (i = 0; i + 1 < length; i += 2) {
-        if (src[i])
-            continue;
-        if (i > 0 && src[i - 1] == 0)
-            i--;
+#define INC 2
+#define LOOPCHECK \
+        if (src[i]) \
+            continue; \
+        if (i > 0 && src[i - 1] == 0) \
+            i--
 #endif
+	for (i = 0; i + 1 < length; i += INC) {
+        LOOPCHECK;
         if (i + 2 < length && src[i + 1] == 0 && src[i + 2] <= 3) {
             if (src[i + 2] != 3) {
                 /* startcode, so we must be past the end */
