@@ -359,6 +359,7 @@ static void show_format_entry_string(const char *key, const char *value)
 static void probe_group_enter(const char *name, int type)
 {
     int64_t count = -1;
+    ProbeElement element = { name, type };
 
     octx.prefix =
         av_realloc(octx.prefix, sizeof(ProbeElement) * (octx.level + 1));
@@ -375,7 +376,8 @@ static void probe_group_enter(const char *name, int type)
         parent->nb_elems++;
     }
 
-    octx.prefix[octx.level++] = (ProbeElement){name, type, count, 0};
+    element.index = count;
+    octx.prefix[octx.level++] = element;
 }
 
 static void probe_group_leave(void)
