@@ -431,20 +431,6 @@ int ff_h264_decode_seq_parameter_set(H264Context *h){
         sps->sar.den= 1;
 
     if(s->avctx->debug&FF_DEBUG_PICT_INFO){
-        av_log(h->s.avctx, AV_LOG_DEBUG, "sps:%u profile:%d/%d poc:%d ref:%d %dx%d %s %s crop:%d/%d/%d/%d %s %s %d/%d\n",
-               sps_id, sps->profile_idc, sps->level_idc,
-               sps->poc_type,
-               sps->ref_frame_count,
-               sps->mb_width, sps->mb_height,
-               sps->frame_mbs_only_flag ? "FRM" : (sps->mb_aff ? "MB-AFF" : "PIC-AFF"),
-               sps->direct_8x8_inference_flag ? "8B8" : "",
-               sps->crop_left, sps->crop_right,
-               sps->crop_top, sps->crop_bottom,
-               sps->vui_parameters_present_flag ? "VUI" : "",
-               ((const char*[]){"Gray","420","422","444"})[sps->chroma_format_idc],
-               sps->timing_info_present_flag ? sps->num_units_in_tick : 0,
-               sps->timing_info_present_flag ? sps->time_scale : 0
-               );
     }
 
     av_free(h->sps_buffers[sps_id]);
@@ -566,18 +552,6 @@ int ff_h264_decode_picture_parameter_set(H264Context *h, int bit_length){
         pps->chroma_qp_diff= 1;
 
     if(s->avctx->debug&FF_DEBUG_PICT_INFO){
-        av_log(h->s.avctx, AV_LOG_DEBUG, "pps:%u sps:%u %s slice_groups:%d ref:%d/%d %s qp:%d/%d/%d/%d %s %s %s %s\n",
-               pps_id, pps->sps_id,
-               pps->cabac ? "CABAC" : "CAVLC",
-               pps->slice_group_count,
-               pps->ref_count[0], pps->ref_count[1],
-               pps->weighted_pred ? "weighted" : "",
-               pps->init_qp, pps->init_qs, pps->chroma_qp_index_offset[0], pps->chroma_qp_index_offset[1],
-               pps->deblocking_filter_parameters_present ? "LPAR" : "",
-               pps->constrained_intra_pred ? "CONSTR" : "",
-               pps->redundant_pic_cnt_present ? "REDU" : "",
-               pps->transform_8x8_mode ? "8x8DCT" : ""
-               );
     }
 
     av_free(h->pps_buffers[pps_id]);
