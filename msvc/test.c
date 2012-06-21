@@ -494,6 +494,8 @@ static const struct s_layout known_structs[N_STRUCTS] = {
             }, {
                 .tag = "url_get_file_handle",
             }, {
+                .tag = "url_shutdown",
+            }, {
                 .tag = "priv_data_size",
             }, {
                 .tag = "priv_data_class",
