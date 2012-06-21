@@ -68,7 +68,12 @@ typedef const struct EbmlSyntax {
     EbmlType type;
     int list_elem_size;
     int data_offset;
-    union {
+#if 1
+    struct
+#else
+    union
+#endif
+    {
         uint64_t    u;
         double      f;
         const char *s;

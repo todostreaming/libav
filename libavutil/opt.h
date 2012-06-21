@@ -260,7 +260,12 @@ typedef struct AVOption {
     /**
      * the default value for scalar options
      */
-    union {
+#if 1
+	struct // this way, we can initialize proper members
+#else
+    union
+#endif
+	{
         double dbl;
         const char *str;
         /* TODO those are unused now */
