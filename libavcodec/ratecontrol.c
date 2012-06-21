@@ -25,6 +25,7 @@
  * Rate control for video encoders.
  */
 
+#include "libavutil/avstring.h"
 #include "libavutil/intmath.h"
 #include "avcodec.h"
 #include "dsputil.h"

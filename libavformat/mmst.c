@@ -32,6 +32,7 @@
 #include "mms.h"
 #include "internal.h"
 #include "avio_internal.h"
+#include "libavutil/avstring.h"
 #include "libavutil/intreadwrite.h"
 #include "libavcodec/bytestream.h"
 #include "network.h"

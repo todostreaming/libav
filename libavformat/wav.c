@@ -24,6 +24,7 @@
  */
 
 #include "libavutil/avassert.h"
+#include "libavutil/avstring.h"
 #include "libavutil/dict.h"
 #include "libavutil/log.h"
 #include "libavutil/mathematics.h"

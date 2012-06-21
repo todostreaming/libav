@@ -23,6 +23,7 @@
  * audio and video splitter
  */
 
+#include "libavutil/avstring.h"
 #include "avfilter.h"
 #include "audio.h"
 #include "internal.h"

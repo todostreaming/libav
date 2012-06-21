@@ -27,6 +27,7 @@
 
 #include "libavutil/audioconvert.h"
 #include "libavutil/avassert.h"
+#include "libavutil/avstring.h"
 #include "libavutil/opt.h"
 
 #include "audio.h"

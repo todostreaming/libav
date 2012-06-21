@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "avstring.h"
 #include "pixfmt.h"
 #include "pixdesc.h"
 

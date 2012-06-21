@@ -33,6 +33,7 @@
 #include "golomb.h"
 #include "mathops.h"
 #include "libavutil/avassert.h"
+#include "libavutil/avstring.h"
 
 #define MAX_PLANES 4
 #define CONTEXT_SIZE 32

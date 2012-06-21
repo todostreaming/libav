@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avformat.h"
+#include "libavutil/avstring.h"
 #include "libavutil/parseutils.h"
 #include "internal.h"
 #include "network.h"

@@ -28,6 +28,7 @@
  * huffyuv codec for libavcodec.
  */
 
+#include "libavutil/avstring.h"
 #include "avcodec.h"
 #include "get_bits.h"
 #include "put_bits.h"

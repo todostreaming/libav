@@ -17,6 +17,7 @@
  */
 
 #include "samplefmt.h"
+#include "avstring.h"
 
 #include <stdio.h>
 #include <stdlib.h>
