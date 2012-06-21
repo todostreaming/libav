@@ -6,7 +6,11 @@ if test x$file = x; then
 fi
 
 echo "Converting ${file}"
-~/test ${file} 2>/dev/null | sed -e "s/\r\n/\n/" > ${file}.2
+if test `basename $file` = vorbisenc.c; then
+    ~/test ${file} 20 2>/dev/null | sed -e "s/\r\n/\n/" > ${file}.2
+else
+	~/test ${file} 2>/dev/null | sed -e "s/\r\n/\n/" > ${file}.2
+fi
 diff -u ${file} ${file}.2
 
 if test x$2 != x1; then
