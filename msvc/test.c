@@ -2263,11 +2263,6 @@ static void backup_multi_line(struct state *s, char *val, int size,
     int l, p;
     char *end = val + size;
 
-    if (from->lnum > to->lnum || (from->lnum == to->lnum && from->pos > to->pos))
-        abort();
-    if (from->lnum < 0 || to->lnum < 0 || from->pos < 0 || to->pos < 0)
-        abort();
-
     for (l = from->lnum, p = from->pos; l <= to->lnum; l++, p = 0) {
         int len = l == to->lnum ? to->pos - p : strlen(s->line[l] + p);
 
@@ -2579,8 +2574,8 @@ static void replace_compound_initializer(struct state *s)
         // this is changed to:
         // { int tmp__X[2] = { a + 1, b - 1 }; x = function(tmp__X); }
         } else if (p->parent->named_initializer_cache.nvp[0].equals.lnum != -1) {
-            char lineend[LINELEN], linestart[10*LINELEN], tmpname[LINELEN], *ptr, val[TVALLEN], *ptr2, *ptr3;
-            char bak[LINELEN], var[LINELEN], bait[10 * LINELEN];
+                       char lineend[LINELEN], linestart[LINELEN], tmpname[LINELEN], *ptr, val[LINELEN*10], *ptr2, *ptr3;
+            char bak[LINELEN], var[LINELEN];
             struct lnum_pos_pair cb, *ob, cp, ls;
             int len, pos, padding;
             char *array_start;
@@ -2625,7 +2620,6 @@ static void replace_compound_initializer(struct state *s)
             // xyz = function((var){val});
             // in the above, find the position of 'xyz'
             ls = p->parent->named_initializer_cache.nvp[0].equals;
-			backup_multi_line(s, bait, sizeof(bait), &ls, &p->named_initializer_cache.obracket);
             ls.pos--;
             ptr = s->line[ls.lnum] + ls.pos;
             // 'ls' is now the position of 'z' in the expression above
@@ -2664,27 +2658,9 @@ static void replace_compound_initializer(struct state *s)
             backup_multi_line(s, linestart, sizeof(linestart), &ls,
                               &s->parent->parent->named_initializer_cache.obracket);
 
-            ptr3 = strstr(linestart, bait);
+            ptr3 = strchr(linestart, '=');
             while (ptr3 > linestart && (isspace(ptr3[-1]) || ismathsymbol(ptr3[-1]))) ptr3--;
-			ptr2 = linestart;
-			do {
-				char *ptr4 = strchr(ptr2, ' ');
-				if (!ptr4) {
-					ptr2 = NULL;
-					break;
-				}
-				while (ptr4 < ptr3 && isspace(*ptr4))
-					ptr4++;
-				if (ismathsymbol(*ptr4)) {
-					while (ptr4 < ptr3 && (isspace(*ptr4) || ismathsymbol(*ptr4)))
-						ptr4++;
-					ptr2 = ptr4;
-				} else {
-					ptr2 = ptr4;
-					break;
-				}
-			} while (1);
-            if (ptr2 && ptr2 < ptr3) {
+            if ((ptr2 = strchr(linestart, ' ')) < ptr3) {
                 /* if it's in the form 'type var = function(..)', make sure to declare
                  * the variable 'type var' outside the scope of the brackets, i.e.:
                  * 'type var; { ...; var = function(..); }'. */
@@ -2716,8 +2692,6 @@ static void replace_compound_initializer(struct state *s)
             copy_multi_line(s, &ls, " = ");
             copy_multi_line(s, &ls, val);
             copy_multi_line(s, &ls, "; ");
-			p->parent->named_initializer_cache.nvp[0].equals.lnum = ls.lnum;
-			p->named_initializer_cache.obracket.lnum = ls.lnum;
             copy_multi_line(s, &ls, linestart);
             copy_multi_line(s, &ls, tmpname);
             copy_multi_line(s, &ls, lineend);
@@ -2727,21 +2701,8 @@ static void replace_compound_initializer(struct state *s)
             // here since it will mess up the parent parsing state.
             s->cur += strlen(s->line[s->lnum]) - padding;
             ptr3 = s->line[p->parent->named_initializer_cache.nvp[0].equals.lnum];
-			if ((ptr2 = strchr(bait, '\n'))) {
-				*ptr2 = 0;
-				ptr = strstr(ptr3, bait);
+            ptr2 = strrchr(ptr3, '=');
 	            p->parent->named_initializer_cache.nvp[0].equals.pos = (int) (ptr2 - ptr3);
-				*ptr2 = '\n';
-				fprintf(stderr, "FIXME\n");
-				// traverse bait from equals until obracket (i.e. end of bait)
-			} else {
-	            ptr2 = strstr(ptr3, bait);
-				if (!ptr2) abort();
-	            p->parent->named_initializer_cache.nvp[0].equals.pos = (int) (ptr2 - ptr3);
-				p->named_initializer_cache.obracket.lnum = p->parent->named_initializer_cache.nvp[0].equals.lnum;
-				p->named_initializer_cache.obracket.pos  = p->parent->named_initializer_cache.nvp[0].equals.pos + strlen(bait);
-			}
-			//p->named_initializer_cache.obracket.pos = p->parent->named_initializer_cache.nvp[0].equals.pos + strlen(bait);
             p->parent->named_initializer_cache.add_closing_bracket++;
 
             // and function((int[2]) { a + 2, b - 1 });
