@@ -2139,6 +2139,36 @@ elif $cc -V 2>&1 | grep -q Portland; then
             esac
         done
     }
+elif $cc 2>&1 | grep -q Microsoft; then
+    cc_type=msvc
+    cc_version='AV_STRINGIFY(_MSC_FULL_VER._MSC_BUILD)'
+    cc_ident=$($cc 2>&1 | head -n1)
+    DEPEND_CMD='$(DEPCC) $(DEPFLAGS) $< 2>&1 | grep including | cut -d: -f3- | sed -e "s/^ *//" -e "s/ /\\\\ /g" -e "s/$$/ \\\\/" -e "1i $(@D)/$(*F).o: \\\\" -e "\$$a\\\\n" > $(@:.o=.d)'
+    DEPFLAGS='$(CPPFLAGS) $(CFLAGS) -showIncludes -nologo -Zs'
+    speed_cflags="-O2"
+    size_cflags="-O1"
+    CC_O='-Fo$$(cmd //c echo $@)'
+    LD_LPRE=''
+    LD_LPOST='.lib'
+    filter_cflags=msvc_flags
+    msvc_flags(){
+        for flag; do
+            case $flag in
+                -fomit-frame-pointer) echo -Oy ;;
+                -g)                   echo -Z7 ;;
+                -Wall)                echo -W4 -wd4244 -wd4127 -wd4018 -wd4389 -wd4146 -wd4057 -wd4204 -wd4706 -wd4305 -wd4152 -wd4324 -we4013 ;;
+                -std=c99)             ;;
+                -fno-math-errno)      ;;
+                -fno-common)          ;;
+                -fno-signed-zeros)    ;;
+                *)                    echo $flag ;;
+            esac
+        done
+    }
+    add_cflags -nologo
+    add_cppflags -D_USE_MATH_DEFINES
+    add_cppflags -Dinline=__inline
+    add_ldflags -nologo
 fi
 
 test -n "$cc_type" && enable $cc_type ||
