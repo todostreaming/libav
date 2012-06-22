@@ -125,7 +125,7 @@ avplay$(EXESUF): FF_EXTRALIBS += $(SDL_LIBS)
 avserver$(EXESUF): LDFLAGS += $(AVSERVERLDFLAGS)
 
 $(PROGS): %$(EXESUF): %.o cmdutils.o $(FF_DEP_LIBS)
-	$(LD) $(LDFLAGS) -o $@ $< cmdutils.o $(FF_EXTRALIBS)
+	link $(LDFLAGS) -out:$@ $< cmdutils.o $(FF_EXTRALIBS)
 
 OBJDIRS += tools
 
