@@ -11,7 +11,7 @@ OBJS      += $(OBJS-yes)
 FFLIBS    := $(FFLIBS-yes) $(FFLIBS)
 TESTPROGS += $(TESTPROGS-yes)
 
-FFEXTRALIBS := $(FFLIBS:%=-l%$(BUILDSUF)) $(EXTRALIBS)
+FFEXTRALIBS := $(FFLIBS:%=lib%.a$(BUILDSUF)) $(EXTRALIBS)
 
 EXAMPLES  := $(EXAMPLES:%=$(SUBDIR)%-example$(EXESUF))
 OBJS      := $(sort $(OBJS:%=$(SUBDIR)%))
@@ -36,7 +36,7 @@ $(HOSTOBJS): %.o: %.c
 	$(HOSTCC) $(HOSTCFLAGS) -c $(CC_O) $<
 
 $(HOSTPROGS): %$(HOSTEXESUF): %.o
-	$(HOSTCC) $(HOSTLDFLAGS) -o $@ $< $(HOSTLIBS)
+	$(HOSTCC) -o $@ $< $(HOSTLIBS) $(HOSTLDFLAGS)
 
 $(OBJS):     | $(sort $(dir $(OBJS)))
 $(HOSTOBJS): | $(sort $(dir $(HOSTOBJS)))

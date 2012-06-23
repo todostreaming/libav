@@ -28,7 +28,7 @@ CFLAGS     += $(ECFLAGS)
 CCFLAGS     = $(CFLAGS)
 YASMFLAGS  += $(IFLAGS) -I$(SRC_PATH)/libavutil/x86/ -Pconfig.asm
 HOSTCFLAGS += $(IFLAGS)
-LDFLAGS    := $(ALLFFLIBS:%=-Llib%) $(LDFLAGS)
+LDFLAGS    := -link $(ALLFFLIBS:%=-libpath:lib%) $(LDFLAGS)
 
 define COMPILE
 	$($(1)DEP)
