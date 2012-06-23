@@ -30,6 +30,7 @@
 #include "eval.h"
 #include "log.h"
 #include "mathematics.h"
+#include "avstring.h"
 
 typedef struct Parser {
     const AVClass *class;
@@ -77,6 +78,40 @@ double av_strtod(const char *numstr, char **tail)
 {
     double d;
     char *next;
+#ifdef _MSC_VER
+    /* MSVC does not support hexadecimal input, nor does it understand
+     * strings such as inf[inity] or nan. Support them manually. */
+    if (!av_strncasecmp(numstr, "inf", 3)) {
+        d = INFINITY;
+        next = numstr + 3;
+    } else if (!av_strncasecmp(numstr, "infinity", 8)) {
+        d = INFINITY;
+        next = numstr + 8;
+    } else if (!av_strncasecmp(numstr, "+inf", 4)) {
+        d = INFINITY;
+        next = numstr + 4;
+    } else if (!av_strncasecmp(numstr, "+infinity", 4)) {
+        d = INFINITY;
+        next = numstr + 9;
+    } else if (!av_strncasecmp(numstr, "-inf", 4)) {
+        d = -INFINITY;
+        next = numstr + 4;
+    } else if (!av_strncasecmp(numstr, "-infinity", 9)) {
+        d = -INFINITY;
+        next = numstr + 9;
+    } else if (!av_strncasecmp(numstr, "nan", 3)) {
+        d = NAN;
+        next = numstr + 3;
+    } else if (!av_strncasecmp(numstr, "+nan", 4) ||
+               !av_strncasecmp(numstr, "-nan", 4)) {
+        d = NAN;
+        next = numstr + 4;
+    } else if (!av_strncasecmp(numstr, "0x", 2) ||
+               !av_strncasecmp(numstr, "-0x", 3) ||
+               !av_strncasecmp(numstr, "+0x", 3)) {
+        d = strtol(numstr, &next, 16);
+    } else
+#endif
     d = strtod(numstr, &next);
     /* if parsing succeeded, check for and interpret postfixes */
     if (next!=numstr) {
