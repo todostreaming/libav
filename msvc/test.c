@@ -302,7 +302,7 @@ static const struct s_layout known_structs[N_STRUCTS] = {
         },
     }, [STRUCT_AVFILTERPAD] = {
         .name = "AVFilterPad",
-        .n_contents = 13,
+        .n_contents = 14,
         .contents = {
             {
                 .tag = "name",
@@ -330,6 +330,8 @@ static const struct s_layout known_structs[N_STRUCTS] = {
                 .tag = "request_frame",
             }, {
                 .tag = "config_props",
+            }, {
+                .tag = "needs_fifo",
             },
         },
     }, [STRUCT_AVOPTION] = {
