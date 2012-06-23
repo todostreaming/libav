@@ -35,7 +35,7 @@ install-libs-$(CONFIG_SHARED): install-lib$(NAME)-shared
 
 define RULES
 $(EXAMPLES) $(TESTPROGS) $(TOOLS): %$(EXESUF): %.o
-	$$(LD) $(LDFLAGS) -o $$@ $$^ -l$(FULLNAME) $(FFEXTRALIBS) $$(ELIBS)
+	$$(LD) -o $$@ $$^ -l$(FULLNAME) $(LDFLAGS) $(FFEXTRALIBS) $$(ELIBS)
 
 $(SUBDIR)$(SLIBNAME): $(SUBDIR)$(SLIBNAME_WITH_MAJOR)
 	$(Q)cd ./$(SUBDIR) && $(LN_S) $(SLIBNAME_WITH_MAJOR) $(SLIBNAME)
