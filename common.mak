@@ -33,7 +33,7 @@ checkheaders: $(filter-out $(SKIPHEADERS:.h=.ho),$(ALLHEADERS:.h=.ho))
 alltools: $(TOOLS)
 
 $(HOSTOBJS): %.o: %.c
-	$(HOSTCC) $(HOSTCFLAGS) -c -o $@ $<
+	$(HOSTCC) $(HOSTCFLAGS) -c $(CC_O) $<
 
 $(HOSTPROGS): %$(HOSTEXESUF): %.o
 	$(HOSTCC) $(HOSTLDFLAGS) -o $@ $< $(HOSTLIBS)
