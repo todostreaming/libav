@@ -24,6 +24,8 @@
 /***********************************/
 /* motion compensation */
 
+#if HAVE_INLINE_ASM
+
 #define QPEL_H264V_MM(A,B,C,D,E,F,OP,T,Z,d,q)\
         "mov"#q" "#C", "#T"         \n\t"\
         "mov"#d" (%0), "#F"         \n\t"\
@@ -1191,6 +1193,7 @@ H264_MC_816(H264_MC_H, ssse3)
 H264_MC_816(H264_MC_HV, ssse3)
 #endif
 
+#endif /* HAVE_INLINE_ASM */
 
 
 //10bit

@@ -23,6 +23,8 @@
 #include "libavcodec/dsputil.h"
 #include "fft.h"
 
+#if HAVE_INLINE_ASM
+
 DECLARE_ALIGNED(8, static const unsigned int, m1m1)[2] = { 1U<<31, 1U<<31 };
 
 #ifdef EMULATE_3DNOWEXT
@@ -171,3 +173,5 @@ void ff_imdct_calc_3dnow2(FFTContext *s, FFTSample *output, const FFTSample *inp
     );
     __asm__ volatile("femms");
 }
+
+#endif /* HAVE_INLINE_ASM */

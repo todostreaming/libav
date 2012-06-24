@@ -29,6 +29,7 @@
 #include "libavcodec/mathops.h"
 #include "dsputil_mmx.h"
 
+#if HAVE_INLINE_ASM
 
 static void get_pixels_mmx(DCTELEM *block, const uint8_t *pixels, int line_size)
 {
@@ -323,7 +324,11 @@ static int sse16_mmx(void *v, uint8_t * pix1, uint8_t * pix2, int line_size, int
     return tmp;
 }
 
+#endif /* HAVE_INLINE_ASM */
+
 int ff_sse16_sse2(void *v, uint8_t * pix1, uint8_t * pix2, int line_size, int h);
+
+#if HAVE_INLINE_ASM
 
 static int hf_noise8_mmx(uint8_t * pix1, int line_size, int h) {
     int tmp;
@@ -925,6 +930,8 @@ static void sub_hfyu_median_prediction_mmx2(uint8_t *dst, const uint8_t *src1, c
     "paddusw "#t", "#a"               \n\t"\
     "movd "#a", "#dst"                \n\t"\
 
+#endif /* HAVE_INLINE_ASM */
+
 #define hadamard_func(cpu) \
 int ff_hadamard8_diff_##cpu  (void *s, uint8_t *src1, uint8_t *src2, \
                               int stride, int h); \
@@ -935,6 +942,8 @@ hadamard_func(mmx)
 hadamard_func(mmx2)
 hadamard_func(sse2)
 hadamard_func(ssse3)
+
+#if HAVE_INLINE_ASM
 
 #define DCT_SAD4(m,mm,o)\
     "mov"#m" "#o"+ 0(%1), "#mm"2      \n\t"\
@@ -1094,6 +1103,7 @@ static int ssd_int8_vs_int16_mmx(const int8_t *pix1, const int16_t *pix2, int si
 #undef PHADDD
 #endif //HAVE_SSSE3
 
+#endif /* HAVE_INLINE_ASM */
 
 void ff_dsputilenc_init_mmx(DSPContext* c, AVCodecContext *avctx)
 {
@@ -1101,6 +1111,7 @@ void ff_dsputilenc_init_mmx(DSPContext* c, AVCodecContext *avctx)
     int bit_depth = avctx->bits_per_raw_sample;
 
     if (mm_flags & AV_CPU_FLAG_MMX) {
+#if HAVE_INLINE_ASM
         const int dct_algo = avctx->dct_algo;
         if (avctx->bits_per_raw_sample <= 8 &&
             (dct_algo==FF_DCT_AUTO || dct_algo==FF_DCT_MMX)) {
@@ -1120,12 +1131,14 @@ void ff_dsputilenc_init_mmx(DSPContext* c, AVCodecContext *avctx)
 
         c->diff_bytes= diff_bytes_mmx;
         c->sum_abs_dctelem= sum_abs_dctelem_mmx;
+#endif /* HAVE_INLINE_ASM */
 
 #if HAVE_YASM
         c->hadamard8_diff[0]= ff_hadamard8_diff16_mmx;
         c->hadamard8_diff[1]= ff_hadamard8_diff_mmx;
 #endif
 
+#if HAVE_INLINE_ASM
         c->pix_norm1 = pix_norm1_mmx;
         c->sse[0] = sse16_mmx;
         c->sse[1] = sse8_mmx;
@@ -1143,13 +1156,14 @@ void ff_dsputilenc_init_mmx(DSPContext* c, AVCodecContext *avctx)
         c->add_8x8basis= add_8x8basis_mmx;
 
         c->ssd_int8_vs_int16 = ssd_int8_vs_int16_mmx;
-
+#endif /* HAVE_INLINE_ASM */
 
         if (mm_flags & AV_CPU_FLAG_MMX2) {
 #if HAVE_YASM
             c->hadamard8_diff[0]= ff_hadamard8_diff16_mmx2;
             c->hadamard8_diff[1]= ff_hadamard8_diff_mmx2;
 #endif
+#if HAVE_INLINE_ASM
             c->sum_abs_dctelem= sum_abs_dctelem_mmx2;
             c->vsad[4]= vsad_intra16_mmx2;
 
@@ -1158,12 +1172,15 @@ void ff_dsputilenc_init_mmx(DSPContext* c, AVCodecContext *avctx)
             }
 
             c->sub_hfyu_median_prediction= sub_hfyu_median_prediction_mmx2;
+#endif /* HAVE_INLINE_ASM */
         }
 
         if(mm_flags & AV_CPU_FLAG_SSE2){
+#if HAVE_INLINE_ASM
             if (bit_depth <= 8)
                 c->get_pixels = get_pixels_sse2;
             c->sum_abs_dctelem= sum_abs_dctelem_sse2;
+#endif /* HAVE_INLINE_ASM */
 #if HAVE_YASM
             c->sse[0] = ff_sse16_sse2;
 #if HAVE_ALIGNED_STACK
@@ -1175,11 +1192,13 @@ void ff_dsputilenc_init_mmx(DSPContext* c, AVCodecContext *avctx)
 
 #if HAVE_SSSE3
         if(mm_flags & AV_CPU_FLAG_SSSE3){
+#if HAVE_INLINE_ASM
             if(!(avctx->flags & CODEC_FLAG_BITEXACT)){
                 c->try_8x8basis= try_8x8basis_ssse3;
             }
             c->add_8x8basis= add_8x8basis_ssse3;
             c->sum_abs_dctelem= sum_abs_dctelem_ssse3;
+#endif /* HAVE_INLINE_ASM */
 #if HAVE_YASM && HAVE_ALIGNED_STACK
             c->hadamard8_diff[0]= ff_hadamard8_diff16_ssse3;
             c->hadamard8_diff[1]= ff_hadamard8_diff_ssse3;
@@ -1187,12 +1206,14 @@ void ff_dsputilenc_init_mmx(DSPContext* c, AVCodecContext *avctx)
         }
 #endif
 
+#if HAVE_INLINE_ASM
         if(mm_flags & AV_CPU_FLAG_3DNOW){
             if(!(avctx->flags & CODEC_FLAG_BITEXACT)){
                 c->try_8x8basis= try_8x8basis_3dnow;
             }
             c->add_8x8basis= add_8x8basis_3dnow;
         }
+#endif /* HAVE_INLINE_ASM */
     }
 
     ff_dsputil_init_pix_mmx(c, avctx);

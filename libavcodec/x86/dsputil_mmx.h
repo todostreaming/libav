@@ -66,6 +66,8 @@ extern const xmm_reg  ff_pb_FE;
 extern const double ff_pd_1[2];
 extern const double ff_pd_2[2];
 
+#if HAVE_INLINE_ASM
+
 #define SBUTTERFLY(a,b,t,n,m)\
     "mov" #m " " #a ", " #t "         \n\t" /* abcd */\
     "punpckl" #n " " #b ", " #a "     \n\t" /* aebf */\
@@ -81,6 +83,8 @@ extern const double ff_pd_2[2];
     __asm__ volatile ( \
     "pcmpeqd %%" #regd ", %%" #regd " \n\t" \
     "psrlw $15, %%" #regd ::)
+
+#endif /* HAVE_INLINE_ASM */
 
 void ff_dsputilenc_init_mmx(DSPContext* c, AVCodecContext *avctx);
 void ff_dsputil_init_pix_mmx(DSPContext* c, AVCodecContext *avctx);

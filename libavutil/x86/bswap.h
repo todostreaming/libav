@@ -26,6 +26,8 @@
 
 #include <stdint.h>
 #include "config.h"
+
+#if HAVE_INLINE_ASM
 #include "libavutil/attributes.h"
 
 #if HAVE_INLINE_ASM
@@ -56,6 +58,7 @@ static inline uint64_t av_const av_bswap64(uint64_t x)
 }
 #endif
 #endif /* !AV_GCC_VERSION_AT_LEAST(4,5) */
+#endif /* HAVE_INLINE_ASM */
 
 #endif /* HAVE_INLINE_ASM */
 #endif /* AVUTIL_X86_BSWAP_H */

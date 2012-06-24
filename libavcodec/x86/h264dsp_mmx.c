@@ -88,6 +88,8 @@ void ff_h264_luma_dc_dequant_idct_sse2(DCTELEM *output, DCTELEM *input, int qmul
 /***********************************/
 /* deblocking */
 
+#if HAVE_INLINE_ASM
+
 #define h264_loop_filter_strength_iteration_mmx2(bS, nz, ref, mv, bidir, edges, step, mask_mv, dir, d_idx, mask_dir) \
     do { \
         x86_reg b_idx; \
@@ -241,6 +243,8 @@ static void h264_loop_filter_strength_mmx2( int16_t bS[2][4][4], uint8_t nnz[40]
     );
 }
 
+#endif /* HAVE_INLINE_ASM */
+
 #define LF_FUNC(DIR, TYPE, DEPTH, OPT) \
 void ff_deblock_ ## DIR ## _ ## TYPE ## _ ## DEPTH ## _ ## OPT (uint8_t *pix, int stride, \
                                                                 int alpha, int beta, int8_t *tc0);
@@ -344,9 +348,11 @@ void ff_h264dsp_init_x86(H264DSPContext *c, const int bit_depth, const int chrom
 {
     int mm_flags = av_get_cpu_flags();
 
+#if HAVE_INLINE_ASM
     if (chroma_format_idc == 1 && mm_flags & AV_CPU_FLAG_MMX2) {
         c->h264_loop_filter_strength= h264_loop_filter_strength_mmx2;
     }
+#endif /* HAVE_INLINE_ASM */
 
     if (bit_depth == 8) {
 #if HAVE_YASM

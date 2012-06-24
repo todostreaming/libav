@@ -135,7 +135,7 @@ static void filter(AVFilterContext *ctx, AVFilterBufferRef *dstpic,
             }
         }
     }
-#if HAVE_MMX
+#if HAVE_MMX && HAVE_INLINE_ASM
     __asm__ volatile("emms \n\t" : : : "memory");
 #endif
 }
