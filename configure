@@ -1138,6 +1138,7 @@ HAVE_LIST="
     setrlimit
     Sleep
     sndio_h
+    snprintf
     socklen_t
     soundcard_h
     strerror_r
@@ -2912,6 +2913,7 @@ check_func  mmap
 check_func  ${malloc_prefix}posix_memalign      && enable posix_memalign
 check_func_headers malloc.h _aligned_malloc     && enable aligned_malloc
 check_func  setrlimit
+check_func  snprintf
 check_func  strerror_r
 check_func  strptime
 check_func  strtok_r

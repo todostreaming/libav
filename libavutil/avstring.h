@@ -24,6 +24,10 @@
 #include <stddef.h>
 #include "attributes.h"
 
+#if !HAVE_SNPRINTF
+int snprintf(char *buffer, size_t bufsize, const char *fmt, ...);
+#endif
+
 /**
  * @addtogroup lavu_string
  * @{

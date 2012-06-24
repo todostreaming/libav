@@ -155,6 +155,28 @@ int av_strncasecmp(const char *a, const char *b, size_t n)
     return c1 - c2;
 }
 
+#if !HAVE_SNPRINTF
+#ifdef _MSC_VER
+#define vsnprintf _vsnprintf
+#endif
+
+int snprintf(char *buffer, size_t bufsize, const char *fmt, ...)
+{
+    va_list ap;
+    int ret;
+
+    if ((int)bufsize <= 0) return -1;
+    va_start(ap, fmt);
+    ret = vsnprintf(buffer, bufsize-1, fmt, ap);
+    if (ret < 0) {
+        buffer[bufsize - 1] = '\0';
+        ret = bufsize - 1;
+    }
+    va_end(ap);
+    return ret;
+}
+#endif
+
 #ifdef TEST
 
 #undef printf
