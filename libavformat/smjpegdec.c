@@ -171,12 +171,12 @@ static int smjpeg_read_packet(AVFormatContext *s, AVPacket *pkt)
 }
 
 AVInputFormat ff_smjpeg_demuxer = {
-    .name           = "smjpeg",
-    .long_name      = NULL_IF_CONFIG_SMALL("Loki SDL MJPEG"),
-    .priv_data_size = sizeof(SMJPEGContext),
-    .read_probe     = smjpeg_probe,
-    .read_header    = smjpeg_read_header,
-    .read_packet    = smjpeg_read_packet,
-    .extensions     = "mjpg",
-    .flags          = AVFMT_GENERIC_INDEX,
+    "smjpeg",
+    NULL_IF_CONFIG_SMALL("Loki SDL MJPEG"),
+    AVFMT_GENERIC_INDEX,
+    "mjpg",
+    0, 0, 0, 0, sizeof(SMJPEGContext),
+    smjpeg_probe,
+    smjpeg_read_header,
+    smjpeg_read_packet,
 };

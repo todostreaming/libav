@@ -188,9 +188,9 @@ static int seg_write_packet(AVFormatContext *s, AVPacket *pkt)
     int64_t end_pts = seg->recording_time * seg->number;
     int ret;
 
-    if ((seg->has_video && st->codec->codec_type == AVMEDIA_TYPE_VIDEO) &&
+    { AVRational tmp__0 = {1, AV_TIME_BASE}; if ((seg->has_video && st->codec->codec_type == AVMEDIA_TYPE_VIDEO) &&
         av_compare_ts(pkt->pts, st->time_base,
-                      end_pts, AV_TIME_BASE_Q) >= 0 &&
+                      end_pts, tmp__0) >= 0 &&
         pkt->flags & AV_PKT_FLAG_KEY) {
 
         av_log(s, AV_LOG_DEBUG, "Next segment starts at %d %"PRId64"\n",
@@ -216,7 +216,7 @@ static int seg_write_packet(AVFormatContext *s, AVPacket *pkt)
         }
     }
 
-    ret = oc->oformat->write_packet(oc, pkt);
+    ret = oc->oformat->write_packet(oc, pkt); }
 
 fail:
     if (ret < 0) {
@@ -246,29 +246,29 @@ static int seg_write_trailer(struct AVFormatContext *s)
 #define OFFSET(x) offsetof(SegmentContext, x)
 #define E AV_OPT_FLAG_ENCODING_PARAM
 static const AVOption options[] = {
-    { "segment_format",    "container format used for the segments",  OFFSET(format),  AV_OPT_TYPE_STRING, {.str = NULL},  0, 0,       E },
-    { "segment_time",      "segment length in seconds",               OFFSET(time),    AV_OPT_TYPE_FLOAT,  {.dbl = 2},     0, FLT_MAX, E },
-    { "segment_list",      "output the segment list",                 OFFSET(list),    AV_OPT_TYPE_STRING, {.str = NULL},  0, 0,       E },
-    { "segment_list_size", "maximum number of playlist entries",      OFFSET(size),    AV_OPT_TYPE_INT,    {.dbl = 5},     0, INT_MAX, E },
-    { "segment_wrap",      "number after which the index wraps",      OFFSET(wrap),    AV_OPT_TYPE_INT,    {.dbl = 0},     0, INT_MAX, E },
+    { "segment_format",    "container format used for the segments",  OFFSET(format),  AV_OPT_TYPE_STRING, {0, NULL},  0, 0,       E },
+    { "segment_time",      "segment length in seconds",               OFFSET(time),    AV_OPT_TYPE_FLOAT,  {2},     0, FLT_MAX, E },
+    { "segment_list",      "output the segment list",                 OFFSET(list),    AV_OPT_TYPE_STRING, {0, NULL},  0, 0,       E },
+    { "segment_list_size", "maximum number of playlist entries",      OFFSET(size),    AV_OPT_TYPE_INT,    {5},     0, INT_MAX, E },
+    { "segment_wrap",      "number after which the index wraps",      OFFSET(wrap),    AV_OPT_TYPE_INT,    {0},     0, INT_MAX, E },
     { NULL },
 };
 
 static const AVClass seg_class = {
-    .class_name = "segment muxer",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "segment muxer",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 
 AVOutputFormat ff_segment_muxer = {
-    .name           = "segment",
-    .long_name      = NULL_IF_CONFIG_SMALL("segment muxer"),
-    .priv_data_size = sizeof(SegmentContext),
-    .flags          = AVFMT_GLOBALHEADER | AVFMT_NOFILE,
-    .write_header   = seg_write_header,
-    .write_packet   = seg_write_packet,
-    .write_trailer  = seg_write_trailer,
-    .priv_class     = &seg_class,
+    "segment",
+    NULL_IF_CONFIG_SMALL("segment muxer"),
+    0, 0, 0, 0, 0, AVFMT_GLOBALHEADER | AVFMT_NOFILE,
+    0, &seg_class,
+    0, sizeof(SegmentContext),
+    seg_write_header,
+    seg_write_packet,
+    seg_write_trailer,
 };

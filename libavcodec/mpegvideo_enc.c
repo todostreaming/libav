@@ -4120,23 +4120,24 @@ static const AVOption h263_options[] = {
 };
 
 static const AVClass h263_class = {
-    .class_name = "H.263 encoder",
-    .item_name  = av_default_item_name,
-    .option     = h263_options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "H.263 encoder",
+    av_default_item_name,
+    h263_options,
+    LIBAVUTIL_VERSION_INT,
 };
 
+static const enum PixelFormat tmp__0[] = {PIX_FMT_YUV420P, PIX_FMT_NONE};
 AVCodec ff_h263_encoder = {
-    .name           = "h263",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_H263,
-    .priv_data_size = sizeof(MpegEncContext),
-    .init           = ff_MPV_encode_init,
-    .encode2        = ff_MPV_encode_picture,
-    .close          = ff_MPV_encode_end,
-    .pix_fmts= (const enum PixelFormat[]){PIX_FMT_YUV420P, PIX_FMT_NONE},
-    .long_name= NULL_IF_CONFIG_SMALL("H.263 / H.263-1996"),
-    .priv_class     = &h263_class,
+    "h263",
+    NULL_IF_CONFIG_SMALL("H.263 / H.263-1996"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_H263,
+    0, 0, tmp__0,
+    0, 0, 0, 0, &h263_class,
+    0, sizeof(MpegEncContext),
+    0, 0, 0, 0, 0, ff_MPV_encode_init,
+    0, ff_MPV_encode_picture,
+    0, ff_MPV_encode_end,
 };
 
 static const AVOption h263p_options[] = {
@@ -4148,67 +4149,71 @@ static const AVOption h263p_options[] = {
     { NULL },
 };
 static const AVClass h263p_class = {
-    .class_name = "H.263p encoder",
-    .item_name  = av_default_item_name,
-    .option     = h263p_options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "H.263p encoder",
+    av_default_item_name,
+    h263p_options,
+    LIBAVUTIL_VERSION_INT,
 };
 
+static const enum PixelFormat tmp__1[] = { PIX_FMT_YUV420P, PIX_FMT_NONE };
 AVCodec ff_h263p_encoder = {
-    .name           = "h263p",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_H263P,
-    .priv_data_size = sizeof(MpegEncContext),
-    .init           = ff_MPV_encode_init,
-    .encode2        = ff_MPV_encode_picture,
-    .close          = ff_MPV_encode_end,
-    .capabilities   = CODEC_CAP_SLICE_THREADS,
-    .pix_fmts       = (const enum PixelFormat[]){ PIX_FMT_YUV420P, PIX_FMT_NONE },
-    .long_name      = NULL_IF_CONFIG_SMALL("H.263+ / H.263-1998 / H.263 version 2"),
-    .priv_class     = &h263p_class,
+    "h263p",
+    NULL_IF_CONFIG_SMALL("H.263+ / H.263-1998 / H.263 version 2"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_H263P,
+    CODEC_CAP_SLICE_THREADS,
+    0, tmp__1,
+    0, 0, 0, 0, &h263p_class,
+    0, sizeof(MpegEncContext),
+    0, 0, 0, 0, 0, ff_MPV_encode_init,
+    0, ff_MPV_encode_picture,
+    0, ff_MPV_encode_end,
 };
 
 FF_MPV_GENERIC_CLASS(msmpeg4v2)
 
+static const enum PixelFormat tmp__2[] = { PIX_FMT_YUV420P, PIX_FMT_NONE };
 AVCodec ff_msmpeg4v2_encoder = {
-    .name           = "msmpeg4v2",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_MSMPEG4V2,
-    .priv_data_size = sizeof(MpegEncContext),
-    .init           = ff_MPV_encode_init,
-    .encode2        = ff_MPV_encode_picture,
-    .close          = ff_MPV_encode_end,
-    .pix_fmts       = (const enum PixelFormat[]){ PIX_FMT_YUV420P, PIX_FMT_NONE },
-    .long_name      = NULL_IF_CONFIG_SMALL("MPEG-4 part 2 Microsoft variant version 2"),
-    .priv_class     = &msmpeg4v2_class,
+    "msmpeg4v2",
+    NULL_IF_CONFIG_SMALL("MPEG-4 part 2 Microsoft variant version 2"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_MSMPEG4V2,
+    0, 0, tmp__2,
+    0, 0, 0, 0, &msmpeg4v2_class,
+    0, sizeof(MpegEncContext),
+    0, 0, 0, 0, 0, ff_MPV_encode_init,
+    0, ff_MPV_encode_picture,
+    0, ff_MPV_encode_end,
 };
 
 FF_MPV_GENERIC_CLASS(msmpeg4v3)
 
+static const enum PixelFormat tmp__3[] = { PIX_FMT_YUV420P, PIX_FMT_NONE };
 AVCodec ff_msmpeg4v3_encoder = {
-    .name           = "msmpeg4",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_MSMPEG4V3,
-    .priv_data_size = sizeof(MpegEncContext),
-    .init           = ff_MPV_encode_init,
-    .encode2        = ff_MPV_encode_picture,
-    .close          = ff_MPV_encode_end,
-    .pix_fmts       = (const enum PixelFormat[]){ PIX_FMT_YUV420P, PIX_FMT_NONE },
-    .long_name      = NULL_IF_CONFIG_SMALL("MPEG-4 part 2 Microsoft variant version 3"),
-    .priv_class     = &msmpeg4v3_class,
+    "msmpeg4",
+    NULL_IF_CONFIG_SMALL("MPEG-4 part 2 Microsoft variant version 3"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_MSMPEG4V3,
+    0, 0, tmp__3,
+    0, 0, 0, 0, &msmpeg4v3_class,
+    0, sizeof(MpegEncContext),
+    0, 0, 0, 0, 0, ff_MPV_encode_init,
+    0, ff_MPV_encode_picture,
+    0, ff_MPV_encode_end,
 };
 
 FF_MPV_GENERIC_CLASS(wmv1)
 
+static const enum PixelFormat tmp__4[] = { PIX_FMT_YUV420P, PIX_FMT_NONE };
 AVCodec ff_wmv1_encoder = {
-    .name           = "wmv1",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_WMV1,
-    .priv_data_size = sizeof(MpegEncContext),
-    .init           = ff_MPV_encode_init,
-    .encode2        = ff_MPV_encode_picture,
-    .close          = ff_MPV_encode_end,
-    .pix_fmts       = (const enum PixelFormat[]){ PIX_FMT_YUV420P, PIX_FMT_NONE },
-    .long_name      = NULL_IF_CONFIG_SMALL("Windows Media Video 7"),
-    .priv_class     = &wmv1_class,
+    "wmv1",
+    NULL_IF_CONFIG_SMALL("Windows Media Video 7"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_WMV1,
+    0, 0, tmp__4,
+    0, 0, 0, 0, &wmv1_class,
+    0, sizeof(MpegEncContext),
+    0, 0, 0, 0, 0, ff_MPV_encode_init,
+    0, ff_MPV_encode_picture,
+    0, ff_MPV_encode_end,
 };

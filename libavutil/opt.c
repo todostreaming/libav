@@ -93,7 +93,7 @@ static int write_number(void *obj, const AVOption *o, void *dst, double num, int
     case AV_OPT_TYPE_FLOAT: *(float     *)dst= num*intnum/den;         break;
     case AV_OPT_TYPE_DOUBLE:*(double    *)dst= num*intnum/den;         break;
     case AV_OPT_TYPE_RATIONAL:
-        if ((int)num == num) *(AVRational*)dst= (AVRational){num*intnum, den};
+        if ((int)num == num) {((AVRational*)dst)->num = num*intnum;((AVRational*)dst)->den = den;}
         else                 *(AVRational*)dst= av_d2q(num*intnum/den, 1<<24);
         break;
     default:
@@ -471,9 +471,9 @@ AVRational av_get_q(void *obj, const char *name, const AVOption **o_out)
     int den=1;
 
     if (get_number(obj, name, o_out, &num, &den, &intnum, 0) < 0)
-        return (AVRational){0, 0};
+        { AVRational tmp__0 = {0, 0}; return tmp__0; }
     if (num == 1.0 && (int)intnum == intnum)
-        return (AVRational){intnum, den};
+        { AVRational tmp__1 = {intnum, den}; return tmp__1; }
     else
         return av_d2q(num*intnum/den, 1<<24);
 }
@@ -524,7 +524,7 @@ int av_opt_get_q(void *obj, const char *name, int search_flags, AVRational *out_
         return ret;
 
     if (num == 1.0 && (int)intnum == intnum)
-        *out_val = (AVRational){intnum, den};
+        {out_val->num = intnum;out_val->den = den;}
     else
         *out_val = av_d2q(num*intnum/den, 1<<24);
     return 0;

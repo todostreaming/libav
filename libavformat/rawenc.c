@@ -34,236 +34,236 @@ int ff_raw_write_packet(AVFormatContext *s, AVPacket *pkt)
 
 #if CONFIG_AC3_MUXER
 AVOutputFormat ff_ac3_muxer = {
-    .name              = "ac3",
-    .long_name         = NULL_IF_CONFIG_SMALL("raw AC-3"),
-    .mime_type         = "audio/x-ac3",
-    .extensions        = "ac3",
-    .audio_codec       = CODEC_ID_AC3,
-    .video_codec       = CODEC_ID_NONE,
-    .write_packet      = ff_raw_write_packet,
-    .flags             = AVFMT_NOTIMESTAMPS,
+    "ac3",
+    NULL_IF_CONFIG_SMALL("raw AC-3"),
+    "audio/x-ac3",
+    "ac3",
+    CODEC_ID_AC3,
+    CODEC_ID_NONE,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, 0, ff_raw_write_packet,
 };
 #endif
 
 #if CONFIG_ADX_MUXER
 AVOutputFormat ff_adx_muxer = {
-    .name              = "adx",
-    .long_name         = NULL_IF_CONFIG_SMALL("CRI ADX"),
-    .extensions        = "adx",
-    .audio_codec       = CODEC_ID_ADPCM_ADX,
-    .video_codec       = CODEC_ID_NONE,
-    .write_packet      = ff_raw_write_packet,
-    .flags             = AVFMT_NOTIMESTAMPS,
+    "adx",
+    NULL_IF_CONFIG_SMALL("CRI ADX"),
+    0, "adx",
+    CODEC_ID_ADPCM_ADX,
+    CODEC_ID_NONE,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, 0, ff_raw_write_packet,
 };
 #endif
 
 #if CONFIG_CAVSVIDEO_MUXER
 AVOutputFormat ff_cavsvideo_muxer = {
-    .name              = "cavsvideo",
-    .long_name         = NULL_IF_CONFIG_SMALL("raw Chinese AVS video"),
-    .extensions        = "cavs",
-    .audio_codec       = CODEC_ID_NONE,
-    .video_codec       = CODEC_ID_CAVS,
-    .write_packet      = ff_raw_write_packet,
-    .flags             = AVFMT_NOTIMESTAMPS,
+    "cavsvideo",
+    NULL_IF_CONFIG_SMALL("raw Chinese AVS video"),
+    0, "cavs",
+    CODEC_ID_NONE,
+    CODEC_ID_CAVS,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, 0, ff_raw_write_packet,
 };
 #endif
 
 #if CONFIG_DIRAC_MUXER
 AVOutputFormat ff_dirac_muxer = {
-    .name              = "dirac",
-    .long_name         = NULL_IF_CONFIG_SMALL("raw Dirac"),
-    .extensions        = "drc",
-    .audio_codec       = CODEC_ID_NONE,
-    .video_codec       = CODEC_ID_DIRAC,
-    .write_packet      = ff_raw_write_packet,
-    .flags             = AVFMT_NOTIMESTAMPS,
+    "dirac",
+    NULL_IF_CONFIG_SMALL("raw Dirac"),
+    0, "drc",
+    CODEC_ID_NONE,
+    CODEC_ID_DIRAC,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, 0, ff_raw_write_packet,
 };
 #endif
 
 #if CONFIG_DNXHD_MUXER
 AVOutputFormat ff_dnxhd_muxer = {
-    .name              = "dnxhd",
-    .long_name         = NULL_IF_CONFIG_SMALL("raw DNxHD (SMPTE VC-3)"),
-    .extensions        = "dnxhd",
-    .audio_codec       = CODEC_ID_NONE,
-    .video_codec       = CODEC_ID_DNXHD,
-    .write_packet      = ff_raw_write_packet,
-    .flags             = AVFMT_NOTIMESTAMPS,
+    "dnxhd",
+    NULL_IF_CONFIG_SMALL("raw DNxHD (SMPTE VC-3)"),
+    0, "dnxhd",
+    CODEC_ID_NONE,
+    CODEC_ID_DNXHD,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, 0, ff_raw_write_packet,
 };
 #endif
 
 #if CONFIG_DTS_MUXER
 AVOutputFormat ff_dts_muxer = {
-    .name              = "dts",
-    .long_name         = NULL_IF_CONFIG_SMALL("raw DTS"),
-    .mime_type         = "audio/x-dca",
-    .extensions        = "dts",
-    .audio_codec       = CODEC_ID_DTS,
-    .video_codec       = CODEC_ID_NONE,
-    .write_packet      = ff_raw_write_packet,
-    .flags             = AVFMT_NOTIMESTAMPS,
+    "dts",
+    NULL_IF_CONFIG_SMALL("raw DTS"),
+    "audio/x-dca",
+    "dts",
+    CODEC_ID_DTS,
+    CODEC_ID_NONE,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, 0, ff_raw_write_packet,
 };
 #endif
 
 #if CONFIG_EAC3_MUXER
 AVOutputFormat ff_eac3_muxer = {
-    .name              = "eac3",
-    .long_name         = NULL_IF_CONFIG_SMALL("raw E-AC-3"),
-    .mime_type         = "audio/x-eac3",
-    .extensions        = "eac3",
-    .audio_codec       = CODEC_ID_EAC3,
-    .video_codec       = CODEC_ID_NONE,
-    .write_packet      = ff_raw_write_packet,
-    .flags             = AVFMT_NOTIMESTAMPS,
+    "eac3",
+    NULL_IF_CONFIG_SMALL("raw E-AC-3"),
+    "audio/x-eac3",
+    "eac3",
+    CODEC_ID_EAC3,
+    CODEC_ID_NONE,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, 0, ff_raw_write_packet,
 };
 #endif
 
 #if CONFIG_G722_MUXER
 AVOutputFormat ff_g722_muxer = {
-    .name              = "g722",
-    .long_name         = NULL_IF_CONFIG_SMALL("raw G.722"),
-    .mime_type         = "audio/G722",
-    .extensions        = "g722",
-    .audio_codec       = CODEC_ID_ADPCM_G722,
-    .video_codec       = CODEC_ID_NONE,
-    .write_packet      = ff_raw_write_packet,
-    .flags             = AVFMT_NOTIMESTAMPS,
+    "g722",
+    NULL_IF_CONFIG_SMALL("raw G.722"),
+    "audio/G722",
+    "g722",
+    CODEC_ID_ADPCM_G722,
+    CODEC_ID_NONE,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, 0, ff_raw_write_packet,
 };
 #endif
 
 #if CONFIG_H261_MUXER
 AVOutputFormat ff_h261_muxer = {
-    .name              = "h261",
-    .long_name         = NULL_IF_CONFIG_SMALL("raw H.261"),
-    .mime_type         = "video/x-h261",
-    .extensions        = "h261",
-    .audio_codec       = CODEC_ID_NONE,
-    .video_codec       = CODEC_ID_H261,
-    .write_packet      = ff_raw_write_packet,
-    .flags             = AVFMT_NOTIMESTAMPS,
+    "h261",
+    NULL_IF_CONFIG_SMALL("raw H.261"),
+    "video/x-h261",
+    "h261",
+    CODEC_ID_NONE,
+    CODEC_ID_H261,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, 0, ff_raw_write_packet,
 };
 #endif
 
 #if CONFIG_H263_MUXER
 AVOutputFormat ff_h263_muxer = {
-    .name              = "h263",
-    .long_name         = NULL_IF_CONFIG_SMALL("raw H.263"),
-    .mime_type         = "video/x-h263",
-    .extensions        = "h263",
-    .audio_codec       = CODEC_ID_NONE,
-    .video_codec       = CODEC_ID_H263,
-    .write_packet      = ff_raw_write_packet,
-    .flags             = AVFMT_NOTIMESTAMPS,
+    "h263",
+    NULL_IF_CONFIG_SMALL("raw H.263"),
+    "video/x-h263",
+    "h263",
+    CODEC_ID_NONE,
+    CODEC_ID_H263,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, 0, ff_raw_write_packet,
 };
 #endif
 
 #if CONFIG_H264_MUXER
 AVOutputFormat ff_h264_muxer = {
-    .name              = "h264",
-    .long_name         = NULL_IF_CONFIG_SMALL("raw H.264 video format"),
-    .extensions        = "h264",
-    .audio_codec       = CODEC_ID_NONE,
-    .video_codec       = CODEC_ID_H264,
-    .write_packet      = ff_raw_write_packet,
-    .flags             = AVFMT_NOTIMESTAMPS,
+    "h264",
+    NULL_IF_CONFIG_SMALL("raw H.264 video format"),
+    0, "h264",
+    CODEC_ID_NONE,
+    CODEC_ID_H264,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, 0, ff_raw_write_packet,
 };
 #endif
 
 #if CONFIG_M4V_MUXER
 AVOutputFormat ff_m4v_muxer = {
-    .name              = "m4v",
-    .long_name         = NULL_IF_CONFIG_SMALL("raw MPEG-4 video format"),
-    .extensions        = "m4v",
-    .audio_codec       = CODEC_ID_NONE,
-    .video_codec       = CODEC_ID_MPEG4,
-    .write_packet      = ff_raw_write_packet,
-    .flags             = AVFMT_NOTIMESTAMPS,
+    "m4v",
+    NULL_IF_CONFIG_SMALL("raw MPEG-4 video format"),
+    0, "m4v",
+    CODEC_ID_NONE,
+    CODEC_ID_MPEG4,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, 0, ff_raw_write_packet,
 };
 #endif
 
 #if CONFIG_MJPEG_MUXER
 AVOutputFormat ff_mjpeg_muxer = {
-    .name              = "mjpeg",
-    .long_name         = NULL_IF_CONFIG_SMALL("raw MJPEG video"),
-    .mime_type         = "video/x-mjpeg",
-    .extensions        = "mjpg,mjpeg",
-    .audio_codec       = CODEC_ID_NONE,
-    .video_codec       = CODEC_ID_MJPEG,
-    .write_packet      = ff_raw_write_packet,
-    .flags             = AVFMT_NOTIMESTAMPS,
+    "mjpeg",
+    NULL_IF_CONFIG_SMALL("raw MJPEG video"),
+    "video/x-mjpeg",
+    "mjpg,mjpeg",
+    CODEC_ID_NONE,
+    CODEC_ID_MJPEG,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, 0, ff_raw_write_packet,
 };
 #endif
 
 #if CONFIG_MLP_MUXER
 AVOutputFormat ff_mlp_muxer = {
-    .name              = "mlp",
-    .long_name         = NULL_IF_CONFIG_SMALL("raw MLP"),
-    .extensions        = "mlp",
-    .audio_codec       = CODEC_ID_MLP,
-    .video_codec       = CODEC_ID_NONE,
-    .write_packet      = ff_raw_write_packet,
-    .flags             = AVFMT_NOTIMESTAMPS,
+    "mlp",
+    NULL_IF_CONFIG_SMALL("raw MLP"),
+    0, "mlp",
+    CODEC_ID_MLP,
+    CODEC_ID_NONE,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, 0, ff_raw_write_packet,
 };
 #endif
 
 #if CONFIG_MPEG1VIDEO_MUXER
 AVOutputFormat ff_mpeg1video_muxer = {
-    .name              = "mpeg1video",
-    .long_name         = NULL_IF_CONFIG_SMALL("raw MPEG-1 video"),
-    .mime_type         = "video/x-mpeg",
-    .extensions        = "mpg,mpeg,m1v",
-    .audio_codec       = CODEC_ID_NONE,
-    .video_codec       = CODEC_ID_MPEG1VIDEO,
-    .write_packet      = ff_raw_write_packet,
-    .flags             = AVFMT_NOTIMESTAMPS,
+    "mpeg1video",
+    NULL_IF_CONFIG_SMALL("raw MPEG-1 video"),
+    "video/x-mpeg",
+    "mpg,mpeg,m1v",
+    CODEC_ID_NONE,
+    CODEC_ID_MPEG1VIDEO,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, 0, ff_raw_write_packet,
 };
 #endif
 
 #if CONFIG_MPEG2VIDEO_MUXER
 AVOutputFormat ff_mpeg2video_muxer = {
-    .name              = "mpeg2video",
-    .long_name         = NULL_IF_CONFIG_SMALL("raw MPEG-2 video"),
-    .extensions        = "m2v",
-    .audio_codec       = CODEC_ID_NONE,
-    .video_codec       = CODEC_ID_MPEG2VIDEO,
-    .write_packet      = ff_raw_write_packet,
-    .flags             = AVFMT_NOTIMESTAMPS,
+    "mpeg2video",
+    NULL_IF_CONFIG_SMALL("raw MPEG-2 video"),
+    0, "m2v",
+    CODEC_ID_NONE,
+    CODEC_ID_MPEG2VIDEO,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, 0, ff_raw_write_packet,
 };
 #endif
 
 #if CONFIG_RAWVIDEO_MUXER
 AVOutputFormat ff_rawvideo_muxer = {
-    .name              = "rawvideo",
-    .long_name         = NULL_IF_CONFIG_SMALL("raw video format"),
-    .extensions        = "yuv,rgb",
-    .audio_codec       = CODEC_ID_NONE,
-    .video_codec       = CODEC_ID_RAWVIDEO,
-    .write_packet      = ff_raw_write_packet,
-    .flags             = AVFMT_NOTIMESTAMPS,
+    "rawvideo",
+    NULL_IF_CONFIG_SMALL("raw video format"),
+    0, "yuv,rgb",
+    CODEC_ID_NONE,
+    CODEC_ID_RAWVIDEO,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, 0, ff_raw_write_packet,
 };
 #endif
 
 #if CONFIG_SRT_MUXER
 AVOutputFormat ff_srt_muxer = {
-    .name              = "srt",
-    .long_name         = NULL_IF_CONFIG_SMALL("SubRip subtitle format"),
-    .mime_type         = "application/x-subrip",
-    .extensions        = "srt",
-    .write_packet      = ff_raw_write_packet,
-    .flags             = AVFMT_NOTIMESTAMPS,
-    .subtitle_codec    = CODEC_ID_SRT,
+    "srt",
+    NULL_IF_CONFIG_SMALL("SubRip subtitle format"),
+    "application/x-subrip",
+    "srt",
+    0, 0, CODEC_ID_SRT,
+    AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, 0, ff_raw_write_packet,
 };
 #endif
 
 #if CONFIG_TRUEHD_MUXER
 AVOutputFormat ff_truehd_muxer = {
-    .name              = "truehd",
-    .long_name         = NULL_IF_CONFIG_SMALL("raw TrueHD"),
-    .extensions        = "thd",
-    .audio_codec       = CODEC_ID_TRUEHD,
-    .video_codec       = CODEC_ID_NONE,
-    .write_packet      = ff_raw_write_packet,
-    .flags             = AVFMT_NOTIMESTAMPS,
+    "truehd",
+    NULL_IF_CONFIG_SMALL("raw TrueHD"),
+    0, "thd",
+    CODEC_ID_TRUEHD,
+    CODEC_ID_NONE,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, 0, ff_raw_write_packet,
 };
 #endif

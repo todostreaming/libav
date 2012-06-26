@@ -115,11 +115,11 @@ static int gopher_read(URLContext *h, uint8_t *buf, int size)
 
 
 URLProtocol ff_gopher_protocol = {
-    .name           = "gopher",
-    .url_open       = gopher_open,
-    .url_read       = gopher_read,
-    .url_write      = gopher_write,
-    .url_close      = gopher_close,
-    .priv_data_size = sizeof(GopherContext),
-    .flags          = URL_PROTOCOL_FLAG_NETWORK,
+    "gopher",
+    gopher_open,
+    0, gopher_read,
+    gopher_write,
+    0, gopher_close,
+    0, 0, 0, 0, 0, sizeof(GopherContext),
+    0, URL_PROTOCOL_FLAG_NETWORK,
 };

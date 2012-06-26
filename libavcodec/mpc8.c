@@ -421,12 +421,12 @@ static int mpc8_decode_frame(AVCodecContext * avctx, void *data,
 }
 
 AVCodec ff_mpc8_decoder = {
-    .name           = "mpc8",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_MUSEPACK8,
-    .priv_data_size = sizeof(MPCContext),
-    .init           = mpc8_decode_init,
-    .decode         = mpc8_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("Musepack SV8"),
+    "mpc8",
+    NULL_IF_CONFIG_SMALL("Musepack SV8"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_MUSEPACK8,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(MPCContext),
+    0, 0, 0, 0, 0, mpc8_decode_init,
+    0, 0, mpc8_decode_frame,
 };

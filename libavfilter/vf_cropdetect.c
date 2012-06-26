@@ -194,24 +194,26 @@ static void end_frame(AVFilterLink *inlink)
     ff_end_frame(inlink->dst->outputs[0]);
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, ff_null_start_frame,
+                                    ff_null_get_video_buffer,
+                                    0, end_frame,
+                                    0, 0, 0, 0, config_input, },
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO },
+                                  { NULL}};
 AVFilter avfilter_vf_cropdetect = {
-    .name        = "cropdetect",
-    .description = NULL_IF_CONFIG_SMALL("Auto-detect crop size."),
+    "cropdetect",
+    NULL_IF_CONFIG_SMALL("Auto-detect crop size."),
 
-    .priv_size = sizeof(CropDetectContext),
-    .init      = init,
+    tmp__0,
+    tmp__1,
 
-    .query_formats = query_formats,
+    init,
 
-    .inputs    = (AVFilterPad[]) {{ .name = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .config_props     = config_input,
-                                    .get_video_buffer = ff_null_get_video_buffer,
-                                    .start_frame      = ff_null_start_frame,
-                                    .end_frame        = end_frame, },
-                                  { .name = NULL}},
+    0, query_formats,
 
-    .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO },
-                                  { .name = NULL}},
+    sizeof(CropDetectContext),
 };

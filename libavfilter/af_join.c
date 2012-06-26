@@ -78,18 +78,18 @@ typedef struct JoinBufferPriv {
 static const AVOption join_options[] = {
     { "inputs",         "Number of input streams.", OFFSET(inputs),             AV_OPT_TYPE_INT,    { 2 }, 1, INT_MAX,       A },
     { "channel_layout", "Channel layout of the "
-                        "output stream.",           OFFSET(channel_layout_str), AV_OPT_TYPE_STRING, {.str = "stereo"}, 0, 0, A },
+                        "output stream.",           OFFSET(channel_layout_str), AV_OPT_TYPE_STRING, {0, "stereo"}, 0, 0, A },
     { "map",            "A comma-separated list of channels maps in the format "
                         "'input_stream.input_channel-output_channel.",
-                                                    OFFSET(map),                AV_OPT_TYPE_STRING,                 .flags = A },
+                                                    OFFSET(map),                AV_OPT_TYPE_STRING,                 { 0 }, 0, 0, A },
     { NULL },
 };
 
 static const AVClass join_class = {
-    .class_name = "join filter",
-    .item_name  = av_default_item_name,
-    .option     = join_options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "join filter",
+    av_default_item_name,
+    join_options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 static int filter_samples(AVFilterLink *link, AVFilterBufferRef *buf)
@@ -484,20 +484,22 @@ fail:
     return AVERROR(ENOMEM);
 }
 
+static const AVFilterPad tmp__0[] = {{ NULL }};
+static const AVFilterPad tmp__1[] = {{ "default",
+                                       AVMEDIA_TYPE_AUDIO,
+                                       0, 0, 0, 0, 0, 0, 0, 0, 0, join_request_frame,
+                                       join_config_output, },
+                                     { NULL }};
 AVFilter avfilter_af_join = {
-    .name           = "join",
-    .description    = NULL_IF_CONFIG_SMALL("Join multiple audio streams into "
+    "join",
+    NULL_IF_CONFIG_SMALL("Join multiple audio streams into "
                                            "multi-channel output"),
-    .priv_size      = sizeof(JoinContext),
+    tmp__0,
 
-    .init           = join_init,
-    .uninit         = join_uninit,
-    .query_formats  = join_query_formats,
+    tmp__1,
+    join_init,
+    join_uninit,
 
-    .inputs  = (const AVFilterPad[]){{ NULL }},
-    .outputs = (const AVFilterPad[]){{ .name          = "default",
-                                       .type          = AVMEDIA_TYPE_AUDIO,
-                                       .config_props  = join_config_output,
-                                       .request_frame = join_request_frame, },
-                                     { NULL }},
+    join_query_formats,
+    sizeof(JoinContext),
 };

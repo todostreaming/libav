@@ -333,6 +333,11 @@ static int decode_main_header(NUTContext *nut)
     return 0;
 }
 
+static const AVCodecTag * const  tmp__0[] = {
+                                                    ff_codec_bmp_tags,
+                                                    ff_nut_video_tags,
+                                                    0
+                                                };
 static int decode_stream_header(NUTContext *nut)
 {
     AVFormatContext *s = nut->avf;
@@ -357,11 +362,7 @@ static int decode_stream_header(NUTContext *nut)
     switch (class) {
     case 0:
         st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
-        st->codec->codec_id   = av_codec_get_id((const AVCodecTag * const []) {
-                                                    ff_codec_bmp_tags,
-                                                    ff_nut_video_tags,
-                                                    0
-                                                },
+        st->codec->codec_id   = av_codec_get_id(tmp__0,
                                                 tmp);
         break;
     case 1:
@@ -919,8 +920,8 @@ static int read_seek(AVFormatContext *s, int stream_index,
 {
     NUTContext *nut    = s->priv_data;
     AVStream *st       = s->streams[stream_index];
-    Syncpoint dummy    = { .ts = pts * av_q2d(st->time_base) * AV_TIME_BASE };
-    Syncpoint nopts_sp = { .ts = AV_NOPTS_VALUE, .back_ptr = AV_NOPTS_VALUE };
+    Syncpoint dummy    = { 0, 0, pts * av_q2d(st->time_base) * AV_TIME_BASE };
+    Syncpoint nopts_sp = { 0, AV_NOPTS_VALUE , AV_NOPTS_VALUE};
     Syncpoint *sp, *next_node[2] = { &nopts_sp, &nopts_sp };
     int64_t pos, pos2, ts;
     int i;
@@ -989,18 +990,19 @@ static int nut_read_close(AVFormatContext *s)
     return 0;
 }
 
-AVInputFormat ff_nut_demuxer = {
-    .name           = "nut",
-    .long_name      = NULL_IF_CONFIG_SMALL("NUT format"),
-    .priv_data_size = sizeof(NUTContext),
-    .read_probe     = nut_probe,
-    .read_header    = nut_read_header,
-    .read_packet    = nut_read_packet,
-    .read_close     = nut_read_close,
-    .read_seek      = read_seek,
-    .extensions     = "nut",
-    .codec_tag      = (const AVCodecTag * const []) {
+static const AVCodecTag * const  tmp__1[] = {
         ff_codec_bmp_tags, ff_nut_video_tags, ff_codec_wav_tags,
         ff_nut_subtitle_tags, 0
-    },
+    };
+AVInputFormat ff_nut_demuxer = {
+    "nut",
+    NULL_IF_CONFIG_SMALL("NUT format"),
+    0, "nut",
+    tmp__1,
+    0, 0, 0, sizeof(NUTContext),
+    nut_probe,
+    nut_read_header,
+    nut_read_packet,
+    nut_read_close,
+    read_seek,
 };

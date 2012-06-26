@@ -36,10 +36,10 @@
 #define SDP_MAX_SIZE 16384
 
 static const AVClass rtsp_muxer_class = {
-    .class_name = "RTSP muxer",
-    .item_name  = av_default_item_name,
-    .option     = ff_rtsp_options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "RTSP muxer",
+    av_default_item_name,
+    ff_rtsp_options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 int ff_rtsp_setup_output_streams(AVFormatContext *s, const char *addr)
@@ -233,14 +233,14 @@ static int rtsp_write_close(AVFormatContext *s)
 }
 
 AVOutputFormat ff_rtsp_muxer = {
-    .name              = "rtsp",
-    .long_name         = NULL_IF_CONFIG_SMALL("RTSP output format"),
-    .priv_data_size    = sizeof(RTSPState),
-    .audio_codec       = CODEC_ID_AAC,
-    .video_codec       = CODEC_ID_MPEG4,
-    .write_header      = rtsp_write_header,
-    .write_packet      = rtsp_write_packet,
-    .write_trailer     = rtsp_write_close,
-    .flags             = AVFMT_NOFILE | AVFMT_GLOBALHEADER,
-    .priv_class        = &rtsp_muxer_class,
+    "rtsp",
+    NULL_IF_CONFIG_SMALL("RTSP output format"),
+    0, 0, CODEC_ID_AAC,
+    CODEC_ID_MPEG4,
+    0, AVFMT_NOFILE | AVFMT_GLOBALHEADER,
+    0, &rtsp_muxer_class,
+    0, sizeof(RTSPState),
+    rtsp_write_header,
+    rtsp_write_packet,
+    rtsp_write_close,
 };

@@ -358,12 +358,12 @@ static int truespeech_decode_frame(AVCodecContext *avctx, void *data,
 }
 
 AVCodec ff_truespeech_decoder = {
-    .name           = "truespeech",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_TRUESPEECH,
-    .priv_data_size = sizeof(TSContext),
-    .init           = truespeech_decode_init,
-    .decode         = truespeech_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("DSP Group TrueSpeech"),
+    "truespeech",
+    NULL_IF_CONFIG_SMALL("DSP Group TrueSpeech"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_TRUESPEECH,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(TSContext),
+    0, 0, 0, 0, 0, truespeech_decode_init,
+    0, 0, truespeech_decode_frame,
 };

@@ -118,14 +118,14 @@ static int flac_write_packet(struct AVFormatContext *s, AVPacket *pkt)
 }
 
 AVOutputFormat ff_flac_muxer = {
-    .name              = "flac",
-    .long_name         = NULL_IF_CONFIG_SMALL("raw FLAC"),
-    .mime_type         = "audio/x-flac",
-    .extensions        = "flac",
-    .audio_codec       = CODEC_ID_FLAC,
-    .video_codec       = CODEC_ID_NONE,
-    .write_header      = flac_write_header,
-    .write_packet      = flac_write_packet,
-    .write_trailer     = flac_write_trailer,
-    .flags             = AVFMT_NOTIMESTAMPS,
+    "flac",
+    NULL_IF_CONFIG_SMALL("raw FLAC"),
+    "audio/x-flac",
+    "flac",
+    CODEC_ID_FLAC,
+    CODEC_ID_NONE,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, 0, flac_write_header,
+    flac_write_packet,
+    flac_write_trailer,
 };

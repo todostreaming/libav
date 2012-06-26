@@ -208,7 +208,7 @@ static AVRational fps_umf2avr(uint32_t flags) {
  * @param si struct to store collected information into
  */
 static void gxf_track_tags(AVIOContext *pb, int *len, struct gxf_stream_info *si) {
-    si->frames_per_second = (AVRational){0, 0};
+    {si->frames_per_second.num = 0;si->frames_per_second.den = 0;}
     si->fields_per_frame = 0;
     while (*len >= 2) {
         GXFTrackTag tag = avio_r8(pb);
@@ -359,7 +359,7 @@ static int gxf_header(AVFormatContext *s) {
     // set a fallback value, 60000/1001 is specified for audio-only files
     // so use that regardless of why we do not know the video frame rate.
     if (!main_timebase.num || !main_timebase.den)
-        main_timebase = (AVRational){1001, 60000};
+        {main_timebase.num = 1001;main_timebase.den = 60000;}
     for (i = 0; i < s->nb_streams; i++) {
         AVStream *st = s->streams[i];
         avpriv_set_pts_info(st, 32, main_timebase.num, main_timebase.den);
@@ -524,12 +524,12 @@ static int64_t gxf_read_timestamp(AVFormatContext *s, int stream_index,
 }
 
 AVInputFormat ff_gxf_demuxer = {
-    .name           = "gxf",
-    .long_name      = NULL_IF_CONFIG_SMALL("GXF format"),
-    .priv_data_size = sizeof(struct gxf_stream_info),
-    .read_probe     = gxf_probe,
-    .read_header    = gxf_header,
-    .read_packet    = gxf_packet,
-    .read_seek      = gxf_seek,
-    .read_timestamp = gxf_read_timestamp,
+    "gxf",
+    NULL_IF_CONFIG_SMALL("GXF format"),
+    0, 0, 0, 0, 0, 0, sizeof(struct gxf_stream_info),
+    gxf_probe,
+    gxf_header,
+    gxf_packet,
+    0, gxf_seek,
+    gxf_read_timestamp,
 };

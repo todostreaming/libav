@@ -90,7 +90,7 @@ static int celt_header(AVFormatContext *s, int idx)
 }
 
 const struct ogg_codec ff_celt_codec = {
-    .magic     = "CELT    ",
-    .magicsize = 8,
-    .header    = celt_header,
+    "CELT    ",
+    8,
+    0, celt_header,
 };

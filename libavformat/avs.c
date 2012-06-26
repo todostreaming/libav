@@ -188,8 +188,7 @@ static int avs_read_packet(AVFormatContext * s, AVPacket * pkt)
                     avs->st_video->codec->height = avs->height;
                     avs->st_video->codec->bits_per_coded_sample=avs->bits_per_sample;
                     avs->st_video->nb_frames = avs->nb_frames;
-                    avs->st_video->r_frame_rate = avs->st_video->avg_frame_rate =
-                                                  (AVRational){avs->fps, 1};
+                    {avs->st_video->r_frame_rate .num =  avs->st_video->avg_frame_rate.num = avs->fps;avs->st_video->r_frame_rate .den =  avs->st_video->avg_frame_rate.den = 1;}
                 }
                 return avs_read_video_packet(s, pkt, type, sub_type, size,
                                              palette, palette_size);
@@ -220,11 +219,11 @@ static int avs_read_close(AVFormatContext * s)
 }
 
 AVInputFormat ff_avs_demuxer = {
-    .name           = "avs",
-    .long_name      = NULL_IF_CONFIG_SMALL("AVS format"),
-    .priv_data_size = sizeof(AvsFormat),
-    .read_probe     = avs_probe,
-    .read_header    = avs_read_header,
-    .read_packet    = avs_read_packet,
-    .read_close     = avs_read_close,
+    "avs",
+    NULL_IF_CONFIG_SMALL("AVS format"),
+    0, 0, 0, 0, 0, 0, sizeof(AvsFormat),
+    avs_probe,
+    avs_read_header,
+    avs_read_packet,
+    avs_read_close,
 };

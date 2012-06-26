@@ -80,12 +80,13 @@ static int read_packet(AVFormatContext *s, AVPacket *pkt)
     return ret;
 }
 
+static const AVCodecTag* const  tmp__0[] = { ff_codec_bmp_tags, 0 };
 AVInputFormat ff_ivf_demuxer = {
-    .name           = "ivf",
-    .long_name      = NULL_IF_CONFIG_SMALL("On2 IVF"),
-    .read_probe     = probe,
-    .read_header    = read_header,
-    .read_packet    = read_packet,
-    .flags          = AVFMT_GENERIC_INDEX,
-    .codec_tag      = (const AVCodecTag* const []){ ff_codec_bmp_tags, 0 },
+    "ivf",
+    NULL_IF_CONFIG_SMALL("On2 IVF"),
+    AVFMT_GENERIC_INDEX,
+    0, tmp__0,
+    0, 0, 0, 0, probe,
+    read_header,
+    read_packet,
 };

@@ -172,9 +172,9 @@ static int wsaud_read_packet(AVFormatContext *s,
 }
 
 AVInputFormat ff_wsaud_demuxer = {
-    .name           = "wsaud",
-    .long_name      = NULL_IF_CONFIG_SMALL("Westwood Studios audio format"),
-    .read_probe     = wsaud_probe,
-    .read_header    = wsaud_read_header,
-    .read_packet    = wsaud_read_packet,
+    "wsaud",
+    NULL_IF_CONFIG_SMALL("Westwood Studios audio format"),
+    0, 0, 0, 0, 0, 0, 0, wsaud_probe,
+    wsaud_read_header,
+    wsaud_read_packet,
 };

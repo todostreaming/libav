@@ -359,25 +359,25 @@ static int decode_frame(AVCodecContext *avctx, void *data,
 }
 
 AVCodec ff_binkaudio_rdft_decoder = {
-    .name           = "binkaudio_rdft",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_BINKAUDIO_RDFT,
-    .priv_data_size = sizeof(BinkAudioContext),
-    .init           = decode_init,
-    .close          = decode_end,
-    .decode         = decode_frame,
-    .capabilities   = CODEC_CAP_DELAY | CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("Bink Audio (RDFT)")
-};
+    "binkaudio_rdft",
+    NULL_IF_CONFIG_SMALL("Bink Audio (RDFT)")
+,
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_BINKAUDIO_RDFT,
+    CODEC_CAP_DELAY | CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(BinkAudioContext),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame,
+    decode_end};
 
 AVCodec ff_binkaudio_dct_decoder = {
-    .name           = "binkaudio_dct",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_BINKAUDIO_DCT,
-    .priv_data_size = sizeof(BinkAudioContext),
-    .init           = decode_init,
-    .close          = decode_end,
-    .decode         = decode_frame,
-    .capabilities   = CODEC_CAP_DELAY | CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("Bink Audio (DCT)")
-};
+    "binkaudio_dct",
+    NULL_IF_CONFIG_SMALL("Bink Audio (DCT)")
+,
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_BINKAUDIO_DCT,
+    CODEC_CAP_DELAY | CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(BinkAudioContext),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame,
+    decode_end};

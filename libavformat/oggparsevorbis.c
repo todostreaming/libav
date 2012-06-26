@@ -46,9 +46,9 @@ static int ogm_chapter(AVFormatContext *as, uint8_t *key, uint8_t *val)
         if (sscanf(val, "%02d:%02d:%02d.%03d", &h, &m, &s, &ms) < 4)
             return 0;
 
-        avpriv_new_chapter(as, cnum, (AVRational){1,1000},
+        { AVRational tmp__0 = {1,1000}; avpriv_new_chapter(as, cnum, tmp__0,
                        ms + 1000*(s + 60*(m + 60*h)),
-                       AV_NOPTS_VALUE, NULL);
+                       AV_NOPTS_VALUE, NULL); }
         av_free(val);
     } else if (!strcmp(key+9, "NAME")) {
         for(i = 0; i < as->nb_chapters; i++)
@@ -355,8 +355,8 @@ static int vorbis_packet(AVFormatContext *s, int idx)
 }
 
 const struct ogg_codec ff_vorbis_codec = {
-    .magic = "\001vorbis",
-    .magicsize = 7,
-    .header = vorbis_header,
-    .packet = vorbis_packet,
+    "\001vorbis",
+    7,
+    0, vorbis_header,
+    vorbis_packet,
 };

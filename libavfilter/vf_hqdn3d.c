@@ -326,23 +326,25 @@ static void end_frame(AVFilterLink *inlink)
     avfilter_unref_buffer(outpic);
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, 0, 0, 0, end_frame ,
+                                    null_draw_slice,
+                                    0, 0, 0, config_input},
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO },
+                                  { NULL}};
 AVFilter avfilter_vf_hqdn3d = {
-    .name          = "hqdn3d",
-    .description   = NULL_IF_CONFIG_SMALL("Apply a High Quality 3D Denoiser."),
+    "hqdn3d",
+    NULL_IF_CONFIG_SMALL("Apply a High Quality 3D Denoiser."),
 
-    .priv_size     = sizeof(HQDN3DContext),
-    .init          = init,
-    .uninit        = uninit,
-    .query_formats = query_formats,
+    tmp__0,
+    tmp__1,
+    init,
+    uninit,
 
-    .inputs    = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .draw_slice       = null_draw_slice,
-                                    .config_props     = config_input,
-                                    .end_frame        = end_frame },
-                                  { .name = NULL}},
+    query_formats,
 
-    .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO },
-                                  { .name = NULL}},
+    sizeof(HQDN3DContext),
 };

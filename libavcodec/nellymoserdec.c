@@ -213,17 +213,18 @@ static av_cold int decode_end(AVCodecContext * avctx) {
     return 0;
 }
 
-AVCodec ff_nellymoser_decoder = {
-    .name           = "nellymoser",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_NELLYMOSER,
-    .priv_data_size = sizeof(NellyMoserDecodeContext),
-    .init           = decode_init,
-    .close          = decode_end,
-    .decode         = decode_tag,
-    .capabilities   = CODEC_CAP_DR1 | CODEC_CAP_PARAM_CHANGE,
-    .long_name      = NULL_IF_CONFIG_SMALL("Nellymoser Asao"),
-    .sample_fmts    = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_FLT,
+static const enum AVSampleFormat tmp__0[] = { AV_SAMPLE_FMT_FLT,
                                                       AV_SAMPLE_FMT_S16,
-                                                      AV_SAMPLE_FMT_NONE },
+                                                      AV_SAMPLE_FMT_NONE };
+AVCodec ff_nellymoser_decoder = {
+    "nellymoser",
+    NULL_IF_CONFIG_SMALL("Nellymoser Asao"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_NELLYMOSER,
+    CODEC_CAP_DR1 | CODEC_CAP_PARAM_CHANGE,
+    0, 0, 0, tmp__0,
+    0, 0, 0, 0, sizeof(NellyMoserDecodeContext),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_tag,
+    decode_end,
 };

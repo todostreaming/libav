@@ -327,16 +327,17 @@ static av_cold int qtrle_encode_end(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec ff_qtrle_encoder = {
-    .name           = "qtrle",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_QTRLE,
-    .priv_data_size = sizeof(QtrleEncContext),
-    .init           = qtrle_encode_init,
-    .encode2        = qtrle_encode_frame,
-    .close          = qtrle_encode_end,
-    .pix_fmts       = (const enum PixelFormat[]){
+static const enum PixelFormat tmp__0[] = {
         PIX_FMT_RGB24, PIX_FMT_RGB555BE, PIX_FMT_ARGB, PIX_FMT_NONE
-    },
-    .long_name      = NULL_IF_CONFIG_SMALL("QuickTime Animation (RLE) video"),
+    };
+AVCodec ff_qtrle_encoder = {
+    "qtrle",
+    NULL_IF_CONFIG_SMALL("QuickTime Animation (RLE) video"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_QTRLE,
+    0, 0, tmp__0,
+    0, 0, 0, 0, 0, 0, sizeof(QtrleEncContext),
+    0, 0, 0, 0, 0, qtrle_encode_init,
+    0, qtrle_encode_frame,
+    0, qtrle_encode_end,
 };

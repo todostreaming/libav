@@ -79,22 +79,24 @@ static void end_frame(AVFilterLink *inlink)
     ff_end_frame(inlink->dst->outputs[0]);
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    AV_PERM_READ,
+                                    0, ff_null_start_frame,
+                                    ff_null_get_video_buffer,
+                                    0, end_frame, },
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO },
+                                  { NULL}};
 AVFilter avfilter_vf_showinfo = {
-    .name        = "showinfo",
-    .description = NULL_IF_CONFIG_SMALL("Show textual information for each video frame."),
+    "showinfo",
+    NULL_IF_CONFIG_SMALL("Show textual information for each video frame."),
 
-    .priv_size = sizeof(ShowInfoContext),
-    .init      = init,
+    tmp__0,
+    tmp__1,
 
-    .inputs    = (AVFilterPad[]) {{ .name = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .get_video_buffer = ff_null_get_video_buffer,
-                                    .start_frame      = ff_null_start_frame,
-                                    .end_frame        = end_frame,
-                                    .min_perms        = AV_PERM_READ, },
-                                  { .name = NULL}},
+    init,
 
-    .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO },
-                                  { .name = NULL}},
+    0, 0, sizeof(ShowInfoContext),
 };

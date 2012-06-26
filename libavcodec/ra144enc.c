@@ -554,16 +554,17 @@ static int ra144_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
 }
 
 
+static const enum AVSampleFormat tmp__0[] = { AV_SAMPLE_FMT_S16,
+                                                     AV_SAMPLE_FMT_NONE };
 AVCodec ff_ra_144_encoder = {
-    .name           = "real_144",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_RA_144,
-    .priv_data_size = sizeof(RA144Context),
-    .init           = ra144_encode_init,
-    .encode2        = ra144_encode_frame,
-    .close          = ra144_encode_close,
-    .capabilities   = CODEC_CAP_DELAY | CODEC_CAP_SMALL_LAST_FRAME,
-    .sample_fmts    = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_S16,
-                                                     AV_SAMPLE_FMT_NONE },
-    .long_name      = NULL_IF_CONFIG_SMALL("RealAudio 1.0 (14.4K)"),
+    "real_144",
+    NULL_IF_CONFIG_SMALL("RealAudio 1.0 (14.4K)"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_RA_144,
+    CODEC_CAP_DELAY | CODEC_CAP_SMALL_LAST_FRAME,
+    0, 0, 0, tmp__0,
+    0, 0, 0, 0, sizeof(RA144Context),
+    0, 0, 0, 0, 0, ra144_encode_init,
+    0, ra144_encode_frame,
+    0, ra144_encode_close,
 };

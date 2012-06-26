@@ -238,9 +238,9 @@ static int config_props(AVFilterLink *outlink)
 
 
     if (inlink->sample_aspect_ratio.num)
-        outlink->sample_aspect_ratio = av_mul_q((AVRational){outlink->h*inlink->w,
-                                                             outlink->w*inlink->h},
-                                                inlink->sample_aspect_ratio);
+        { AVRational tmp__0 = {outlink->h*inlink->w,
+                                                             outlink->w*inlink->h}; outlink->sample_aspect_ratio = av_mul_q(tmp__0,
+                                                inlink->sample_aspect_ratio); }
     else
         outlink->sample_aspect_ratio = inlink->sample_aspect_ratio;
 
@@ -315,25 +315,27 @@ static void draw_slice(AVFilterLink *link, int y, int h, int slice_dir)
         scale->slice_y += out_h;
 }
 
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    AV_PERM_READ,
+                                    0, start_frame,
+                                    0, 0, 0, draw_slice, },
+                                  { NULL}};
+static AVFilterPad tmp__2[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, config_props, },
+                                  { NULL}};
 AVFilter avfilter_vf_scale = {
-    .name      = "scale",
-    .description = NULL_IF_CONFIG_SMALL("Scale the input video to width:height size and/or convert the image format."),
+    "scale",
+    NULL_IF_CONFIG_SMALL("Scale the input video to width:height size and/or convert the image format."),
 
-    .init      = init,
-    .uninit    = uninit,
+    tmp__1,
+    tmp__2,
 
-    .query_formats = query_formats,
+    init,
 
-    .priv_size = sizeof(ScaleContext),
+    uninit,
 
-    .inputs    = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .start_frame      = start_frame,
-                                    .draw_slice       = draw_slice,
-                                    .min_perms        = AV_PERM_READ, },
-                                  { .name = NULL}},
-    .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .config_props     = config_props, },
-                                  { .name = NULL}},
+    query_formats,
+    sizeof(ScaleContext),
 };

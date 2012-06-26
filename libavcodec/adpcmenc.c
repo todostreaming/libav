@@ -722,15 +722,15 @@ static const enum AVSampleFormat sample_fmts[] = {
 };
 #define ADPCM_ENCODER(id_, name_, long_name_)               \
 AVCodec ff_ ## name_ ## _encoder = {                        \
-    .name           = #name_,                               \
-    .type           = AVMEDIA_TYPE_AUDIO,                   \
-    .id             = id_,                                  \
-    .priv_data_size = sizeof(ADPCMEncodeContext),           \
-    .init           = adpcm_encode_init,                    \
-    .encode2        = adpcm_encode_frame,                   \
-    .close          = adpcm_encode_close,                   \
-    .sample_fmts    = sample_fmts,                          \
-    .long_name      = NULL_IF_CONFIG_SMALL(long_name_),     \
+    #name_,                               \
+    NULL_IF_CONFIG_SMALL(long_name_),                   \
+    AVMEDIA_TYPE_AUDIO,                                  \
+    id_,           \
+    0, 0, 0, 0, sample_fmts,                    \
+    0, 0, 0, 0, sizeof(ADPCMEncodeContext),                   \
+    0, 0, 0, 0, 0, adpcm_encode_init,                   \
+    0, adpcm_encode_frame,                          \
+    0, adpcm_encode_close,     \
 }
 
 ADPCM_ENCODER(CODEC_ID_ADPCM_IMA_QT, adpcm_ima_qt,   "ADPCM IMA QuickTime");

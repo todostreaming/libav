@@ -88,12 +88,12 @@ static void picmemset(PicContext *s, int value, int run,
 }
 
 static const uint8_t cga_mode45_index[6][4] = {
-    [0] = { 0, 3,  5,   7 }, // mode4, palette#1, low intensity
-    [1] = { 0, 2,  4,   6 }, // mode4, palette#2, low intensity
-    [2] = { 0, 3,  4,   7 }, // mode5, low intensity
-    [3] = { 0, 11, 13, 15 }, // mode4, palette#1, high intensity
-    [4] = { 0, 10, 12, 14 }, // mode4, palette#2, high intensity
-    [5] = { 0, 11, 12, 15 }, // mode5, high intensity
+    /* 0 */ { 0, 3,  5,   7 }, // mode4, palette#1, low intensity
+    /* 1 */ { 0, 2,  4,   6 }, // mode4, palette#2, low intensity
+    /* 2 */ { 0, 3,  4,   7 }, // mode5, low intensity
+    /* 3 */ { 0, 11, 13, 15 }, // mode4, palette#1, high intensity
+    /* 4 */ { 0, 10, 12, 14 }, // mode4, palette#2, high intensity
+    /* 5 */ { 0, 11, 12, 15 }, // mode5, high intensity
 };
 
 static int decode_frame(AVCodecContext *avctx,
@@ -251,12 +251,12 @@ static av_cold int decode_end(AVCodecContext *avctx)
 }
 
 AVCodec ff_pictor_decoder = {
-    .name           = "pictor",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_PICTOR,
-    .priv_data_size = sizeof(PicContext),
-    .close          = decode_end,
-    .decode         = decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("Pictor/PC Paint"),
+    "pictor",
+    NULL_IF_CONFIG_SMALL("Pictor/PC Paint"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_PICTOR,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(PicContext),
+    0, 0, 0, 0, 0, 0, 0, 0, decode_frame,
+    decode_end,
 };

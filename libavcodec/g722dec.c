@@ -47,10 +47,10 @@ static const AVOption options[] = {
 };
 
 static const AVClass g722_decoder_class = {
-    .class_name = "g722 decoder",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "g722 decoder",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 static av_cold int g722_decode_init(AVCodecContext * avctx)
@@ -142,13 +142,13 @@ static int g722_decode_frame(AVCodecContext *avctx, void *data,
 }
 
 AVCodec ff_adpcm_g722_decoder = {
-    .name           = "g722",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_ADPCM_G722,
-    .priv_data_size = sizeof(G722Context),
-    .init           = g722_decode_init,
-    .decode         = g722_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("G.722 ADPCM"),
-    .priv_class     = &g722_decoder_class,
+    "g722",
+    NULL_IF_CONFIG_SMALL("G.722 ADPCM"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_ADPCM_G722,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, &g722_decoder_class,
+    0, sizeof(G722Context),
+    0, 0, 0, 0, 0, g722_decode_init,
+    0, 0, g722_decode_frame,
 };

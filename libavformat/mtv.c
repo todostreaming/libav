@@ -188,10 +188,10 @@ static int mtv_read_packet(AVFormatContext *s, AVPacket *pkt)
 }
 
 AVInputFormat ff_mtv_demuxer = {
-    .name           = "mtv",
-    .long_name      = NULL_IF_CONFIG_SMALL("MTV format"),
-    .priv_data_size = sizeof(MTVDemuxContext),
-    .read_probe     = mtv_probe,
-    .read_header    = mtv_read_header,
-    .read_packet    = mtv_read_packet,
+    "mtv",
+    NULL_IF_CONFIG_SMALL("MTV format"),
+    0, 0, 0, 0, 0, 0, sizeof(MTVDemuxContext),
+    mtv_probe,
+    mtv_read_header,
+    mtv_read_packet,
 };

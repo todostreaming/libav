@@ -216,10 +216,10 @@ static int dxa_read_packet(AVFormatContext *s, AVPacket *pkt)
 }
 
 AVInputFormat ff_dxa_demuxer = {
-    .name           = "dxa",
-    .long_name      = NULL_IF_CONFIG_SMALL("DXA"),
-    .priv_data_size = sizeof(DXAContext),
-    .read_probe     = dxa_probe,
-    .read_header    = dxa_read_header,
-    .read_packet    = dxa_read_packet,
+    "dxa",
+    NULL_IF_CONFIG_SMALL("DXA"),
+    0, 0, 0, 0, 0, 0, sizeof(DXAContext),
+    dxa_probe,
+    dxa_read_header,
+    dxa_read_packet,
 };

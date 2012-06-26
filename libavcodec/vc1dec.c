@@ -5664,95 +5664,97 @@ static const AVProfile profiles[] = {
 };
 
 AVCodec ff_vc1_decoder = {
-    .name           = "vc1",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_VC1,
-    .priv_data_size = sizeof(VC1Context),
-    .init           = vc1_decode_init,
-    .close          = vc1_decode_end,
-    .decode         = vc1_decode_frame,
-    .capabilities   = CODEC_CAP_DR1 | CODEC_CAP_DELAY,
-    .long_name      = NULL_IF_CONFIG_SMALL("SMPTE VC-1"),
-    .pix_fmts       = ff_hwaccel_pixfmt_list_420,
-    .profiles       = NULL_IF_CONFIG_SMALL(profiles)
-};
+    "vc1",
+    NULL_IF_CONFIG_SMALL("SMPTE VC-1"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_VC1,
+    CODEC_CAP_DR1 | CODEC_CAP_DELAY,
+    0, ff_hwaccel_pixfmt_list_420,
+    0, 0, 0, 0, 0, NULL_IF_CONFIG_SMALL(profiles)
+,
+    sizeof(VC1Context),
+    0, 0, 0, 0, 0, vc1_decode_init,
+    0, 0, vc1_decode_frame,
+    vc1_decode_end};
 
 #if CONFIG_WMV3_DECODER
 AVCodec ff_wmv3_decoder = {
-    .name           = "wmv3",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_WMV3,
-    .priv_data_size = sizeof(VC1Context),
-    .init           = vc1_decode_init,
-    .close          = vc1_decode_end,
-    .decode         = vc1_decode_frame,
-    .capabilities   = CODEC_CAP_DR1 | CODEC_CAP_DELAY,
-    .long_name      = NULL_IF_CONFIG_SMALL("Windows Media Video 9"),
-    .pix_fmts       = ff_hwaccel_pixfmt_list_420,
-    .profiles       = NULL_IF_CONFIG_SMALL(profiles)
-};
+    "wmv3",
+    NULL_IF_CONFIG_SMALL("Windows Media Video 9"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_WMV3,
+    CODEC_CAP_DR1 | CODEC_CAP_DELAY,
+    0, ff_hwaccel_pixfmt_list_420,
+    0, 0, 0, 0, 0, NULL_IF_CONFIG_SMALL(profiles)
+,
+    sizeof(VC1Context),
+    0, 0, 0, 0, 0, vc1_decode_init,
+    0, 0, vc1_decode_frame,
+    vc1_decode_end};
 #endif
 
 #if CONFIG_WMV3_VDPAU_DECODER
+static const enum PixelFormat tmp__0[] = { PIX_FMT_VDPAU_WMV3, PIX_FMT_NONE };
 AVCodec ff_wmv3_vdpau_decoder = {
-    .name           = "wmv3_vdpau",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_WMV3,
-    .priv_data_size = sizeof(VC1Context),
-    .init           = vc1_decode_init,
-    .close          = vc1_decode_end,
-    .decode         = vc1_decode_frame,
-    .capabilities   = CODEC_CAP_DR1 | CODEC_CAP_DELAY | CODEC_CAP_HWACCEL_VDPAU,
-    .long_name      = NULL_IF_CONFIG_SMALL("Windows Media Video 9 VDPAU"),
-    .pix_fmts       = (const enum PixelFormat[]){ PIX_FMT_VDPAU_WMV3, PIX_FMT_NONE },
-    .profiles       = NULL_IF_CONFIG_SMALL(profiles)
-};
+    "wmv3_vdpau",
+    NULL_IF_CONFIG_SMALL("Windows Media Video 9 VDPAU"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_WMV3,
+    CODEC_CAP_DR1 | CODEC_CAP_DELAY | CODEC_CAP_HWACCEL_VDPAU,
+    0, tmp__0,
+    0, 0, 0, 0, 0, NULL_IF_CONFIG_SMALL(profiles)
+,
+    sizeof(VC1Context),
+    0, 0, 0, 0, 0, vc1_decode_init,
+    0, 0, vc1_decode_frame,
+    vc1_decode_end};
 #endif
 
 #if CONFIG_VC1_VDPAU_DECODER
+static const enum PixelFormat tmp__1[] = { PIX_FMT_VDPAU_VC1, PIX_FMT_NONE };
 AVCodec ff_vc1_vdpau_decoder = {
-    .name           = "vc1_vdpau",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_VC1,
-    .priv_data_size = sizeof(VC1Context),
-    .init           = vc1_decode_init,
-    .close          = vc1_decode_end,
-    .decode         = vc1_decode_frame,
-    .capabilities   = CODEC_CAP_DR1 | CODEC_CAP_DELAY | CODEC_CAP_HWACCEL_VDPAU,
-    .long_name      = NULL_IF_CONFIG_SMALL("SMPTE VC-1 VDPAU"),
-    .pix_fmts       = (const enum PixelFormat[]){ PIX_FMT_VDPAU_VC1, PIX_FMT_NONE },
-    .profiles       = NULL_IF_CONFIG_SMALL(profiles)
-};
+    "vc1_vdpau",
+    NULL_IF_CONFIG_SMALL("SMPTE VC-1 VDPAU"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_VC1,
+    CODEC_CAP_DR1 | CODEC_CAP_DELAY | CODEC_CAP_HWACCEL_VDPAU,
+    0, tmp__1,
+    0, 0, 0, 0, 0, NULL_IF_CONFIG_SMALL(profiles)
+,
+    sizeof(VC1Context),
+    0, 0, 0, 0, 0, vc1_decode_init,
+    0, 0, vc1_decode_frame,
+    vc1_decode_end};
 #endif
 
 #if CONFIG_WMV3IMAGE_DECODER
 AVCodec ff_wmv3image_decoder = {
-    .name           = "wmv3image",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_WMV3IMAGE,
-    .priv_data_size = sizeof(VC1Context),
-    .init           = vc1_decode_init,
-    .close          = vc1_decode_end,
-    .decode         = vc1_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .flush          = vc1_sprite_flush,
-    .long_name      = NULL_IF_CONFIG_SMALL("Windows Media Video 9 Image"),
-    .pix_fmts       = ff_pixfmt_list_420
-};
+    "wmv3image",
+    NULL_IF_CONFIG_SMALL("Windows Media Video 9 Image"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_WMV3IMAGE,
+    CODEC_CAP_DR1,
+    0, ff_pixfmt_list_420
+,
+    0, 0, 0, 0, 0, 0, sizeof(VC1Context),
+    0, 0, 0, 0, 0, vc1_decode_init,
+    0, 0, vc1_decode_frame,
+    vc1_decode_end,
+    vc1_sprite_flush};
 #endif
 
 #if CONFIG_VC1IMAGE_DECODER
 AVCodec ff_vc1image_decoder = {
-    .name           = "vc1image",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_VC1IMAGE,
-    .priv_data_size = sizeof(VC1Context),
-    .init           = vc1_decode_init,
-    .close          = vc1_decode_end,
-    .decode         = vc1_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .flush          = vc1_sprite_flush,
-    .long_name      = NULL_IF_CONFIG_SMALL("Windows Media Video 9 Image v2"),
-    .pix_fmts       = ff_pixfmt_list_420
-};
+    "vc1image",
+    NULL_IF_CONFIG_SMALL("Windows Media Video 9 Image v2"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_VC1IMAGE,
+    CODEC_CAP_DR1,
+    0, ff_pixfmt_list_420
+,
+    0, 0, 0, 0, 0, 0, sizeof(VC1Context),
+    0, 0, 0, 0, 0, vc1_decode_init,
+    0, 0, vc1_decode_frame,
+    vc1_decode_end,
+    vc1_sprite_flush};
 #endif

@@ -781,19 +781,21 @@ static const AVCodecDefault mp2_defaults[] = {
     { NULL },
 };
 
-AVCodec ff_mp2_encoder = {
-    .name                  = "mp2",
-    .type                  = AVMEDIA_TYPE_AUDIO,
-    .id                    = CODEC_ID_MP2,
-    .priv_data_size        = sizeof(MpegAudioContext),
-    .init                  = MPA_encode_init,
-    .encode2               = MPA_encode_frame,
-    .close                 = MPA_encode_close,
-    .sample_fmts           = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_S16,
-                                                            AV_SAMPLE_FMT_NONE },
-    .supported_samplerates = (const int[]){
+static const enum AVSampleFormat tmp__0[] = { AV_SAMPLE_FMT_S16,
+                                                            AV_SAMPLE_FMT_NONE };
+static const int tmp__1[] = {
         44100, 48000,  32000, 22050, 24000, 16000, 0
-    },
-    .long_name             = NULL_IF_CONFIG_SMALL("MP2 (MPEG audio layer 2)"),
-    .defaults              = mp2_defaults,
+    };
+AVCodec ff_mp2_encoder = {
+    "mp2",
+    NULL_IF_CONFIG_SMALL("MP2 (MPEG audio layer 2)"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_MP2,
+    0, 0, 0, tmp__1,
+    tmp__0,
+    0, 0, 0, 0, sizeof(MpegAudioContext),
+    0, 0, 0, mp2_defaults,
+    0, MPA_encode_init,
+    0, MPA_encode_frame,
+    0, MPA_encode_close,
 };

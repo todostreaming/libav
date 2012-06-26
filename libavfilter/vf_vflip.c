@@ -89,20 +89,22 @@ static void draw_slice(AVFilterLink *link, int y, int h, int slice_dir)
     ff_draw_slice(ctx->outputs[0], link->h - (y+h), h, -1 * slice_dir);
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, start_frame,
+                                    get_video_buffer,
+                                    0, 0, draw_slice,
+                                    0, 0, 0, config_input, },
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO, },
+                                  { NULL}};
 AVFilter avfilter_vf_vflip = {
-    .name      = "vflip",
-    .description = NULL_IF_CONFIG_SMALL("Flip the input video vertically."),
+    "vflip",
+    NULL_IF_CONFIG_SMALL("Flip the input video vertically."),
 
-    .priv_size = sizeof(FlipContext),
+    tmp__0,
 
-    .inputs    = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .get_video_buffer = get_video_buffer,
-                                    .start_frame      = start_frame,
-                                    .draw_slice       = draw_slice,
-                                    .config_props     = config_input, },
-                                  { .name = NULL}},
-    .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO, },
-                                  { .name = NULL}},
+    tmp__1,
+    0, 0, 0, sizeof(FlipContext),
 };

@@ -1955,21 +1955,21 @@ static int sdp_read_close(AVFormatContext *s)
 }
 
 static const AVClass sdp_demuxer_class = {
-    .class_name     = "SDP demuxer",
-    .item_name      = av_default_item_name,
-    .option         = sdp_options,
-    .version        = LIBAVUTIL_VERSION_INT,
+    "SDP demuxer",
+    av_default_item_name,
+    sdp_options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 AVInputFormat ff_sdp_demuxer = {
-    .name           = "sdp",
-    .long_name      = NULL_IF_CONFIG_SMALL("SDP"),
-    .priv_data_size = sizeof(RTSPState),
-    .read_probe     = sdp_probe,
-    .read_header    = sdp_read_header,
-    .read_packet    = ff_rtsp_fetch_packet,
-    .read_close     = sdp_read_close,
-    .priv_class     = &sdp_demuxer_class,
+    "sdp",
+    NULL_IF_CONFIG_SMALL("SDP"),
+    0, 0, 0, &sdp_demuxer_class,
+    0, 0, sizeof(RTSPState),
+    sdp_probe,
+    sdp_read_header,
+    ff_rtsp_fetch_packet,
+    sdp_read_close,
 };
 #endif /* CONFIG_SDP_DEMUXER */
 
@@ -2072,21 +2072,21 @@ fail:
 }
 
 static const AVClass rtp_demuxer_class = {
-    .class_name     = "RTP demuxer",
-    .item_name      = av_default_item_name,
-    .option         = rtp_options,
-    .version        = LIBAVUTIL_VERSION_INT,
+    "RTP demuxer",
+    av_default_item_name,
+    rtp_options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 AVInputFormat ff_rtp_demuxer = {
-    .name           = "rtp",
-    .long_name      = NULL_IF_CONFIG_SMALL("RTP input format"),
-    .priv_data_size = sizeof(RTSPState),
-    .read_probe     = rtp_probe,
-    .read_header    = rtp_read_header,
-    .read_packet    = ff_rtsp_fetch_packet,
-    .read_close     = sdp_read_close,
-    .flags          = AVFMT_NOFILE,
-    .priv_class     = &rtp_demuxer_class,
+    "rtp",
+    NULL_IF_CONFIG_SMALL("RTP input format"),
+    AVFMT_NOFILE,
+    0, 0, &rtp_demuxer_class,
+    0, 0, sizeof(RTSPState),
+    rtp_probe,
+    rtp_read_header,
+    ff_rtsp_fetch_packet,
+    sdp_read_close,
 };
 #endif /* CONFIG_RTP_DEMUXER */

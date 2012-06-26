@@ -653,13 +653,13 @@ static av_cold int alac_decode_init(AVCodecContext * avctx)
 }
 
 AVCodec ff_alac_decoder = {
-    .name           = "alac",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_ALAC,
-    .priv_data_size = sizeof(ALACContext),
-    .init           = alac_decode_init,
-    .close          = alac_decode_close,
-    .decode         = alac_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("ALAC (Apple Lossless Audio Codec)"),
+    "alac",
+    NULL_IF_CONFIG_SMALL("ALAC (Apple Lossless Audio Codec)"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_ALAC,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(ALACContext),
+    0, 0, 0, 0, 0, alac_decode_init,
+    0, 0, alac_decode_frame,
+    alac_decode_close,
 };

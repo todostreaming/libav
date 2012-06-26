@@ -331,25 +331,27 @@ static av_cold void uninit(AVFilterContext *ctx)
     select->pending_frames = NULL;
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, start_frame,
+                                    ff_null_get_video_buffer,
+                                    0, end_frame ,
+                                    draw_slice,
+                                    0, 0, 0, config_input},
+                                  { NULL }};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, 0, 0, 0, 0, 0, 0, poll_frame,
+                                    request_frame, },
+                                  { NULL}};
 AVFilter avfilter_vf_select = {
-    .name      = "select",
-    .description = NULL_IF_CONFIG_SMALL("Select frames to pass in output."),
-    .init      = init,
-    .uninit    = uninit,
+    "select",
+    NULL_IF_CONFIG_SMALL("Select frames to pass in output."),
+    tmp__0,
+    tmp__1,
 
-    .priv_size = sizeof(SelectContext),
+    init,
 
-    .inputs    = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .get_video_buffer = ff_null_get_video_buffer,
-                                    .config_props     = config_input,
-                                    .start_frame      = start_frame,
-                                    .draw_slice       = draw_slice,
-                                    .end_frame        = end_frame },
-                                  { .name = NULL }},
-    .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .poll_frame       = poll_frame,
-                                    .request_frame    = request_frame, },
-                                  { .name = NULL}},
+    uninit,
+    0, sizeof(SelectContext),
 };

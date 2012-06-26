@@ -142,7 +142,7 @@ static int color_request_frame(AVFilterLink *link)
 {
     ColorContext *color = link->src->priv;
     AVFilterBufferRef *picref = ff_get_video_buffer(link, AV_PERM_WRITE, color->w, color->h);
-    picref->video->pixel_aspect = (AVRational) {1, 1};
+    {picref->video->pixel_aspect.num = 1;picref->video->pixel_aspect.den = 1;}
     picref->pts                 = color->pts++;
     picref->pos                 = -1;
 
@@ -157,21 +157,23 @@ static int color_request_frame(AVFilterLink *link)
     return 0;
 }
 
+static AVFilterPad tmp__0[] = {{ NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, color_request_frame,
+                                    color_config_props },
+                                  { NULL}};
 AVFilter avfilter_vsrc_color = {
-    .name        = "color",
-    .description = NULL_IF_CONFIG_SMALL("Provide an uniformly colored input, syntax is: [color[:size[:rate]]]"),
+    "color",
+    NULL_IF_CONFIG_SMALL("Provide an uniformly colored input, syntax is: [color[:size[:rate]]]"),
 
-    .priv_size = sizeof(ColorContext),
-    .init      = color_init,
-    .uninit    = color_uninit,
+    tmp__0,
+    tmp__1,
+    color_init,
 
-    .query_formats = query_formats,
+    color_uninit,
 
-    .inputs    = (AVFilterPad[]) {{ .name = NULL}},
+    query_formats,
 
-    .outputs   = (AVFilterPad[]) {{ .name            = "default",
-                                    .type            = AVMEDIA_TYPE_VIDEO,
-                                    .request_frame   = color_request_frame,
-                                    .config_props    = color_config_props },
-                                  { .name = NULL}},
+    sizeof(ColorContext),
 };

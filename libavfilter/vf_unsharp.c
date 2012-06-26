@@ -235,25 +235,27 @@ static void draw_slice(AVFilterLink *link, int y, int h, int slice_dir)
 {
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    AV_PERM_READ,
+                                    0, 0, 0, 0, end_frame,
+                                    draw_slice,
+                                    0, 0, 0, config_props, },
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO, },
+                                  { NULL}};
 AVFilter avfilter_vf_unsharp = {
-    .name      = "unsharp",
-    .description = NULL_IF_CONFIG_SMALL("Sharpen or blur the input video."),
+    "unsharp",
+    NULL_IF_CONFIG_SMALL("Sharpen or blur the input video."),
 
-    .priv_size = sizeof(UnsharpContext),
+    tmp__0,
 
-    .init = init,
-    .uninit = uninit,
-    .query_formats = query_formats,
+    tmp__1,
+    init,
+    uninit,
 
-    .inputs    = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .draw_slice       = draw_slice,
-                                    .end_frame        = end_frame,
-                                    .config_props     = config_props,
-                                    .min_perms        = AV_PERM_READ, },
-                                  { .name = NULL}},
+    query_formats,
 
-    .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO, },
-                                  { .name = NULL}},
+    sizeof(UnsharpContext),
 };

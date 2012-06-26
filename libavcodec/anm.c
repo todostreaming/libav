@@ -184,13 +184,13 @@ static av_cold int decode_end(AVCodecContext *avctx)
 }
 
 AVCodec ff_anm_decoder = {
-    .name           = "anm",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_ANM,
-    .priv_data_size = sizeof(AnmContext),
-    .init           = decode_init,
-    .close          = decode_end,
-    .decode         = decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("Deluxe Paint Animation"),
+    "anm",
+    NULL_IF_CONFIG_SMALL("Deluxe Paint Animation"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_ANM,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(AnmContext),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame,
+    decode_end,
 };

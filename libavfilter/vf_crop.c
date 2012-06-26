@@ -321,26 +321,28 @@ static void end_frame(AVFilterLink *link)
     ff_end_frame(link->dst->outputs[0]);
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, start_frame,
+                                    ff_null_get_video_buffer,
+                                    0, end_frame,
+                                    draw_slice,
+                                    0, 0, 0, config_input, },
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, config_output, },
+                                  { NULL}};
 AVFilter avfilter_vf_crop = {
-    .name      = "crop",
-    .description = NULL_IF_CONFIG_SMALL("Crop the input video to width:height:x:y."),
+    "crop",
+    NULL_IF_CONFIG_SMALL("Crop the input video to width:height:x:y."),
 
-    .priv_size = sizeof(CropContext),
+    tmp__0,
 
-    .query_formats = query_formats,
-    .init          = init,
-    .uninit        = uninit,
+    tmp__1,
+    init,
+    uninit,
 
-    .inputs    = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .start_frame      = start_frame,
-                                    .draw_slice       = draw_slice,
-                                    .end_frame        = end_frame,
-                                    .get_video_buffer = ff_null_get_video_buffer,
-                                    .config_props     = config_input, },
-                                  { .name = NULL}},
-    .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .config_props     = config_output, },
-                                  { .name = NULL}},
+    query_formats,
+    sizeof(CropContext),
 };

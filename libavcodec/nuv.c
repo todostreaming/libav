@@ -273,13 +273,13 @@ static av_cold int decode_end(AVCodecContext *avctx) {
 }
 
 AVCodec ff_nuv_decoder = {
-    .name           = "nuv",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_NUV,
-    .priv_data_size = sizeof(NuvContext),
-    .init           = decode_init,
-    .close          = decode_end,
-    .decode         = decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("NuppelVideo/RTJPEG"),
+    "nuv",
+    NULL_IF_CONFIG_SMALL("NuppelVideo/RTJPEG"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_NUV,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(NuvContext),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame,
+    decode_end,
 };

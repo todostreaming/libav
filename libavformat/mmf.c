@@ -291,26 +291,26 @@ static int mmf_read_packet(AVFormatContext *s,
 
 #if CONFIG_MMF_DEMUXER
 AVInputFormat ff_mmf_demuxer = {
-    .name           = "mmf",
-    .long_name      = NULL_IF_CONFIG_SMALL("Yamaha SMAF"),
-    .priv_data_size = sizeof(MMFContext),
-    .read_probe     = mmf_probe,
-    .read_header    = mmf_read_header,
-    .read_packet    = mmf_read_packet,
-    .read_seek      = ff_pcm_read_seek,
+    "mmf",
+    NULL_IF_CONFIG_SMALL("Yamaha SMAF"),
+    0, 0, 0, 0, 0, 0, sizeof(MMFContext),
+    mmf_probe,
+    mmf_read_header,
+    mmf_read_packet,
+    0, ff_pcm_read_seek,
 };
 #endif
 #if CONFIG_MMF_MUXER
 AVOutputFormat ff_mmf_muxer = {
-    .name              = "mmf",
-    .long_name         = NULL_IF_CONFIG_SMALL("Yamaha SMAF"),
-    .mime_type         = "application/vnd.smaf",
-    .extensions        = "mmf",
-    .priv_data_size    = sizeof(MMFContext),
-    .audio_codec       = CODEC_ID_ADPCM_YAMAHA,
-    .video_codec       = CODEC_ID_NONE,
-    .write_header      = mmf_write_header,
-    .write_packet      = mmf_write_packet,
-    .write_trailer     = mmf_write_trailer,
+    "mmf",
+    NULL_IF_CONFIG_SMALL("Yamaha SMAF"),
+    "application/vnd.smaf",
+    "mmf",
+    CODEC_ID_ADPCM_YAMAHA,
+    CODEC_ID_NONE,
+    0, 0, 0, 0, 0, sizeof(MMFContext),
+    mmf_write_header,
+    mmf_write_packet,
+    mmf_write_trailer,
 };
 #endif

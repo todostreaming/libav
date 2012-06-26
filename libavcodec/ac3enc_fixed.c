@@ -141,18 +141,19 @@ static av_cold int ac3_fixed_encode_init(AVCodecContext *avctx)
 }
 
 
+static const enum AVSampleFormat tmp__0[] = { AV_SAMPLE_FMT_S16,
+                                                      AV_SAMPLE_FMT_NONE };
 AVCodec ff_ac3_fixed_encoder = {
-    .name            = "ac3_fixed",
-    .type            = AVMEDIA_TYPE_AUDIO,
-    .id              = CODEC_ID_AC3,
-    .priv_data_size  = sizeof(AC3EncodeContext),
-    .init            = ac3_fixed_encode_init,
-    .encode2         = ff_ac3_fixed_encode_frame,
-    .close           = ff_ac3_encode_close,
-    .sample_fmts     = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_S16,
-                                                      AV_SAMPLE_FMT_NONE },
-    .long_name       = NULL_IF_CONFIG_SMALL("ATSC A/52A (AC-3)"),
-    .priv_class      = &ac3enc_class,
-    .channel_layouts = ff_ac3_channel_layouts,
-    .defaults        = ac3_defaults,
+    "ac3_fixed",
+    NULL_IF_CONFIG_SMALL("ATSC A/52A (AC-3)"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_AC3,
+    0, 0, 0, 0, tmp__0,
+    ff_ac3_channel_layouts,
+    0, &ac3enc_class,
+    0, sizeof(AC3EncodeContext),
+    0, 0, 0, ac3_defaults,
+    0, ac3_fixed_encode_init,
+    0, ff_ac3_fixed_encode_frame,
+    0, ff_ac3_encode_close,
 };

@@ -328,20 +328,20 @@ retry:
 
 #if FF_API_APPLEHTTP_PROTO
 URLProtocol ff_applehttp_protocol = {
-    .name           = "applehttp",
-    .url_open       = hls_open,
-    .url_read       = hls_read,
-    .url_close      = hls_close,
-    .flags          = URL_PROTOCOL_FLAG_NESTED_SCHEME,
-    .priv_data_size = sizeof(HLSContext),
+    "applehttp",
+    hls_open,
+    0, hls_read,
+    0, 0, hls_close,
+    0, 0, 0, 0, 0, sizeof(HLSContext),
+    0, URL_PROTOCOL_FLAG_NESTED_SCHEME,
 };
 #endif
 
 URLProtocol ff_hls_protocol = {
-    .name           = "hls",
-    .url_open       = hls_open,
-    .url_read       = hls_read,
-    .url_close      = hls_close,
-    .flags          = URL_PROTOCOL_FLAG_NESTED_SCHEME,
-    .priv_data_size = sizeof(HLSContext),
+    "hls",
+    hls_open,
+    0, hls_read,
+    0, 0, hls_close,
+    0, 0, 0, 0, 0, sizeof(HLSContext),
+    0, URL_PROTOCOL_FLAG_NESTED_SCHEME,
 };

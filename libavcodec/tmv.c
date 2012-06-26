@@ -99,13 +99,13 @@ static av_cold int tmv_decode_close(AVCodecContext *avctx)
 }
 
 AVCodec ff_tmv_decoder = {
-    .name           = "tmv",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_TMV,
-    .priv_data_size = sizeof(TMVContext),
-    .init           = tmv_decode_init,
-    .close          = tmv_decode_close,
-    .decode         = tmv_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("8088flex TMV"),
+    "tmv",
+    NULL_IF_CONFIG_SMALL("8088flex TMV"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_TMV,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(TMVContext),
+    0, 0, 0, 0, 0, tmv_decode_init,
+    0, 0, tmv_decode_frame,
+    tmv_decode_close,
 };

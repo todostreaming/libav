@@ -857,13 +857,13 @@ static av_cold int mss3_decode_end(AVCodecContext *avctx)
 }
 
 AVCodec ff_msa1_decoder = {
-    .name           = "msa1",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_MSA1,
-    .priv_data_size = sizeof(MSS3Context),
-    .init           = mss3_decode_init,
-    .close          = mss3_decode_end,
-    .decode         = mss3_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("MS ATC Screen"),
+    "msa1",
+    NULL_IF_CONFIG_SMALL("MS ATC Screen"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_MSA1,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(MSS3Context),
+    0, 0, 0, 0, 0, mss3_decode_init,
+    0, 0, mss3_decode_frame,
+    mss3_decode_end,
 };

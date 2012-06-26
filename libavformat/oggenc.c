@@ -79,10 +79,10 @@ static const AVOption options[] = {
 };
 
 static const AVClass ogg_muxer_class = {
-    .class_name = "Ogg muxer",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "Ogg muxer",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 
@@ -151,10 +151,10 @@ static int ogg_compare_granule(AVFormatContext *s, OGGPage *next, OGGPage *page)
     if (next->granule == -1 || page->granule == -1)
         return 0;
 
-    next_granule = av_rescale_q(ogg_granule_to_timestamp(st2->priv_data, next->granule),
-                                st2->time_base, AV_TIME_BASE_Q);
-    cur_granule  = av_rescale_q(ogg_granule_to_timestamp(st->priv_data, page->granule),
-                                st ->time_base, AV_TIME_BASE_Q);
+    { AVRational tmp__0 = {1, AV_TIME_BASE}; next_granule = av_rescale_q(ogg_granule_to_timestamp(st2->priv_data, next->granule),
+                                st2->time_base, tmp__0); }
+    { AVRational tmp__1 = {1, AV_TIME_BASE}; cur_granule  = av_rescale_q(ogg_granule_to_timestamp(st->priv_data, page->granule),
+                                st ->time_base, tmp__1); }
     return next_granule > cur_granule;
 }
 
@@ -528,15 +528,15 @@ static int ogg_write_trailer(AVFormatContext *s)
 }
 
 AVOutputFormat ff_ogg_muxer = {
-    .name              = "ogg",
-    .long_name         = NULL_IF_CONFIG_SMALL("Ogg"),
-    .mime_type         = "application/ogg",
-    .extensions        = "ogg,ogv,spx",
-    .priv_data_size    = sizeof(OGGContext),
-    .audio_codec       = CODEC_ID_FLAC,
-    .video_codec       = CODEC_ID_THEORA,
-    .write_header      = ogg_write_header,
-    .write_packet      = ogg_write_packet,
-    .write_trailer     = ogg_write_trailer,
-    .priv_class        = &ogg_muxer_class,
+    "ogg",
+    NULL_IF_CONFIG_SMALL("Ogg"),
+    "application/ogg",
+    "ogg,ogv,spx",
+    CODEC_ID_FLAC,
+    CODEC_ID_THEORA,
+    0, 0, 0, &ogg_muxer_class,
+    0, sizeof(OGGContext),
+    ogg_write_header,
+    ogg_write_packet,
+    ogg_write_trailer,
 };

@@ -66,68 +66,68 @@ typedef struct {
 } SiprModeParam;
 
 static const SiprModeParam modes[MODE_COUNT] = {
-    [MODE_16k] = {
-        .mode_name          = "16k",
-        .bits_per_frame     = 160,
-        .subframe_count     = SUBFRAME_COUNT_16k,
-        .frames_per_packet  = 1,
-        .pitch_sharp_factor = 0.00,
+    /* MODE_16k */ {
+        "16k",
+        160,
+        SUBFRAME_COUNT_16k,
+        1,
+        0.00,
 
-        .number_of_fc_indexes = 10,
-        .ma_predictor_bits    = 1,
-        .vq_indexes_bits      = {7, 8, 7, 7, 7},
-        .pitch_delay_bits     = {9, 6},
-        .gp_index_bits        = 4,
-        .fc_index_bits        = {4, 5, 4, 5, 4, 5, 4, 5, 4, 5},
-        .gc_index_bits        = 5
+        10,
+        1,
+        {7, 8, 7, 7, 7},
+        {9, 6},
+        4,
+        {4, 5, 4, 5, 4, 5, 4, 5, 4, 5},
+        5
     },
 
-    [MODE_8k5] = {
-        .mode_name          = "8k5",
-        .bits_per_frame     = 152,
-        .subframe_count     = 3,
-        .frames_per_packet  = 1,
-        .pitch_sharp_factor = 0.8,
+    /* MODE_8k5 */ {
+        "8k5",
+        152,
+        3,
+        1,
+        0.8,
 
-        .number_of_fc_indexes = 3,
-        .ma_predictor_bits    = 0,
-        .vq_indexes_bits      = {6, 7, 7, 7, 5},
-        .pitch_delay_bits     = {8, 5, 5},
-        .gp_index_bits        = 0,
-        .fc_index_bits        = {9, 9, 9},
-        .gc_index_bits        = 7
+        3,
+        0,
+        {6, 7, 7, 7, 5},
+        {8, 5, 5},
+        0,
+        {9, 9, 9},
+        7
     },
 
-    [MODE_6k5] = {
-        .mode_name          = "6k5",
-        .bits_per_frame     = 232,
-        .subframe_count     = 3,
-        .frames_per_packet  = 2,
-        .pitch_sharp_factor = 0.8,
+    /* MODE_6k5 */ {
+        "6k5",
+        232,
+        3,
+        2,
+        0.8,
 
-        .number_of_fc_indexes = 3,
-        .ma_predictor_bits    = 0,
-        .vq_indexes_bits      = {6, 7, 7, 7, 5},
-        .pitch_delay_bits     = {8, 5, 5},
-        .gp_index_bits        = 0,
-        .fc_index_bits        = {5, 5, 5},
-        .gc_index_bits        = 7
+        3,
+        0,
+        {6, 7, 7, 7, 5},
+        {8, 5, 5},
+        0,
+        {5, 5, 5},
+        7
     },
 
-    [MODE_5k0] = {
-        .mode_name          = "5k0",
-        .bits_per_frame     = 296,
-        .subframe_count     = 5,
-        .frames_per_packet  = 2,
-        .pitch_sharp_factor = 0.85,
+    /* MODE_5k0 */ {
+        "5k0",
+        296,
+        5,
+        2,
+        0.85,
 
-        .number_of_fc_indexes = 1,
-        .ma_predictor_bits    = 0,
-        .vq_indexes_bits      = {6, 7, 7, 7, 5},
-        .pitch_delay_bits     = {8, 5, 8, 5, 5},
-        .gp_index_bits        = 0,
-        .fc_index_bits        = {10},
-        .gc_index_bits        = 7
+        1,
+        0,
+        {6, 7, 7, 7, 5},
+        {8, 5, 8, 5, 5},
+        0,
+        {10},
+        7
     }
 };
 
@@ -360,6 +360,8 @@ static void decode_fixed_sparse(AMRFixed *fixed_sparse, const int16_t *pulses,
     }
 }
 
+static const float tmp__0[2] = {-1.99997   , 1.000000000};
+static const float tmp__1[2] = {-1.93307352, 0.935891986};
 static void decode_frame(SiprContext *ctx, SiprParameters *params,
                          float *out_data)
 {
@@ -468,8 +470,8 @@ static void decode_frame(SiprContext *ctx, SiprParameters *params,
            (PITCH_DELAY_MAX + L_INTERPOL) * sizeof(float));
 
     ff_acelp_apply_order_2_transfer_function(out_data, synth,
-                                             (const float[2]) {-1.99997   , 1.000000000},
-                                             (const float[2]) {-1.93307352, 0.935891986},
+                                             tmp__0,
+                                             tmp__1,
                                              0.939805806,
                                              ctx->highpass_filt_mem,
                                              frame_size);
@@ -559,12 +561,12 @@ static int sipr_decode_frame(AVCodecContext *avctx, void *data,
 }
 
 AVCodec ff_sipr_decoder = {
-    .name           = "sipr",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_SIPR,
-    .priv_data_size = sizeof(SiprContext),
-    .init           = sipr_decoder_init,
-    .decode         = sipr_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("RealAudio SIPR / ACELP.NET"),
+    "sipr",
+    NULL_IF_CONFIG_SMALL("RealAudio SIPR / ACELP.NET"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_SIPR,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(SiprContext),
+    0, 0, 0, 0, 0, sipr_decoder_init,
+    0, 0, sipr_decode_frame,
 };

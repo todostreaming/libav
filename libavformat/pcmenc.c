@@ -24,13 +24,13 @@
 
 #define PCMDEF(name_, long_name_, ext, codec)               \
 AVOutputFormat ff_pcm_ ## name_ ## _muxer = {               \
-    .name         = #name_,                                 \
-    .long_name    = NULL_IF_CONFIG_SMALL(long_name_),       \
-    .extensions   = ext,                                    \
-    .audio_codec  = codec,                                  \
-    .video_codec  = CODEC_ID_NONE,                          \
-    .write_packet = ff_raw_write_packet,                    \
-    .flags        = AVFMT_NOTIMESTAMPS,                     \
+    #name_,                                 \
+    NULL_IF_CONFIG_SMALL(long_name_),       \
+    0, ext,                                    \
+    codec,                                  \
+    CODEC_ID_NONE,                          \
+    0, AVFMT_NOTIMESTAMPS,                    \
+    0, 0, 0, 0, 0, ff_raw_write_packet,                     \
 };
 
 PCMDEF(f64be, "PCM 64 bit floating-point big-endian format",

@@ -241,10 +241,10 @@ WINDOW_FUNC(eight_short)
 static void (*const apply_window[4])(DSPContext *dsp, AVFloatDSPContext *fdsp,
                                      SingleChannelElement *sce,
                                      const float *audio) = {
-    [ONLY_LONG_SEQUENCE]   = apply_only_long_window,
-    [LONG_START_SEQUENCE]  = apply_long_start_window,
-    [EIGHT_SHORT_SEQUENCE] = apply_eight_short_window,
-    [LONG_STOP_SEQUENCE]   = apply_long_stop_window
+    /* ONLY_LONG_SEQUENCE */ apply_only_long_window,
+    /* LONG_START_SEQUENCE */ apply_long_start_window,
+    /* EIGHT_SHORT_SEQUENCE */ apply_eight_short_window,
+    /* LONG_STOP_SEQUENCE */ apply_long_stop_window
 };
 
 static void apply_window_and_mdct(AACEncContext *s, SingleChannelElement *sce,
@@ -802,10 +802,10 @@ fail:
 
 #define AACENC_FLAGS AV_OPT_FLAG_ENCODING_PARAM | AV_OPT_FLAG_AUDIO_PARAM
 static const AVOption aacenc_options[] = {
-    {"stereo_mode", "Stereo coding method", offsetof(AACEncContext, options.stereo_mode), AV_OPT_TYPE_INT, {.dbl = 0}, -1, 1, AACENC_FLAGS, "stereo_mode"},
-        {"auto",     "Selected by the Encoder", 0, AV_OPT_TYPE_CONST, {.dbl = -1 }, INT_MIN, INT_MAX, AACENC_FLAGS, "stereo_mode"},
-        {"ms_off",   "Disable Mid/Side coding", 0, AV_OPT_TYPE_CONST, {.dbl =  0 }, INT_MIN, INT_MAX, AACENC_FLAGS, "stereo_mode"},
-        {"ms_force", "Force Mid/Side for the whole frame if possible", 0, AV_OPT_TYPE_CONST, {.dbl =  1 }, INT_MIN, INT_MAX, AACENC_FLAGS, "stereo_mode"},
+    {"stereo_mode", "Stereo coding method", offsetof(AACEncContext, options.stereo_mode), AV_OPT_TYPE_INT, {0}, -1, 1, AACENC_FLAGS, "stereo_mode"},
+        {"auto",     "Selected by the Encoder", 0, AV_OPT_TYPE_CONST, {-1 }, INT_MIN, INT_MAX, AACENC_FLAGS, "stereo_mode"},
+        {"ms_off",   "Disable Mid/Side coding", 0, AV_OPT_TYPE_CONST, {0 }, INT_MIN, INT_MAX, AACENC_FLAGS, "stereo_mode"},
+        {"ms_force", "Force Mid/Side for the whole frame if possible", 0, AV_OPT_TYPE_CONST, {1 }, INT_MIN, INT_MAX, AACENC_FLAGS, "stereo_mode"},
     {NULL}
 };
 
@@ -816,18 +816,19 @@ static const AVClass aacenc_class = {
     LIBAVUTIL_VERSION_INT,
 };
 
+static const enum AVSampleFormat tmp__0[] = { AV_SAMPLE_FMT_FLT,
+                                                     AV_SAMPLE_FMT_NONE };
 AVCodec ff_aac_encoder = {
-    .name           = "aac",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_AAC,
-    .priv_data_size = sizeof(AACEncContext),
-    .init           = aac_encode_init,
-    .encode2        = aac_encode_frame,
-    .close          = aac_encode_end,
-    .capabilities   = CODEC_CAP_SMALL_LAST_FRAME | CODEC_CAP_DELAY |
+    "aac",
+    NULL_IF_CONFIG_SMALL("Advanced Audio Coding"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_AAC,
+    CODEC_CAP_SMALL_LAST_FRAME | CODEC_CAP_DELAY |
                       CODEC_CAP_EXPERIMENTAL,
-    .sample_fmts    = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_FLT,
-                                                     AV_SAMPLE_FMT_NONE },
-    .long_name      = NULL_IF_CONFIG_SMALL("Advanced Audio Coding"),
-    .priv_class     = &aacenc_class,
+    0, 0, 0, tmp__0,
+    0, 0, &aacenc_class,
+    0, sizeof(AACEncContext),
+    0, 0, 0, 0, 0, aac_encode_init,
+    0, aac_encode_frame,
+    0, aac_encode_end,
 };

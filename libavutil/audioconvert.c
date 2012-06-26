@@ -28,30 +28,30 @@
 #include "audioconvert.h"
 
 static const char * const channel_names[] = {
-    [0]  = "FL",        /* front left */
-    [1]  = "FR",        /* front right */
-    [2]  = "FC",        /* front center */
-    [3]  = "LFE",       /* low frequency */
-    [4]  = "BL",        /* back left */
-    [5]  = "BR",        /* back right */
-    [6]  = "FLC",       /* front left-of-center  */
-    [7]  = "FRC",       /* front right-of-center */
-    [8]  = "BC",        /* back-center */
-    [9]  = "SL",        /* side left */
-    [10] = "SR",        /* side right */
-    [11] = "TC",        /* top center */
-    [12] = "TFL",       /* top front left */
-    [13] = "TFC",       /* top front center */
-    [14] = "TFR",       /* top front right */
-    [15] = "TBL",       /* top back left */
-    [16] = "TBC",       /* top back center */
-    [17] = "TBR",       /* top back right */
-    [29] = "DL",        /* downmix left */
-    [30] = "DR",        /* downmix right */
-    [31] = "WL",        /* wide left */
-    [32] = "WR",        /* wide right */
-    [33] = "SDL",       /* surround direct left */
-    [34] = "SDR",       /* surround direct right */
+    /* 0 */ "FL",        /* front left */
+    /* 1 */ "FR",        /* front right */
+    /* 2 */ "FC",        /* front center */
+    /* 3 */ "LFE",       /* low frequency */
+    /* 4 */ "BL",        /* back left */
+    /* 5 */ "BR",        /* back right */
+    /* 6 */ "FLC",       /* front left-of-center  */
+    /* 7 */ "FRC",       /* front right-of-center */
+    /* 8 */ "BC",        /* back-center */
+    /* 9 */ "SL",        /* side left */
+    /* 10 */ "SR",        /* side right */
+    /* 11 */ "TC",        /* top center */
+    /* 12 */ "TFL",       /* top front left */
+    /* 13 */ "TFC",       /* top front center */
+    /* 14 */ "TFR",       /* top front right */
+    /* 15 */ "TBL",       /* top back left */
+    /* 16 */ "TBC",       /* top back center */
+    /* 17 */ "TBR",       /* top back right */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 29 */ "DL",        /* downmix left */
+    /* 30 */ "DR",        /* downmix right */
+    /* 31 */ "WL",        /* wide left */
+    /* 32 */ "WR",        /* wide right */
+    /* 33 */ "SDL",       /* surround direct left */
+    /* 34 */ "SDR",       /* surround direct right */
 };
 
 static const char *get_channel_name(int channel_id)

@@ -252,13 +252,13 @@ static int sap_write_packet(AVFormatContext *s, AVPacket *pkt)
 }
 
 AVOutputFormat ff_sap_muxer = {
-    .name              = "sap",
-    .long_name         = NULL_IF_CONFIG_SMALL("SAP output format"),
-    .priv_data_size    = sizeof(struct SAPState),
-    .audio_codec       = CODEC_ID_AAC,
-    .video_codec       = CODEC_ID_MPEG4,
-    .write_header      = sap_write_header,
-    .write_packet      = sap_write_packet,
-    .write_trailer     = sap_write_close,
-    .flags             = AVFMT_NOFILE | AVFMT_GLOBALHEADER,
+    "sap",
+    NULL_IF_CONFIG_SMALL("SAP output format"),
+    0, 0, CODEC_ID_AAC,
+    CODEC_ID_MPEG4,
+    0, AVFMT_NOFILE | AVFMT_GLOBALHEADER,
+    0, 0, 0, sizeof(struct SAPState),
+    sap_write_header,
+    sap_write_packet,
+    sap_write_close,
 };

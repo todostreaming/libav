@@ -419,28 +419,30 @@ static int encode_superframe(AVCodecContext *avctx, AVPacket *avpkt,
     return 0;
 }
 
+static const enum AVSampleFormat tmp__0[] = { AV_SAMPLE_FMT_S16,
+                                                     AV_SAMPLE_FMT_NONE };
 AVCodec ff_wmav1_encoder = {
-    .name           = "wmav1",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_WMAV1,
-    .priv_data_size = sizeof(WMACodecContext),
-    .init           = encode_init,
-    .encode2        = encode_superframe,
-    .close          = ff_wma_end,
-    .sample_fmts    = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_S16,
-                                                     AV_SAMPLE_FMT_NONE },
-    .long_name      = NULL_IF_CONFIG_SMALL("Windows Media Audio 1"),
+    "wmav1",
+    NULL_IF_CONFIG_SMALL("Windows Media Audio 1"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_WMAV1,
+    0, 0, 0, 0, tmp__0,
+    0, 0, 0, 0, sizeof(WMACodecContext),
+    0, 0, 0, 0, 0, encode_init,
+    0, encode_superframe,
+    0, ff_wma_end,
 };
 
+static const enum AVSampleFormat tmp__1[] = { AV_SAMPLE_FMT_S16,
+                                                     AV_SAMPLE_FMT_NONE };
 AVCodec ff_wmav2_encoder = {
-    .name           = "wmav2",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_WMAV2,
-    .priv_data_size = sizeof(WMACodecContext),
-    .init           = encode_init,
-    .encode2        = encode_superframe,
-    .close          = ff_wma_end,
-    .sample_fmts    = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_S16,
-                                                     AV_SAMPLE_FMT_NONE },
-    .long_name      = NULL_IF_CONFIG_SMALL("Windows Media Audio 2"),
+    "wmav2",
+    NULL_IF_CONFIG_SMALL("Windows Media Audio 2"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_WMAV2,
+    0, 0, 0, 0, tmp__1,
+    0, 0, 0, 0, sizeof(WMACodecContext),
+    0, 0, 0, 0, 0, encode_init,
+    0, encode_superframe,
+    0, ff_wma_end,
 };

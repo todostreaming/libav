@@ -27,20 +27,22 @@ static void end_frame(AVFilterLink *link)
 {
 }
 
-AVFilter avfilter_vsink_nullsink = {
-    .name        = "nullsink",
-    .description = NULL_IF_CONFIG_SMALL("Do absolutely nothing with the input video."),
-
-    .priv_size = 0,
-
-    .inputs    = (AVFilterPad[]) {
+static AVFilterPad tmp__0[] = {
         {
-            .name            = "default",
-            .type            = AVMEDIA_TYPE_VIDEO,
-            .start_frame     = start_frame,
-            .end_frame       = end_frame,
+            "default",
+            AVMEDIA_TYPE_VIDEO,
+            0, 0, start_frame,
+            0, 0, end_frame,
         },
-        { .name = NULL},
-    },
-    .outputs   = (AVFilterPad[]) {{ .name = NULL }},
+        { NULL},
+    };
+static AVFilterPad tmp__1[] = {{ NULL }};
+AVFilter avfilter_vsink_nullsink = {
+    "nullsink",
+    NULL_IF_CONFIG_SMALL("Do absolutely nothing with the input video."),
+
+    tmp__0,
+
+    tmp__1,
+    0, 0, 0, 0,
 };

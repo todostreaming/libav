@@ -266,24 +266,24 @@ static int end_frame(AVCodecContext *avctx)
 
 #if CONFIG_WMV3_DXVA2_HWACCEL
 AVHWAccel ff_wmv3_dxva2_hwaccel = {
-    .name           = "wmv3_dxva2",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_WMV3,
-    .pix_fmt        = PIX_FMT_DXVA2_VLD,
-    .start_frame    = start_frame,
-    .decode_slice   = decode_slice,
-    .end_frame      = end_frame,
-    .priv_data_size = sizeof(struct dxva2_picture_context),
+    "wmv3_dxva2",
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_WMV3,
+    PIX_FMT_DXVA2_VLD,
+    0, 0, start_frame,
+    decode_slice,
+    end_frame,
+    sizeof(struct dxva2_picture_context),
 };
 #endif
 
 AVHWAccel ff_vc1_dxva2_hwaccel = {
-    .name           = "vc1_dxva2",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_VC1,
-    .pix_fmt        = PIX_FMT_DXVA2_VLD,
-    .start_frame    = start_frame,
-    .decode_slice   = decode_slice,
-    .end_frame      = end_frame,
-    .priv_data_size = sizeof(struct dxva2_picture_context),
+    "vc1_dxva2",
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_VC1,
+    PIX_FMT_DXVA2_VLD,
+    0, 0, start_frame,
+    decode_slice,
+    end_frame,
+    sizeof(struct dxva2_picture_context),
 };

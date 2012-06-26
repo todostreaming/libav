@@ -241,11 +241,11 @@ fail:
 }
 
 URLProtocol ff_rtmphttp_protocol = {
-    .name           = "rtmphttp",
-    .url_open       = rtmp_http_open,
-    .url_read       = rtmp_http_read,
-    .url_write      = rtmp_http_write,
-    .url_close      = rtmp_http_close,
-    .priv_data_size = sizeof(RTMP_HTTPContext),
-    .flags          = URL_PROTOCOL_FLAG_NETWORK,
+    "rtmphttp",
+    rtmp_http_open,
+    0, rtmp_http_read,
+    rtmp_http_write,
+    0, rtmp_http_close,
+    0, 0, 0, 0, 0, sizeof(RTMP_HTTPContext),
+    0, URL_PROTOCOL_FLAG_NETWORK,
 };

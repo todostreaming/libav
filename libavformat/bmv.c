@@ -127,11 +127,11 @@ static int bmv_read_close(AVFormatContext *s)
 }
 
 AVInputFormat ff_bmv_demuxer = {
-    .name           = "bmv",
-    .long_name      = NULL_IF_CONFIG_SMALL("Discworld II BMV"),
-    .priv_data_size = sizeof(BMVContext),
-    .read_header    = bmv_read_header,
-    .read_packet    = bmv_read_packet,
-    .read_close     = bmv_read_close,
-    .extensions     = "bmv",
+    "bmv",
+    NULL_IF_CONFIG_SMALL("Discworld II BMV"),
+    0, "bmv",
+    0, 0, 0, 0, sizeof(BMVContext),
+    0, bmv_read_header,
+    bmv_read_packet,
+    bmv_read_close,
 };

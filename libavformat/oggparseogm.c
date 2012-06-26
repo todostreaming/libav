@@ -151,33 +151,33 @@ ogm_packet(AVFormatContext *s, int idx)
 }
 
 const struct ogg_codec ff_ogm_video_codec = {
-    .magic = "\001video",
-    .magicsize = 6,
-    .header = ogm_header,
-    .packet = ogm_packet,
-    .granule_is_start = 1,
+    "\001video",
+    6,
+    0, ogm_header,
+    ogm_packet,
+    0, 1,
 };
 
 const struct ogg_codec ff_ogm_audio_codec = {
-    .magic = "\001audio",
-    .magicsize = 6,
-    .header = ogm_header,
-    .packet = ogm_packet,
-    .granule_is_start = 1,
+    "\001audio",
+    6,
+    0, ogm_header,
+    ogm_packet,
+    0, 1,
 };
 
 const struct ogg_codec ff_ogm_text_codec = {
-    .magic = "\001text",
-    .magicsize = 5,
-    .header = ogm_header,
-    .packet = ogm_packet,
-    .granule_is_start = 1,
+    "\001text",
+    5,
+    0, ogm_header,
+    ogm_packet,
+    0, 1,
 };
 
 const struct ogg_codec ff_ogm_old_codec = {
-    .magic = "\001Direct Show Samples embedded in Ogg",
-    .magicsize = 35,
-    .header = ogm_dshow_header,
-    .packet = ogm_packet,
-    .granule_is_start = 1,
+    "\001Direct Show Samples embedded in Ogg",
+    35,
+    0, ogm_dshow_header,
+    ogm_packet,
+    0, 1,
 };

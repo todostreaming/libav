@@ -34,10 +34,10 @@ static int g726_ ## bitrate ##_init(AVFormatContext *s, int st_index, PayloadCon
 } \
 \
 RTPDynamicProtocolHandler ff_g726_ ## bitrate ## _dynamic_handler = { \
-    .enc_name   = "G726-" #bitrate, \
-    .codec_type = AVMEDIA_TYPE_AUDIO, \
-    .codec_id   = CODEC_ID_ADPCM_G726, \
-    .init       = g726_ ## bitrate ## _init, \
+    "G726-" #bitrate, \
+    AVMEDIA_TYPE_AUDIO, \
+    CODEC_ID_ADPCM_G726, \
+    0, g726_ ## bitrate ## _init, \
 }
 
 RTP_G726_HANDLER(16);

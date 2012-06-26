@@ -189,14 +189,14 @@ static int mp3_write_trailer(struct AVFormatContext *s)
 
 #if CONFIG_MP2_MUXER
 AVOutputFormat ff_mp2_muxer = {
-    .name              = "mp2",
-    .long_name         = NULL_IF_CONFIG_SMALL("MPEG audio layer 2"),
-    .mime_type         = "audio/x-mpeg",
-    .extensions        = "mp2,m2a",
-    .audio_codec       = CODEC_ID_MP2,
-    .video_codec       = CODEC_ID_NONE,
-    .write_packet      = ff_raw_write_packet,
-    .write_trailer     = mp3_write_trailer,
+    "mp2",
+    NULL_IF_CONFIG_SMALL("MPEG audio layer 2"),
+    "audio/x-mpeg",
+    "mp2,m2a",
+    CODEC_ID_MP2,
+    CODEC_ID_NONE,
+    0, 0, 0, 0, 0, 0, 0, ff_raw_write_packet,
+    mp3_write_trailer,
 };
 #endif
 
@@ -204,17 +204,17 @@ AVOutputFormat ff_mp2_muxer = {
 
 static const AVOption options[] = {
     { "id3v2_version", "Select ID3v2 version to write. Currently 3 and 4 are supported.",
-      offsetof(MP3Context, id3v2_version), AV_OPT_TYPE_INT, {.dbl = 4}, 3, 4, AV_OPT_FLAG_ENCODING_PARAM},
+      offsetof(MP3Context, id3v2_version), AV_OPT_TYPE_INT, {4}, 3, 4, AV_OPT_FLAG_ENCODING_PARAM},
     { "write_id3v1", "Enable ID3v1 writing. ID3v1 tags are written in UTF-8 which may not be supported by most software.",
-      offsetof(MP3Context, write_id3v1), AV_OPT_TYPE_INT, {.dbl = 0}, 0, 1, AV_OPT_FLAG_ENCODING_PARAM},
+      offsetof(MP3Context, write_id3v1), AV_OPT_TYPE_INT, {0}, 0, 1, AV_OPT_FLAG_ENCODING_PARAM},
     { NULL },
 };
 
 static const AVClass mp3_muxer_class = {
-    .class_name     = "MP3 muxer",
-    .item_name      = av_default_item_name,
-    .option         = options,
-    .version        = LIBAVUTIL_VERSION_INT,
+    "MP3 muxer",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 static int mp3_write_packet(AVFormatContext *s, AVPacket *pkt)
@@ -308,17 +308,17 @@ static int mp3_write_header(struct AVFormatContext *s)
 }
 
 AVOutputFormat ff_mp3_muxer = {
-    .name              = "mp3",
-    .long_name         = NULL_IF_CONFIG_SMALL("MPEG audio layer 3"),
-    .mime_type         = "audio/x-mpeg",
-    .extensions        = "mp3",
-    .priv_data_size    = sizeof(MP3Context),
-    .audio_codec       = CODEC_ID_MP3,
-    .video_codec       = CODEC_ID_PNG,
-    .write_header      = mp3_write_header,
-    .write_packet      = mp3_write_packet,
-    .write_trailer     = mp3_write_trailer,
-    .flags             = AVFMT_NOTIMESTAMPS,
-    .priv_class        = &mp3_muxer_class,
+    "mp3",
+    NULL_IF_CONFIG_SMALL("MPEG audio layer 3"),
+    "audio/x-mpeg",
+    "mp3",
+    CODEC_ID_MP3,
+    CODEC_ID_PNG,
+    0, AVFMT_NOTIMESTAMPS,
+    0, &mp3_muxer_class,
+    0, sizeof(MP3Context),
+    mp3_write_header,
+    mp3_write_packet,
+    mp3_write_trailer,
 };
 #endif

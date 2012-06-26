@@ -157,25 +157,25 @@ static int cdxl_read_packet(AVFormatContext *s, AVPacket *pkt)
 
 #define OFFSET(x) offsetof(CDXLDemuxContext, x)
 static const AVOption cdxl_options[] = {
-    { "sample_rate", "", OFFSET(sample_rate), AV_OPT_TYPE_INT,    { .dbl = 11025 }, 1, INT_MAX, AV_OPT_FLAG_DECODING_PARAM },
-    { "framerate",   "", OFFSET(framerate),   AV_OPT_TYPE_STRING, { .str = NULL },  0, 0,       AV_OPT_FLAG_DECODING_PARAM },
+    { "sample_rate", "", OFFSET(sample_rate), AV_OPT_TYPE_INT,    { 11025 }, 1, INT_MAX, AV_OPT_FLAG_DECODING_PARAM },
+    { "framerate",   "", OFFSET(framerate),   AV_OPT_TYPE_STRING, { 0, NULL },  0, 0,       AV_OPT_FLAG_DECODING_PARAM },
     { NULL },
 };
 
 static const AVClass cdxl_demuxer_class = {
-    .class_name = "CDXL demuxer",
-    .item_name  = av_default_item_name,
-    .option     = cdxl_options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "CDXL demuxer",
+    av_default_item_name,
+    cdxl_options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 AVInputFormat ff_cdxl_demuxer = {
-    .name           = "cdxl",
-    .long_name      = NULL_IF_CONFIG_SMALL("Commodore CDXL video format"),
-    .priv_data_size = sizeof(CDXLDemuxContext),
-    .read_header    = cdxl_read_header,
-    .read_packet    = cdxl_read_packet,
-    .extensions     = "cdxl,xl",
-    .flags          = AVFMT_GENERIC_INDEX,
-    .priv_class     = &cdxl_demuxer_class,
+    "cdxl",
+    NULL_IF_CONFIG_SMALL("Commodore CDXL video format"),
+    AVFMT_GENERIC_INDEX,
+    "cdxl,xl",
+    0, &cdxl_demuxer_class,
+    0, 0, sizeof(CDXLDemuxContext),
+    0, cdxl_read_header,
+    cdxl_read_packet,
 };

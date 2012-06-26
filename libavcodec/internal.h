@@ -140,8 +140,8 @@ int ff_alloc_packet(AVPacket *avpkt, int size);
 static av_always_inline int64_t ff_samples_to_time_base(AVCodecContext *avctx,
                                                         int64_t samples)
 {
-    return av_rescale_q(samples, (AVRational){ 1, avctx->sample_rate },
-                        avctx->time_base);
+    { AVRational tmp__0 = { 1, avctx->sample_rate }; return av_rescale_q(samples, tmp__0,
+                        avctx->time_base); }
 }
 
 #endif /* AVCODEC_INTERNAL_H */

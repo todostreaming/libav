@@ -418,13 +418,13 @@ err:
 }
 
 AVCodec ff_ulti_decoder = {
-    .name           = "ultimotion",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_ULTI,
-    .priv_data_size = sizeof(UltimotionDecodeContext),
-    .init           = ulti_decode_init,
-    .close          = ulti_decode_end,
-    .decode         = ulti_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("IBM UltiMotion"),
+    "ultimotion",
+    NULL_IF_CONFIG_SMALL("IBM UltiMotion"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_ULTI,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(UltimotionDecodeContext),
+    0, 0, 0, 0, 0, ulti_decode_init,
+    0, 0, ulti_decode_frame,
+    ulti_decode_end,
 };

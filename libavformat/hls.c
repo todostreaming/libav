@@ -743,12 +743,12 @@ static int hls_probe(AVProbeData *p)
 }
 
 AVInputFormat ff_hls_demuxer = {
-    .name           = "hls,applehttp",
-    .long_name      = NULL_IF_CONFIG_SMALL("Apple HTTP Live Streaming format"),
-    .priv_data_size = sizeof(HLSContext),
-    .read_probe     = hls_probe,
-    .read_header    = hls_read_header,
-    .read_packet    = hls_read_packet,
-    .read_close     = hls_close,
-    .read_seek      = hls_read_seek,
+    "hls,applehttp",
+    NULL_IF_CONFIG_SMALL("Apple HTTP Live Streaming format"),
+    0, 0, 0, 0, 0, 0, sizeof(HLSContext),
+    hls_probe,
+    hls_read_header,
+    hls_read_packet,
+    hls_close,
+    hls_read_seek,
 };

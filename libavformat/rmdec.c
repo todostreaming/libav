@@ -980,20 +980,20 @@ static int64_t rm_read_dts(AVFormatContext *s, int stream_index,
 }
 
 AVInputFormat ff_rm_demuxer = {
-    .name           = "rm",
-    .long_name      = NULL_IF_CONFIG_SMALL("RealMedia format"),
-    .priv_data_size = sizeof(RMDemuxContext),
-    .read_probe     = rm_probe,
-    .read_header    = rm_read_header,
-    .read_packet    = rm_read_packet,
-    .read_close     = rm_read_close,
-    .read_timestamp = rm_read_dts,
+    "rm",
+    NULL_IF_CONFIG_SMALL("RealMedia format"),
+    0, 0, 0, 0, 0, 0, sizeof(RMDemuxContext),
+    rm_probe,
+    rm_read_header,
+    rm_read_packet,
+    rm_read_close,
+    0, rm_read_dts,
 };
 
 AVInputFormat ff_rdt_demuxer = {
-    .name           = "rdt",
-    .long_name      = NULL_IF_CONFIG_SMALL("RDT demuxer"),
-    .priv_data_size = sizeof(RMDemuxContext),
-    .read_close     = rm_read_close,
-    .flags          = AVFMT_NOFILE,
+    "rdt",
+    NULL_IF_CONFIG_SMALL("RDT demuxer"),
+    AVFMT_NOFILE,
+    0, 0, 0, 0, 0, sizeof(RMDemuxContext),
+    0, 0, 0, rm_read_close,
 };

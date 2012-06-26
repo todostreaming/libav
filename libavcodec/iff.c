@@ -368,25 +368,25 @@ static av_cold int decode_end(AVCodecContext *avctx)
 }
 
 AVCodec ff_iff_ilbm_decoder = {
-    .name           = "iff_ilbm",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_IFF_ILBM,
-    .priv_data_size = sizeof(IffContext),
-    .init           = decode_init,
-    .close          = decode_end,
-    .decode         = decode_frame_ilbm,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("IFF ILBM"),
+    "iff_ilbm",
+    NULL_IF_CONFIG_SMALL("IFF ILBM"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_IFF_ILBM,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(IffContext),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame_ilbm,
+    decode_end,
 };
 
 AVCodec ff_iff_byterun1_decoder = {
-    .name           = "iff_byterun1",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_IFF_BYTERUN1,
-    .priv_data_size = sizeof(IffContext),
-    .init           = decode_init,
-    .close          = decode_end,
-    .decode         = decode_frame_byterun1,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("IFF ByteRun1"),
+    "iff_byterun1",
+    NULL_IF_CONFIG_SMALL("IFF ByteRun1"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_IFF_BYTERUN1,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(IffContext),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame_byterun1,
+    decode_end,
 };

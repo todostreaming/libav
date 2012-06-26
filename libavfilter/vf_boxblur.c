@@ -333,21 +333,23 @@ static void draw_slice(AVFilterLink *inlink, int y0, int h0, int slice_dir)
     ff_draw_slice(outlink, y0, h0, slice_dir);
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    AV_PERM_READ ,
+                                    0, 0, 0, 0, 0, draw_slice,
+                                    0, 0, 0, config_input},
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO, },
+                                  { NULL}};
 AVFilter avfilter_vf_boxblur = {
-    .name          = "boxblur",
-    .description   = NULL_IF_CONFIG_SMALL("Blur the input."),
-    .priv_size     = sizeof(BoxBlurContext),
-    .init          = init,
-    .uninit        = uninit,
-    .query_formats = query_formats,
+    "boxblur",
+    NULL_IF_CONFIG_SMALL("Blur the input."),
+    tmp__0,
+    tmp__1,
+    init,
+    uninit,
 
-    .inputs    = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .config_props     = config_input,
-                                    .draw_slice       = draw_slice,
-                                    .min_perms        = AV_PERM_READ },
-                                  { .name = NULL}},
-    .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO, },
-                                  { .name = NULL}},
+    query_formats,
+    sizeof(BoxBlurContext),
 };

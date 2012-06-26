@@ -1636,33 +1636,33 @@ static const AVOption options[] = {
 };
 
 static const AVClass mjpegdec_class = {
-    .class_name = "MJPEG decoder",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "MJPEG decoder",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 AVCodec ff_mjpeg_decoder = {
-    .name           = "mjpeg",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_MJPEG,
-    .priv_data_size = sizeof(MJpegDecodeContext),
-    .init           = ff_mjpeg_decode_init,
-    .close          = ff_mjpeg_decode_end,
-    .decode         = ff_mjpeg_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("MJPEG (Motion JPEG)"),
-    .priv_class     = &mjpegdec_class,
+    "mjpeg",
+    NULL_IF_CONFIG_SMALL("MJPEG (Motion JPEG)"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_MJPEG,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, &mjpegdec_class,
+    0, sizeof(MJpegDecodeContext),
+    0, 0, 0, 0, 0, ff_mjpeg_decode_init,
+    0, 0, ff_mjpeg_decode_frame,
+    ff_mjpeg_decode_end,
 };
 
 AVCodec ff_thp_decoder = {
-    .name           = "thp",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_THP,
-    .priv_data_size = sizeof(MJpegDecodeContext),
-    .init           = ff_mjpeg_decode_init,
-    .close          = ff_mjpeg_decode_end,
-    .decode         = ff_mjpeg_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("Nintendo Gamecube THP video"),
+    "thp",
+    NULL_IF_CONFIG_SMALL("Nintendo Gamecube THP video"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_THP,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(MJpegDecodeContext),
+    0, 0, 0, 0, 0, ff_mjpeg_decode_init,
+    0, 0, ff_mjpeg_decode_frame,
+    ff_mjpeg_decode_end,
 };

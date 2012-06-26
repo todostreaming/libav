@@ -573,16 +573,17 @@ static int alac_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
     return 0;
 }
 
+static const enum AVSampleFormat tmp__0[] = { AV_SAMPLE_FMT_S16,
+                                                     AV_SAMPLE_FMT_NONE };
 AVCodec ff_alac_encoder = {
-    .name           = "alac",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_ALAC,
-    .priv_data_size = sizeof(AlacEncodeContext),
-    .init           = alac_encode_init,
-    .encode2        = alac_encode_frame,
-    .close          = alac_encode_close,
-    .capabilities   = CODEC_CAP_SMALL_LAST_FRAME,
-    .sample_fmts    = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_S16,
-                                                     AV_SAMPLE_FMT_NONE },
-    .long_name      = NULL_IF_CONFIG_SMALL("ALAC (Apple Lossless Audio Codec)"),
+    "alac",
+    NULL_IF_CONFIG_SMALL("ALAC (Apple Lossless Audio Codec)"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_ALAC,
+    CODEC_CAP_SMALL_LAST_FRAME,
+    0, 0, 0, tmp__0,
+    0, 0, 0, 0, sizeof(AlacEncodeContext),
+    0, 0, 0, 0, 0, alac_encode_init,
+    0, alac_encode_frame,
+    0, alac_encode_close,
 };

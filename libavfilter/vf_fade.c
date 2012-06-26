@@ -150,24 +150,26 @@ static void end_frame(AVFilterLink *inlink)
     fade->frame_index++;
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    AV_PERM_READ | AV_PERM_WRITE,
+                                    AV_PERM_PRESERVE,
+                                    ff_null_start_frame,
+                                    ff_null_get_video_buffer,
+                                    0, end_frame,
+                                    draw_slice,
+                                    0, 0, 0, config_props, },
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO, },
+                                  { NULL}};
 AVFilter avfilter_vf_fade = {
-    .name          = "fade",
-    .description   = NULL_IF_CONFIG_SMALL("Fade in/out input video"),
-    .init          = init,
-    .priv_size     = sizeof(FadeContext),
-    .query_formats = query_formats,
+    "fade",
+    NULL_IF_CONFIG_SMALL("Fade in/out input video"),
+    tmp__0,
+    tmp__1,
+    init,
 
-    .inputs    = (AVFilterPad[]) {{ .name            = "default",
-                                    .type            = AVMEDIA_TYPE_VIDEO,
-                                    .config_props    = config_props,
-                                    .get_video_buffer = ff_null_get_video_buffer,
-                                    .start_frame      = ff_null_start_frame,
-                                    .draw_slice      = draw_slice,
-                                    .end_frame       = end_frame,
-                                    .min_perms       = AV_PERM_READ | AV_PERM_WRITE,
-                                    .rej_perms       = AV_PERM_PRESERVE, },
-                                  { .name = NULL}},
-    .outputs   = (AVFilterPad[]) {{ .name            = "default",
-                                    .type            = AVMEDIA_TYPE_VIDEO, },
-                                  { .name = NULL}},
+    0, query_formats,
+    sizeof(FadeContext),
 };

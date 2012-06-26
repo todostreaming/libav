@@ -418,16 +418,17 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
     return 0;
 }
 
+static const enum AVSampleFormat tmp__0[] = { AV_SAMPLE_FMT_FLT,
+                                                     AV_SAMPLE_FMT_NONE };
 AVCodec ff_nellymoser_encoder = {
-    .name           = "nellymoser",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_NELLYMOSER,
-    .priv_data_size = sizeof(NellyMoserEncodeContext),
-    .init           = encode_init,
-    .encode2        = encode_frame,
-    .close          = encode_end,
-    .capabilities   = CODEC_CAP_SMALL_LAST_FRAME | CODEC_CAP_DELAY,
-    .long_name      = NULL_IF_CONFIG_SMALL("Nellymoser Asao"),
-    .sample_fmts    = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_FLT,
-                                                     AV_SAMPLE_FMT_NONE },
+    "nellymoser",
+    NULL_IF_CONFIG_SMALL("Nellymoser Asao"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_NELLYMOSER,
+    CODEC_CAP_SMALL_LAST_FRAME | CODEC_CAP_DELAY,
+    0, 0, 0, tmp__0,
+    0, 0, 0, 0, sizeof(NellyMoserEncodeContext),
+    0, 0, 0, 0, 0, encode_init,
+    0, encode_frame,
+    0, encode_end,
 };

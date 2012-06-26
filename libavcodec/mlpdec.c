@@ -1145,25 +1145,25 @@ error:
 }
 
 AVCodec ff_mlp_decoder = {
-    .name           = "mlp",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_MLP,
-    .priv_data_size = sizeof(MLPDecodeContext),
-    .init           = mlp_decode_init,
-    .decode         = read_access_unit,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("MLP (Meridian Lossless Packing)"),
+    "mlp",
+    NULL_IF_CONFIG_SMALL("MLP (Meridian Lossless Packing)"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_MLP,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(MLPDecodeContext),
+    0, 0, 0, 0, 0, mlp_decode_init,
+    0, 0, read_access_unit,
 };
 
 #if CONFIG_TRUEHD_DECODER
 AVCodec ff_truehd_decoder = {
-    .name           = "truehd",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_TRUEHD,
-    .priv_data_size = sizeof(MLPDecodeContext),
-    .init           = mlp_decode_init,
-    .decode         = read_access_unit,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("TrueHD"),
+    "truehd",
+    NULL_IF_CONFIG_SMALL("TrueHD"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_TRUEHD,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(MLPDecodeContext),
+    0, 0, 0, 0, 0, mlp_decode_init,
+    0, 0, read_access_unit,
 };
 #endif /* CONFIG_TRUEHD_DECODER */

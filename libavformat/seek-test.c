@@ -117,12 +117,12 @@ int main(int argc, char **argv)
         timestamp= (i*19362894167LL) % (4*AV_TIME_BASE) - AV_TIME_BASE;
         if(stream_id>=0){
             st= ic->streams[stream_id];
-            timestamp= av_rescale_q(timestamp, AV_TIME_BASE_Q, st->time_base);
+            { AVRational tmp__0 = {1, AV_TIME_BASE}; timestamp= av_rescale_q(timestamp, tmp__0, st->time_base); }
         }
         //FIXME fully test the new seek API
         if(i&1) ret = avformat_seek_file(ic, stream_id, INT64_MIN, timestamp, timestamp, 0);
         else    ret = avformat_seek_file(ic, stream_id, timestamp, timestamp, INT64_MAX, 0);
-        ts_str(ts_buf, timestamp, stream_id < 0 ? AV_TIME_BASE_Q : st->time_base);
+        { AVRational tmp__1 = {1, AV_TIME_BASE}; ts_str(ts_buf, timestamp, stream_id < 0 ? tmp__1 : st->time_base); }
         printf("ret:%-10s st:%2d flags:%d  ts:%s\n", ret_str(ret), stream_id, i&1, ts_buf);
     }
 

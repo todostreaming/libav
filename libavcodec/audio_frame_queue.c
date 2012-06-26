@@ -67,9 +67,9 @@ int ff_af_queue_add(AudioFrameQueue *afq, const AVFrame *f)
     new_frame->next = NULL;
     new_frame->duration = f->nb_samples;
     if (f->pts != AV_NOPTS_VALUE) {
-        new_frame->pts = av_rescale_q(f->pts,
+        { AVRational tmp__0 = { 1, afq->avctx->sample_rate }; new_frame->pts = av_rescale_q(f->pts,
                                       afq->avctx->time_base,
-                                      (AVRational){ 1, afq->avctx->sample_rate });
+                                      tmp__0); }
         afq->next_pts = new_frame->pts + new_frame->duration;
     } else {
         new_frame->pts = AV_NOPTS_VALUE;

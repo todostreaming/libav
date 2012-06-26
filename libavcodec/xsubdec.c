@@ -71,7 +71,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size,
         return -1;
     }
     if (avpkt->pts != AV_NOPTS_VALUE)
-        packet_time = av_rescale_q(avpkt->pts, AV_TIME_BASE_Q, (AVRational){1, 1000});
+        { AVRational tmp__0 = {1, AV_TIME_BASE}; { AVRational tmp__1 = {1, 1000}; packet_time = av_rescale_q(avpkt->pts, tmp__0, tmp__1); }}
     sub->start_display_time = parse_timecode(buf +  1, packet_time);
     sub->end_display_time   = parse_timecode(buf + 14, packet_time);
     buf += 27;
@@ -134,10 +134,10 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size,
 }
 
 AVCodec ff_xsub_decoder = {
-    .name      = "xsub",
-    .type      = AVMEDIA_TYPE_SUBTITLE,
-    .id        = CODEC_ID_XSUB,
-    .init      = decode_init,
-    .decode    = decode_frame,
-    .long_name = NULL_IF_CONFIG_SMALL("XSUB"),
+    "xsub",
+    NULL_IF_CONFIG_SMALL("XSUB"),
+    AVMEDIA_TYPE_SUBTITLE,
+    CODEC_ID_XSUB,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame,
 };

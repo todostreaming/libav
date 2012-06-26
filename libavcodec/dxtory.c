@@ -98,12 +98,12 @@ static av_cold int decode_close(AVCodecContext *avctx)
 }
 
 AVCodec ff_dxtory_decoder = {
-    .name           = "dxtory",
-    .long_name      = NULL_IF_CONFIG_SMALL("Dxtory"),
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_DXTORY,
-    .init           = decode_init,
-    .close          = decode_close,
-    .decode         = decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
+    "dxtory",
+    NULL_IF_CONFIG_SMALL("Dxtory"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_DXTORY,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame,
+    decode_close,
 };

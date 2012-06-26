@@ -140,21 +140,23 @@ static av_cold void uninit(AVFilterContext *ctx)
     setpts->expr = NULL;
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, start_frame,
+                                    ff_null_get_video_buffer,
+                                    0, 0, 0, 0, 0, 0, config_input, },
+                                  { NULL }};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO, },
+                                  { NULL}};
 AVFilter avfilter_vf_setpts = {
-    .name      = "setpts",
-    .description = NULL_IF_CONFIG_SMALL("Set PTS for the output video frame."),
-    .init      = init,
-    .uninit    = uninit,
+    "setpts",
+    NULL_IF_CONFIG_SMALL("Set PTS for the output video frame."),
+    tmp__0,
+    tmp__1,
 
-    .priv_size = sizeof(SetPTSContext),
+    init,
 
-    .inputs    = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .get_video_buffer = ff_null_get_video_buffer,
-                                    .config_props     = config_input,
-                                    .start_frame      = start_frame, },
-                                  { .name = NULL }},
-    .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO, },
-                                  { .name = NULL}},
+    uninit,
+    0, sizeof(SetPTSContext),
 };

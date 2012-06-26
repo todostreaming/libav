@@ -1250,57 +1250,57 @@ static const AVOption options[] = {
 
 #define MPEGENC_CLASS(flavor)\
 static const AVClass flavor ## _class = {\
-    .class_name = #flavor " muxer",\
-    .item_name  = av_default_item_name,\
-    .version    = LIBAVUTIL_VERSION_INT,\
-    .option     = options,\
+    #flavor " muxer",\
+    av_default_item_name,\
+    options,\
+    LIBAVUTIL_VERSION_INT,\
 };
 
 #if CONFIG_MPEG1SYSTEM_MUXER
 MPEGENC_CLASS(mpeg)
 AVOutputFormat ff_mpeg1system_muxer = {
-    .name              = "mpeg",
-    .long_name         = NULL_IF_CONFIG_SMALL("MPEG-1 System format"),
-    .mime_type         = "video/mpeg",
-    .extensions        = "mpg,mpeg",
-    .priv_data_size    = sizeof(MpegMuxContext),
-    .audio_codec       = CODEC_ID_MP2,
-    .video_codec       = CODEC_ID_MPEG1VIDEO,
-    .write_header      = mpeg_mux_init,
-    .write_packet      = mpeg_mux_write_packet,
-    .write_trailer     = mpeg_mux_end,
-    .priv_class        = &mpeg_class,
+    "mpeg",
+    NULL_IF_CONFIG_SMALL("MPEG-1 System format"),
+    "video/mpeg",
+    "mpg,mpeg",
+    CODEC_ID_MP2,
+    CODEC_ID_MPEG1VIDEO,
+    0, 0, 0, &mpeg_class,
+    0, sizeof(MpegMuxContext),
+    mpeg_mux_init,
+    mpeg_mux_write_packet,
+    mpeg_mux_end,
 };
 #endif
 #if CONFIG_MPEG1VCD_MUXER
 MPEGENC_CLASS(vcd)
 AVOutputFormat ff_mpeg1vcd_muxer = {
-    .name              = "vcd",
-    .long_name         = NULL_IF_CONFIG_SMALL("MPEG-1 System format (VCD)"),
-    .mime_type         = "video/mpeg",
-    .priv_data_size    = sizeof(MpegMuxContext),
-    .audio_codec       = CODEC_ID_MP2,
-    .video_codec       = CODEC_ID_MPEG1VIDEO,
-    .write_header      = mpeg_mux_init,
-    .write_packet      = mpeg_mux_write_packet,
-    .write_trailer     = mpeg_mux_end,
-    .priv_class        = &vcd_class,
+    "vcd",
+    NULL_IF_CONFIG_SMALL("MPEG-1 System format (VCD)"),
+    "video/mpeg",
+    0, CODEC_ID_MP2,
+    CODEC_ID_MPEG1VIDEO,
+    0, 0, 0, &vcd_class,
+    0, sizeof(MpegMuxContext),
+    mpeg_mux_init,
+    mpeg_mux_write_packet,
+    mpeg_mux_end,
 };
 #endif
 #if CONFIG_MPEG2VOB_MUXER
 MPEGENC_CLASS(vob)
 AVOutputFormat ff_mpeg2vob_muxer = {
-    .name              = "vob",
-    .long_name         = NULL_IF_CONFIG_SMALL("MPEG-2 PS format (VOB)"),
-    .mime_type         = "video/mpeg",
-    .extensions        = "vob",
-    .priv_data_size    = sizeof(MpegMuxContext),
-    .audio_codec       = CODEC_ID_MP2,
-    .video_codec       = CODEC_ID_MPEG2VIDEO,
-    .write_header      = mpeg_mux_init,
-    .write_packet      = mpeg_mux_write_packet,
-    .write_trailer     = mpeg_mux_end,
-    .priv_class        = &vob_class,
+    "vob",
+    NULL_IF_CONFIG_SMALL("MPEG-2 PS format (VOB)"),
+    "video/mpeg",
+    "vob",
+    CODEC_ID_MP2,
+    CODEC_ID_MPEG2VIDEO,
+    0, 0, 0, &vob_class,
+    0, sizeof(MpegMuxContext),
+    mpeg_mux_init,
+    mpeg_mux_write_packet,
+    mpeg_mux_end,
 };
 #endif
 
@@ -1308,17 +1308,17 @@ AVOutputFormat ff_mpeg2vob_muxer = {
 #if CONFIG_MPEG2SVCD_MUXER
 MPEGENC_CLASS(svcd)
 AVOutputFormat ff_mpeg2svcd_muxer = {
-    .name              = "svcd",
-    .long_name         = NULL_IF_CONFIG_SMALL("MPEG-2 PS format (VOB)"),
-    .mime_type         = "video/mpeg",
-    .extensions        = "vob",
-    .priv_data_size    = sizeof(MpegMuxContext),
-    .audio_codec       = CODEC_ID_MP2,
-    .video_codec       = CODEC_ID_MPEG2VIDEO,
-    .write_header      = mpeg_mux_init,
-    .write_packet      = mpeg_mux_write_packet,
-    .write_trailer     = mpeg_mux_end,
-    .priv_class        = &svcd_class,
+    "svcd",
+    NULL_IF_CONFIG_SMALL("MPEG-2 PS format (VOB)"),
+    "video/mpeg",
+    "vob",
+    CODEC_ID_MP2,
+    CODEC_ID_MPEG2VIDEO,
+    0, 0, 0, &svcd_class,
+    0, sizeof(MpegMuxContext),
+    mpeg_mux_init,
+    mpeg_mux_write_packet,
+    mpeg_mux_end,
 };
 #endif
 
@@ -1326,16 +1326,16 @@ AVOutputFormat ff_mpeg2svcd_muxer = {
 #if CONFIG_MPEG2DVD_MUXER
 MPEGENC_CLASS(dvd)
 AVOutputFormat ff_mpeg2dvd_muxer = {
-    .name              = "dvd",
-    .long_name         = NULL_IF_CONFIG_SMALL("MPEG-2 PS format (DVD VOB)"),
-    .mime_type         = "video/mpeg",
-    .extensions        = "dvd",
-    .priv_data_size    = sizeof(MpegMuxContext),
-    .audio_codec       = CODEC_ID_MP2,
-    .video_codec       = CODEC_ID_MPEG2VIDEO,
-    .write_header      = mpeg_mux_init,
-    .write_packet      = mpeg_mux_write_packet,
-    .write_trailer     = mpeg_mux_end,
-    .priv_class        = &dvd_class,
+    "dvd",
+    NULL_IF_CONFIG_SMALL("MPEG-2 PS format (DVD VOB)"),
+    "video/mpeg",
+    "dvd",
+    CODEC_ID_MP2,
+    CODEC_ID_MPEG2VIDEO,
+    0, 0, 0, &dvd_class,
+    0, sizeof(MpegMuxContext),
+    mpeg_mux_init,
+    mpeg_mux_write_packet,
+    mpeg_mux_end,
 };
 #endif

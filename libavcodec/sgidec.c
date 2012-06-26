@@ -259,12 +259,12 @@ static av_cold int sgi_end(AVCodecContext *avctx)
 }
 
 AVCodec ff_sgi_decoder = {
-    .name           = "sgi",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_SGI,
-    .priv_data_size = sizeof(SgiState),
-    .init           = sgi_init,
-    .close          = sgi_end,
-    .decode         = decode_frame,
-    .long_name      = NULL_IF_CONFIG_SMALL("SGI image"),
+    "sgi",
+    NULL_IF_CONFIG_SMALL("SGI image"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_SGI,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, sizeof(SgiState),
+    0, 0, 0, 0, 0, sgi_init,
+    0, 0, decode_frame,
+    sgi_end,
 };

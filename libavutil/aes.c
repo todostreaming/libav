@@ -185,6 +185,8 @@ static void init_multbl2(uint32_t tbl[][256], const int c[4],
 }
 
 // this is based on the reference AES code by Paulo Barreto and Vincent Rijmen
+static const int tmp__0[4] = { 0xe, 0x9, 0xd, 0xb };
+static const int tmp__1[4] = { 0x2, 0x1, 0x1, 0x3 };
 int av_aes_init(AVAES *a, const uint8_t *key, int key_bits, int decrypt)
 {
     int i, j, t, rconpointer = 0;
@@ -210,9 +212,9 @@ int av_aes_init(AVAES *a, const uint8_t *key, int key_bits, int decrypt)
             inv_sbox[j] = i;
             sbox[i] = j;
         }
-        init_multbl2(dec_multbl, (const int[4]) { 0xe, 0x9, 0xd, 0xb },
+        init_multbl2(dec_multbl, tmp__0,
                      log8, alog8, inv_sbox);
-        init_multbl2(enc_multbl, (const int[4]) { 0x2, 0x1, 0x1, 0x3 },
+        init_multbl2(enc_multbl, tmp__1,
                      log8, alog8, sbox);
     }
 

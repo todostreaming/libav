@@ -159,19 +159,20 @@ static int bmp_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     return 0;
 }
 
-AVCodec ff_bmp_encoder = {
-    .name           = "bmp",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_BMP,
-    .priv_data_size = sizeof(BMPContext),
-    .init           = bmp_encode_init,
-    .encode2        = bmp_encode_frame,
-    .pix_fmts       = (const enum PixelFormat[]){
+static const enum PixelFormat tmp__0[] = {
         PIX_FMT_BGR24,
         PIX_FMT_RGB555, PIX_FMT_RGB444, PIX_FMT_RGB565,
         PIX_FMT_RGB8, PIX_FMT_BGR8, PIX_FMT_RGB4_BYTE, PIX_FMT_BGR4_BYTE, PIX_FMT_GRAY8, PIX_FMT_PAL8,
         PIX_FMT_MONOBLACK,
         PIX_FMT_NONE
-    },
-    .long_name      = NULL_IF_CONFIG_SMALL("BMP image"),
+    };
+AVCodec ff_bmp_encoder = {
+    "bmp",
+    NULL_IF_CONFIG_SMALL("BMP image"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_BMP,
+    0, 0, tmp__0,
+    0, 0, 0, 0, 0, 0, sizeof(BMPContext),
+    0, 0, 0, 0, 0, bmp_encode_init,
+    0, bmp_encode_frame,
 };

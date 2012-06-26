@@ -215,23 +215,25 @@ static void end_frame(AVFilterLink *inlink)
     avfilter_unref_buffer(inpicref);
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                        AVMEDIA_TYPE_VIDEO,
+                                        AV_PERM_READ,
+                                        AV_PERM_REUSE2|AV_PERM_PRESERVE,
+                                        start_frame,
+                                        get_video_buffer,
+                                        0, end_frame,
+                                        draw_slice,
+                                        0, 0, 0, config_input,},
+                                      { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                        AVMEDIA_TYPE_VIDEO, },
+                                      { NULL}};
 AVFilter avfilter_vf_fieldorder = {
-    .name          = "fieldorder",
-    .description   = NULL_IF_CONFIG_SMALL("Set the field order."),
-    .init          = init,
-    .priv_size     = sizeof(FieldOrderContext),
-    .query_formats = query_formats,
-    .inputs        = (AVFilterPad[]) {{ .name             = "default",
-                                        .type             = AVMEDIA_TYPE_VIDEO,
-                                        .config_props     = config_input,
-                                        .start_frame      = start_frame,
-                                        .get_video_buffer = get_video_buffer,
-                                        .draw_slice       = draw_slice,
-                                        .end_frame        = end_frame,
-                                        .min_perms        = AV_PERM_READ,
-                                        .rej_perms        = AV_PERM_REUSE2|AV_PERM_PRESERVE,},
-                                      { .name = NULL}},
-    .outputs       = (AVFilterPad[]) {{ .name             = "default",
-                                        .type             = AVMEDIA_TYPE_VIDEO, },
-                                      { .name = NULL}},
+    "fieldorder",
+    NULL_IF_CONFIG_SMALL("Set the field order."),
+    tmp__0,
+    tmp__1,
+    init,
+    0, query_formats,
+    sizeof(FieldOrderContext),
 };

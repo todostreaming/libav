@@ -202,16 +202,17 @@ static int roq_dpcm_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
     return 0;
 }
 
+static const enum AVSampleFormat tmp__0[] = { AV_SAMPLE_FMT_S16,
+                                                     AV_SAMPLE_FMT_NONE };
 AVCodec ff_roq_dpcm_encoder = {
-    .name           = "roq_dpcm",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_ROQ_DPCM,
-    .priv_data_size = sizeof(ROQDPCMContext),
-    .init           = roq_dpcm_encode_init,
-    .encode2        = roq_dpcm_encode_frame,
-    .close          = roq_dpcm_encode_close,
-    .capabilities   = CODEC_CAP_DELAY,
-    .sample_fmts    = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_S16,
-                                                     AV_SAMPLE_FMT_NONE },
-    .long_name      = NULL_IF_CONFIG_SMALL("id RoQ DPCM"),
+    "roq_dpcm",
+    NULL_IF_CONFIG_SMALL("id RoQ DPCM"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_ROQ_DPCM,
+    CODEC_CAP_DELAY,
+    0, 0, 0, tmp__0,
+    0, 0, 0, 0, sizeof(ROQDPCMContext),
+    0, 0, 0, 0, 0, roq_dpcm_encode_init,
+    0, roq_dpcm_encode_frame,
+    0, roq_dpcm_encode_close,
 };

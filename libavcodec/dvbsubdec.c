@@ -1464,12 +1464,12 @@ static int dvbsub_decode(AVCodecContext *avctx,
 
 
 AVCodec ff_dvbsub_decoder = {
-    .name           = "dvbsub",
-    .type           = AVMEDIA_TYPE_SUBTITLE,
-    .id             = CODEC_ID_DVB_SUBTITLE,
-    .priv_data_size = sizeof(DVBSubContext),
-    .init           = dvbsub_init_decoder,
-    .close          = dvbsub_close_decoder,
-    .decode         = dvbsub_decode,
-    .long_name      = NULL_IF_CONFIG_SMALL("DVB subtitles"),
+    "dvbsub",
+    NULL_IF_CONFIG_SMALL("DVB subtitles"),
+    AVMEDIA_TYPE_SUBTITLE,
+    CODEC_ID_DVB_SUBTITLE,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, sizeof(DVBSubContext),
+    0, 0, 0, 0, 0, dvbsub_init_decoder,
+    0, 0, dvbsub_decode,
+    dvbsub_close_decoder,
 };

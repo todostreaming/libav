@@ -1736,33 +1736,34 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPac
 }
 
 AVCodec ff_ffv1_decoder = {
-    .name           = "ffv1",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_FFV1,
-    .priv_data_size = sizeof(FFV1Context),
-    .init           = decode_init,
-    .close          = common_end,
-    .decode         = decode_frame,
-    .capabilities   = CODEC_CAP_DR1 /*| CODEC_CAP_DRAW_HORIZ_BAND*/ |
+    "ffv1",
+    NULL_IF_CONFIG_SMALL("FFmpeg video codec #1"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_FFV1,
+    CODEC_CAP_DR1 /*| CODEC_CAP_DRAW_HORIZ_BAND*/ |
                       CODEC_CAP_SLICE_THREADS,
-    .long_name      = NULL_IF_CONFIG_SMALL("FFmpeg video codec #1"),
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(FFV1Context),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame,
+    common_end,
 };
 
 #if CONFIG_FFV1_ENCODER
-AVCodec ff_ffv1_encoder = {
-    .name           = "ffv1",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_FFV1,
-    .priv_data_size = sizeof(FFV1Context),
-    .init           = encode_init,
-    .encode2        = encode_frame,
-    .close          = common_end,
-    .capabilities   = CODEC_CAP_SLICE_THREADS,
-    .pix_fmts       = (const enum PixelFormat[]){
+static const enum PixelFormat tmp__0[] = {
         PIX_FMT_YUV420P, PIX_FMT_YUV444P, PIX_FMT_YUV422P, PIX_FMT_YUV411P,
         PIX_FMT_YUV410P, PIX_FMT_RGB32, PIX_FMT_YUV420P16, PIX_FMT_YUV422P16,
         PIX_FMT_YUV444P16, PIX_FMT_NONE
-    },
-    .long_name      = NULL_IF_CONFIG_SMALL("FFmpeg video codec #1"),
+    };
+AVCodec ff_ffv1_encoder = {
+    "ffv1",
+    NULL_IF_CONFIG_SMALL("FFmpeg video codec #1"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_FFV1,
+    CODEC_CAP_SLICE_THREADS,
+    0, tmp__0,
+    0, 0, 0, 0, 0, 0, sizeof(FFV1Context),
+    0, 0, 0, 0, 0, encode_init,
+    0, encode_frame,
+    0, common_end,
 };
 #endif

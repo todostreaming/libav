@@ -305,11 +305,11 @@ static int seq_read_close(AVFormatContext *s)
 }
 
 AVInputFormat ff_tiertexseq_demuxer = {
-    .name           = "tiertexseq",
-    .long_name      = NULL_IF_CONFIG_SMALL("Tiertex Limited SEQ format"),
-    .priv_data_size = sizeof(SeqDemuxContext),
-    .read_probe     = seq_probe,
-    .read_header    = seq_read_header,
-    .read_packet    = seq_read_packet,
-    .read_close     = seq_read_close,
+    "tiertexseq",
+    NULL_IF_CONFIG_SMALL("Tiertex Limited SEQ format"),
+    0, 0, 0, 0, 0, 0, sizeof(SeqDemuxContext),
+    seq_probe,
+    seq_read_header,
+    seq_read_packet,
+    seq_read_close,
 };

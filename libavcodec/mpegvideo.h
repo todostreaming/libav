@@ -733,10 +733,10 @@ extern const AVOption ff_mpv_generic_options[];
 
 #define FF_MPV_GENERIC_CLASS(name) \
 static const AVClass name ## _class = {\
-    .class_name = #name " encoder",\
-    .item_name  = av_default_item_name,\
-    .option     = ff_mpv_generic_options,\
-    .version    = LIBAVUTIL_VERSION_INT,\
+    #name " encoder",\
+    av_default_item_name,\
+    ff_mpv_generic_options,\
+    LIBAVUTIL_VERSION_INT,\
 };
 
 void ff_MPV_decode_defaults(MpegEncContext *s);

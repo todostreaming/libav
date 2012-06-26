@@ -97,23 +97,25 @@ static void draw_slice(AVFilterLink *link, int y, int h, int slice_dir)
     }
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, start_frame,
+                                    ff_null_get_video_buffer,
+                                    0, ff_null_end_frame,
+                                    draw_slice,
+                                    0, 0, 0, config_props, },
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO, },
+                                  { NULL}};
 AVFilter avfilter_vf_slicify = {
-    .name      = "slicify",
-    .description = NULL_IF_CONFIG_SMALL("Pass the images of input video on to next video filter as multiple slices."),
+    "slicify",
+    NULL_IF_CONFIG_SMALL("Pass the images of input video on to next video filter as multiple slices."),
 
-    .init      = init,
+    tmp__0,
 
-    .priv_size = sizeof(SliceContext),
+    tmp__1,
 
-    .inputs    = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .get_video_buffer = ff_null_get_video_buffer,
-                                    .start_frame      = start_frame,
-                                    .draw_slice       = draw_slice,
-                                    .config_props     = config_props,
-                                    .end_frame        = ff_null_end_frame, },
-                                  { .name = NULL}},
-    .outputs   = (AVFilterPad[]) {{ .name            = "default",
-                                    .type            = AVMEDIA_TYPE_VIDEO, },
-                                  { .name = NULL}},
+    init,
+    0, 0, sizeof(SliceContext),
 };

@@ -80,18 +80,20 @@ static int request_frame(AVFilterLink *link)
     return -1;
 }
 
+static AVFilterPad tmp__0[] = {{ NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                      AVMEDIA_TYPE_AUDIO,
+                                      0, 0, 0, 0, 0, 0, 0, 0, 0, request_frame,
+                                      config_props, },
+                                    { NULL}};
 AVFilter avfilter_asrc_anullsrc = {
-    .name        = "anullsrc",
-    .description = NULL_IF_CONFIG_SMALL("Null audio source, never return audio frames."),
+    "anullsrc",
+    NULL_IF_CONFIG_SMALL("Null audio source, never return audio frames."),
 
-    .init        = init,
-    .priv_size   = sizeof(ANullContext),
+    tmp__0,
+    tmp__1,
 
-    .inputs      = (AVFilterPad[]) {{ .name = NULL}},
+    init,
 
-    .outputs     = (AVFilterPad[]) {{ .name = "default",
-                                      .type = AVMEDIA_TYPE_AUDIO,
-                                      .config_props = config_props,
-                                      .request_frame = request_frame, },
-                                    { .name = NULL}},
+    0, 0, sizeof(ANullContext),
 };

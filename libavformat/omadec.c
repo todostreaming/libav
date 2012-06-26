@@ -176,6 +176,7 @@ static int nprobe(AVFormatContext *s, uint8_t *enc_header, int size, const uint8
     return -1;
 }
 
+static const uint8_t tmp__0[8] = {0};
 static int decrypt_init(AVFormatContext *s, ID3v2ExtraMeta *em, uint8_t *header)
 {
     OMAContext *oc = s->priv_data;
@@ -230,7 +231,7 @@ static int decrypt_init(AVFormatContext *s, ID3v2ExtraMeta *em, uint8_t *header)
     if (s->keylen > 0) {
         kset(s, s->key, s->key, s->keylen);
     }
-    if (!memcmp(oc->r_val, (const uint8_t[8]){0}, 8) ||
+    if (!memcmp(oc->r_val, tmp__0, 8) ||
         rprobe(s, gdata, oc->r_val) < 0 &&
         nprobe(s, gdata, geob->datasize, oc->n_val) < 0) {
         int i;
@@ -259,6 +260,7 @@ static int decrypt_init(AVFormatContext *s, ID3v2ExtraMeta *em, uint8_t *header)
     return 0;
 }
 
+static const uint8_t tmp__1[] = {'E', 'A', '3'};
 static int oma_read_header(AVFormatContext *s)
 {
     int     ret, framesize, jsflag, samplerate;
@@ -275,7 +277,7 @@ static int oma_read_header(AVFormatContext *s)
     if (ret < EA3_HEADER_SIZE)
         return -1;
 
-    if (memcmp(buf, ((const uint8_t[]){'E', 'A', '3'}),3) || buf[4] != 0 || buf[5] != EA3_HEADER_SIZE) {
+    if (memcmp(buf, (tmp__1),3) || buf[4] != 0 || buf[5] != EA3_HEADER_SIZE) {
         av_log(s, AV_LOG_ERROR, "Couldn't find the EA3 header !\n");
         return -1;
     }
@@ -433,15 +435,16 @@ static int oma_read_seek(struct AVFormatContext *s, int stream_index, int64_t ti
     return 0;
 }
 
+static const AVCodecTag* const  tmp__2[] = {ff_oma_codec_tags, 0};
 AVInputFormat ff_oma_demuxer = {
-    .name           = "oma",
-    .long_name      = NULL_IF_CONFIG_SMALL("Sony OpenMG audio"),
-    .priv_data_size = sizeof(OMAContext),
-    .read_probe     = oma_read_probe,
-    .read_header    = oma_read_header,
-    .read_packet    = oma_read_packet,
-    .read_seek      = oma_read_seek,
-    .flags          = AVFMT_GENERIC_INDEX,
-    .extensions     = "oma,omg,aa3",
-    .codec_tag      = (const AVCodecTag* const []){ff_oma_codec_tags, 0},
+    "oma",
+    NULL_IF_CONFIG_SMALL("Sony OpenMG audio"),
+    AVFMT_GENERIC_INDEX,
+    "oma,omg,aa3",
+    tmp__2,
+    0, 0, 0, sizeof(OMAContext),
+    oma_read_probe,
+    oma_read_header,
+    oma_read_packet,
+    0, oma_read_seek,
 };

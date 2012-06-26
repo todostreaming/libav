@@ -163,7 +163,7 @@ static MacroBlock decode_macroblock(Escape124Context* s, GetBitContext* gb,
     // This condition can occur with invalid bitstreams and
     // *codebook_index == 2
     if (block_index >= s->codebooks[*codebook_index].size)
-        return (MacroBlock) { { 0 } };
+        { MacroBlock tmp__0 = { { 0 } }; return tmp__0; }
 
     return s->codebooks[*codebook_index].blocks[block_index];
 }
@@ -364,13 +364,13 @@ static int escape124_decode_frame(AVCodecContext *avctx,
 
 
 AVCodec ff_escape124_decoder = {
-    .name           = "escape124",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_ESCAPE124,
-    .priv_data_size = sizeof(Escape124Context),
-    .init           = escape124_decode_init,
-    .close          = escape124_decode_close,
-    .decode         = escape124_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("Escape 124"),
+    "escape124",
+    NULL_IF_CONFIG_SMALL("Escape 124"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_ESCAPE124,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(Escape124Context),
+    0, 0, 0, 0, 0, escape124_decode_init,
+    0, 0, escape124_decode_frame,
+    escape124_decode_close,
 };

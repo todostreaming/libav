@@ -392,16 +392,17 @@ static av_cold int encode_init_ls(AVCodecContext *ctx) {
     return 0;
 }
 
-AVCodec ff_jpegls_encoder = { //FIXME avoid MPV_* lossless JPEG should not need them
-    .name           = "jpegls",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_JPEGLS,
-    .priv_data_size = sizeof(JpeglsContext),
-    .init           = encode_init_ls,
-    .encode2        = encode_picture_ls,
-    .pix_fmts       = (const enum PixelFormat[]){
+static const enum PixelFormat tmp__0[] = {
         PIX_FMT_BGR24, PIX_FMT_RGB24, PIX_FMT_GRAY8, PIX_FMT_GRAY16,
         PIX_FMT_NONE
-    },
-    .long_name      = NULL_IF_CONFIG_SMALL("JPEG-LS"),
+    };
+AVCodec ff_jpegls_encoder = { //FIXME avoid MPV_* lossless JPEG should not need them
+    "jpegls",
+    NULL_IF_CONFIG_SMALL("JPEG-LS"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_JPEGLS,
+    0, 0, tmp__0,
+    0, 0, 0, 0, 0, 0, sizeof(JpeglsContext),
+    0, 0, 0, 0, 0, encode_init_ls,
+    0, encode_picture_ls,
 };

@@ -89,16 +89,17 @@ static int voc_write_trailer(AVFormatContext *s)
     return 0;
 }
 
+static const AVCodecTag* const  tmp__0[] = { ff_voc_codec_tags, 0 };
 AVOutputFormat ff_voc_muxer = {
-    .name              = "voc",
-    .long_name         = NULL_IF_CONFIG_SMALL("Creative Voice file format"),
-    .mime_type         = "audio/x-voc",
-    .extensions        = "voc",
-    .priv_data_size    = sizeof(VocEncContext),
-    .audio_codec       = CODEC_ID_PCM_U8,
-    .video_codec       = CODEC_ID_NONE,
-    .write_header      = voc_write_header,
-    .write_packet      = voc_write_packet,
-    .write_trailer     = voc_write_trailer,
-    .codec_tag         = (const AVCodecTag* const []){ ff_voc_codec_tags, 0 },
+    "voc",
+    NULL_IF_CONFIG_SMALL("Creative Voice file format"),
+    "audio/x-voc",
+    "voc",
+    CODEC_ID_PCM_U8,
+    CODEC_ID_NONE,
+    0, 0, tmp__0,
+    0, 0, sizeof(VocEncContext),
+    voc_write_header,
+    voc_write_packet,
+    voc_write_trailer,
 };

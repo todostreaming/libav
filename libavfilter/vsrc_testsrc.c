@@ -61,11 +61,11 @@ typedef struct {
 #define OFFSET(x) offsetof(TestSourceContext, x)
 
 static const AVOption testsrc_options[] = {
-    { "size",     "set video size",     OFFSET(size),     FF_OPT_TYPE_STRING, {.str = "320x240"}},
-    { "s",        "set video size",     OFFSET(size),     FF_OPT_TYPE_STRING, {.str = "320x240"}},
-    { "rate",     "set video rate",     OFFSET(rate),     FF_OPT_TYPE_STRING, {.str = "25"},    },
-    { "r",        "set video rate",     OFFSET(rate),     FF_OPT_TYPE_STRING, {.str = "25"},    },
-    { "duration", "set video duration", OFFSET(duration), FF_OPT_TYPE_STRING, {.str = NULL},    },
+    { "size",     "set video size",     OFFSET(size),     FF_OPT_TYPE_STRING, {0, "320x240"}},
+    { "s",        "set video size",     OFFSET(size),     FF_OPT_TYPE_STRING, {0, "320x240"}},
+    { "rate",     "set video rate",     OFFSET(rate),     FF_OPT_TYPE_STRING, {0, "25"},    },
+    { "r",        "set video rate",     OFFSET(rate),     FF_OPT_TYPE_STRING, {0, "25"},    },
+    { "duration", "set video duration", OFFSET(duration), FF_OPT_TYPE_STRING, {0, NULL},    },
     { "sar",      "set video sample aspect ratio", OFFSET(sar), FF_OPT_TYPE_RATIONAL, {1},  0, INT_MAX },
     { NULL },
 };
@@ -102,8 +102,8 @@ static av_cold int init_common(AVFilterContext *ctx, const char *args)
 
     test->time_base.num = frame_rate_q.den;
     test->time_base.den = frame_rate_q.num;
-    test->max_pts = duration >= 0 ?
-        av_rescale_q(duration, AV_TIME_BASE_Q, test->time_base) : -1;
+    { AVRational tmp__0 = {1, AV_TIME_BASE}; test->max_pts = duration >= 0 ?
+        av_rescale_q(duration, tmp__0, test->time_base) : -1; }
     test->nb_frame = 0;
     test->pts = 0;
 
@@ -159,9 +159,9 @@ static const char *testsrc_get_name(void *ctx)
 }
 
 static const AVClass testsrc_class = {
-    .class_name = "TestSourceContext",
-    .item_name  = testsrc_get_name,
-    .option     = testsrc_options,
+    "TestSourceContext",
+    testsrc_get_name,
+    testsrc_options,
 };
 
 /**
@@ -354,21 +354,23 @@ static int test_query_formats(AVFilterContext *ctx)
     return 0;
 }
 
+static AVFilterPad tmp__1[] = {{ NULL}};
+static AVFilterPad tmp__2[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, request_frame,
+                                    config_props, },
+                                  { NULL }};
 AVFilter avfilter_vsrc_testsrc = {
-    .name          = "testsrc",
-    .description   = NULL_IF_CONFIG_SMALL("Generate test pattern."),
-    .priv_size     = sizeof(TestSourceContext),
-    .init          = test_init,
+    "testsrc",
+    NULL_IF_CONFIG_SMALL("Generate test pattern."),
+    tmp__1,
+    tmp__2,
 
-    .query_formats = test_query_formats,
+    test_init,
 
-    .inputs    = (AVFilterPad[]) {{ .name = NULL}},
+    0, test_query_formats,
 
-    .outputs   = (AVFilterPad[]) {{ .name = "default",
-                                    .type = AVMEDIA_TYPE_VIDEO,
-                                    .request_frame = request_frame,
-                                    .config_props  = config_props, },
-                                  { .name = NULL }},
+    sizeof(TestSourceContext),
 };
 
 #endif /* CONFIG_TESTSRC_FILTER */
@@ -381,9 +383,9 @@ static const char *rgbtestsrc_get_name(void *ctx)
 }
 
 static const AVClass rgbtestsrc_class = {
-    .class_name = "RGBTestSourceContext",
-    .item_name  = rgbtestsrc_get_name,
-    .option     = testsrc_options,
+    "RGBTestSourceContext",
+    rgbtestsrc_get_name,
+    testsrc_options,
 };
 
 #define R 0
@@ -481,21 +483,23 @@ static int rgbtest_config_props(AVFilterLink *outlink)
     return config_props(outlink);
 }
 
+static AVFilterPad tmp__3[] = {{ NULL}};
+static AVFilterPad tmp__4[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, request_frame,
+                                    rgbtest_config_props, },
+                                  { NULL }};
 AVFilter avfilter_vsrc_rgbtestsrc = {
-    .name          = "rgbtestsrc",
-    .description   = NULL_IF_CONFIG_SMALL("Generate RGB test pattern."),
-    .priv_size     = sizeof(TestSourceContext),
-    .init          = rgbtest_init,
+    "rgbtestsrc",
+    NULL_IF_CONFIG_SMALL("Generate RGB test pattern."),
+    tmp__3,
+    tmp__4,
 
-    .query_formats = rgbtest_query_formats,
+    rgbtest_init,
 
-    .inputs    = (AVFilterPad[]) {{ .name = NULL}},
+    0, rgbtest_query_formats,
 
-    .outputs   = (AVFilterPad[]) {{ .name = "default",
-                                    .type = AVMEDIA_TYPE_VIDEO,
-                                    .request_frame = request_frame,
-                                    .config_props  = rgbtest_config_props, },
-                                  { .name = NULL }},
+    sizeof(TestSourceContext),
 };
 
 #endif /* CONFIG_RGBTESTSRC_FILTER */

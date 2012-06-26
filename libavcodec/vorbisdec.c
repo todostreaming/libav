@@ -1727,19 +1727,20 @@ static av_cold void vorbis_decode_flush(AVCodecContext *avccontext)
     vc->previous_window = 0;
 }
 
-AVCodec ff_vorbis_decoder = {
-    .name            = "vorbis",
-    .type            = AVMEDIA_TYPE_AUDIO,
-    .id              = CODEC_ID_VORBIS,
-    .priv_data_size  = sizeof(vorbis_context),
-    .init            = vorbis_decode_init,
-    .close           = vorbis_decode_close,
-    .decode          = vorbis_decode_frame,
-    .flush           = vorbis_decode_flush,
-    .capabilities    = CODEC_CAP_DR1,
-    .long_name       = NULL_IF_CONFIG_SMALL("Vorbis"),
-    .channel_layouts = ff_vorbis_channel_layouts,
-    .sample_fmts     = (const enum AVSampleFormat[]) {
+static const enum AVSampleFormat tmp__0[] = {
         AV_SAMPLE_FMT_FLT, AV_SAMPLE_FMT_S16, AV_SAMPLE_FMT_NONE
-    },
+    };
+AVCodec ff_vorbis_decoder = {
+    "vorbis",
+    NULL_IF_CONFIG_SMALL("Vorbis"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_VORBIS,
+    CODEC_CAP_DR1,
+    0, 0, 0, tmp__0,
+    ff_vorbis_channel_layouts,
+    0, 0, 0, sizeof(vorbis_context),
+    0, 0, 0, 0, 0, vorbis_decode_init,
+    0, 0, vorbis_decode_frame,
+    vorbis_decode_close,
+    vorbis_decode_flush,
 };

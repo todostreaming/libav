@@ -116,13 +116,13 @@ static int sox_write_trailer(AVFormatContext *s)
 }
 
 AVOutputFormat ff_sox_muxer = {
-    .name              = "sox",
-    .long_name         = NULL_IF_CONFIG_SMALL("SoX native format"),
-    .extensions        = "sox",
-    .priv_data_size    = sizeof(SoXContext),
-    .audio_codec       = CODEC_ID_PCM_S32LE,
-    .video_codec       = CODEC_ID_NONE,
-    .write_header      = sox_write_header,
-    .write_packet      = sox_write_packet,
-    .write_trailer     = sox_write_trailer,
+    "sox",
+    NULL_IF_CONFIG_SMALL("SoX native format"),
+    0, "sox",
+    CODEC_ID_PCM_S32LE,
+    CODEC_ID_NONE,
+    0, 0, 0, 0, 0, sizeof(SoXContext),
+    sox_write_header,
+    sox_write_packet,
+    sox_write_trailer,
 };

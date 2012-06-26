@@ -53,10 +53,10 @@ static const AVOption options[] = {
 };
 
 static const AVClass async_class = {
-    .class_name = "asyncts filter",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "asyncts filter",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 static int init(AVFilterContext *ctx, const char *args)
@@ -94,7 +94,7 @@ static int config_props(AVFilterLink *link)
     int ret;
 
     s->min_delta = s->min_delta_sec * link->sample_rate;
-    link->time_base = (AVRational){1, link->sample_rate};
+    {link->time_base.num = 1;link->time_base.den = link->sample_rate;}
 
     s->avr = avresample_alloc_context();
     if (!s->avr)
@@ -234,22 +234,24 @@ fail:
     return ret;
 }
 
+static const AVFilterPad tmp__0[] = {{ "default",
+                                            AVMEDIA_TYPE_AUDIO,
+                                            0, 0, 0, 0, 0, 0, 0, filter_samples },
+                                          { NULL }};
+static const AVFilterPad tmp__1[] = {{ "default",
+                                            AVMEDIA_TYPE_AUDIO,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, request_frame ,
+                                            config_props},
+                                          { NULL }};
 AVFilter avfilter_af_asyncts = {
-    .name        = "asyncts",
-    .description = NULL_IF_CONFIG_SMALL("Sync audio data to timestamps"),
+    "asyncts",
+    NULL_IF_CONFIG_SMALL("Sync audio data to timestamps"),
 
-    .init        = init,
-    .uninit      = uninit,
+    tmp__0,
+    tmp__1,
 
-    .priv_size   = sizeof(ASyncContext),
+    init,
 
-    .inputs      = (const AVFilterPad[]) {{ .name           = "default",
-                                            .type           = AVMEDIA_TYPE_AUDIO,
-                                            .filter_samples = filter_samples },
-                                          { NULL }},
-    .outputs     = (const AVFilterPad[]) {{ .name           = "default",
-                                            .type           = AVMEDIA_TYPE_AUDIO,
-                                            .config_props   = config_props,
-                                            .request_frame  = request_frame },
-                                          { NULL }},
+    uninit,
+    0, sizeof(ASyncContext),
 };

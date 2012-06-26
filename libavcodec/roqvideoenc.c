@@ -338,8 +338,8 @@ static void motion_search(RoqContext *enc, int blocksize)
 
     for (i=0; i<enc->height; i+=blocksize)
         for (j=0; j<enc->width; j+=blocksize) {
-            lowestdiff = eval_motion_dist(enc, j, i, (motion_vect) {{0,0}},
-                                          blocksize);
+            { motion_vect tmp__0 = {{0,0}}; lowestdiff = eval_motion_dist(enc, j, i, tmp__0,
+                                          blocksize); }
             bestpick.d[0] = 0;
             bestpick.d[1] = 0;
 
@@ -1072,16 +1072,18 @@ static int roq_encode_end(AVCodecContext *avctx)
     return 0;
 }
 
+static const AVRational tmp__1[] = { {30,1}, {0,0} };
+static const enum PixelFormat tmp__2[] = { PIX_FMT_YUV444P,
+                                                        PIX_FMT_NONE };
 AVCodec ff_roq_encoder = {
-    .name                 = "roqvideo",
-    .type                 = AVMEDIA_TYPE_VIDEO,
-    .id                   = CODEC_ID_ROQ,
-    .priv_data_size       = sizeof(RoqContext),
-    .init                 = roq_encode_init,
-    .encode2              = roq_encode_frame,
-    .close                = roq_encode_end,
-    .supported_framerates = (const AVRational[]){ {30,1}, {0,0} },
-    .pix_fmts             = (const enum PixelFormat[]){ PIX_FMT_YUV444P,
-                                                        PIX_FMT_NONE },
-    .long_name            = NULL_IF_CONFIG_SMALL("id RoQ video"),
+    "roqvideo",
+    NULL_IF_CONFIG_SMALL("id RoQ video"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_ROQ,
+    0, tmp__1,
+    tmp__2,
+    0, 0, 0, 0, 0, 0, sizeof(RoqContext),
+    0, 0, 0, 0, 0, roq_encode_init,
+    0, roq_encode_frame,
+    0, roq_encode_end,
 };

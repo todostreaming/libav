@@ -683,13 +683,13 @@ static av_cold int tiff_end(AVCodecContext *avctx)
 }
 
 AVCodec ff_tiff_decoder = {
-    .name           = "tiff",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_TIFF,
-    .priv_data_size = sizeof(TiffContext),
-    .init           = tiff_init,
-    .close          = tiff_end,
-    .decode         = decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("TIFF image"),
+    "tiff",
+    NULL_IF_CONFIG_SMALL("TIFF image"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_TIFF,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(TiffContext),
+    0, 0, 0, 0, 0, tiff_init,
+    0, 0, decode_frame,
+    tiff_end,
 };

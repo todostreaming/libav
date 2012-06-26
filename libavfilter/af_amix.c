@@ -188,10 +188,10 @@ static const AVOption options[] = {
 };
 
 static const AVClass amix_class = {
-    .class_name = "amix filter",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "amix filter",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 
@@ -228,7 +228,7 @@ static int config_output(AVFilterLink *outlink)
 
     s->planar          = av_sample_fmt_is_planar(outlink->format);
     s->sample_rate     = outlink->sample_rate;
-    outlink->time_base = (AVRational){ 1, outlink->sample_rate };
+    {outlink->time_base.num = 1;outlink->time_base.den = outlink->sample_rate ;}
     s->next_pts        = AV_NOPTS_VALUE;
 
     s->frame_list = av_mallocz(sizeof(*s->frame_list));
@@ -546,19 +546,21 @@ static int query_formats(AVFilterContext *ctx)
     return 0;
 }
 
+static const AVFilterPad tmp__0[] = {{ NULL}};
+static const AVFilterPad tmp__1[] = {{ "default",
+                                          AVMEDIA_TYPE_AUDIO,
+                                          0, 0, 0, 0, 0, 0, 0, 0, 0, request_frame ,
+                                          config_output},
+                                        { NULL}};
 AVFilter avfilter_af_amix = {
-    .name          = "amix",
-    .description   = NULL_IF_CONFIG_SMALL("Audio mixing."),
-    .priv_size     = sizeof(MixContext),
+    "amix",
+    NULL_IF_CONFIG_SMALL("Audio mixing."),
+    tmp__0,
 
-    .init           = init,
-    .uninit         = uninit,
-    .query_formats  = query_formats,
+    tmp__1,
+    init,
+    uninit,
 
-    .inputs    = (const AVFilterPad[]) {{ .name = NULL}},
-    .outputs   = (const AVFilterPad[]) {{ .name          = "default",
-                                          .type          = AVMEDIA_TYPE_AUDIO,
-                                          .config_props  = config_output,
-                                          .request_frame = request_frame },
-                                        { .name = NULL}},
+    query_formats,
+    sizeof(MixContext),
 };

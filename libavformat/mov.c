@@ -346,7 +346,7 @@ static int mov_read_chpl(MOVContext *c, AVIOContext *pb, MOVAtom atom)
 
         avio_read(pb, str, str_len);
         str[str_len] = 0;
-        avpriv_new_chapter(c->fc, i, (AVRational){1,10000000}, start, AV_NOPTS_VALUE, str);
+        { AVRational tmp__0 = {1,10000000}; avpriv_new_chapter(c->fc, i, tmp__0, start, AV_NOPTS_VALUE, str); }
     }
     return 0;
 }
@@ -533,7 +533,7 @@ static int mov_read_dac3(MOVContext *c, AVIOContext *pb, MOVAtom atom)
     bsmod = (ac3info >> 14) & 0x7;
     acmod = (ac3info >> 11) & 0x7;
     lfeon = (ac3info >> 10) & 0x1;
-    st->codec->channels = ((int[]){2,1,2,3,3,4,4,5})[acmod] + lfeon;
+    { int tmp__1[] = {2,1,2,3,3,4,4,5}; st->codec->channels = (tmp__1)[acmod] + lfeon; }
     st->codec->channel_layout = avpriv_ac3_channel_layout_tab[acmod];
     if (lfeon)
         st->codec->channel_layout |= AV_CH_LOW_FREQUENCY;
@@ -1373,7 +1373,7 @@ int ff_mov_read_stsd_entries(MOVContext *c, AVIOContext *pb, int entries)
         } else if (st->codec->codec_type==AVMEDIA_TYPE_SUBTITLE){
             // ttxt stsd contains display flags, justification, background
             // color, fonts, and default styles, so fake an atom to read it
-            MOVAtom fake_atom = { .size = size - (avio_tell(pb) - start_pos) };
+            MOVAtom fake_atom = { 0, size - (avio_tell(pb) - start_pos) };
             if (format != AV_RL32("mp4s")) // mp4s contains a regular esds atom
                 mov_read_glbl(c, pb, fake_atom);
             st->codec->codec_id= id;
@@ -2794,9 +2794,9 @@ static int mov_read_packet(AVFormatContext *s, AVPacket *pkt)
             return AVERROR_EOF;
         avio_seek(s->pb, mov->next_root_atom, SEEK_SET);
         mov->next_root_atom = 0;
-        if (mov_read_default(mov, s->pb, (MOVAtom){ AV_RL32("root"), INT64_MAX }) < 0 ||
+        { MOVAtom tmp__2 = { AV_RL32("root"), INT64_MAX }; if (mov_read_default(mov, s->pb, tmp__2) < 0 ||
             s->pb->eof_reached)
-            return AVERROR_EOF;
+            return AVERROR_EOF; }
         av_dlog(s, "read fragments, offset 0x%"PRIx64"\n", avio_tell(s->pb));
         goto retry;
     }
@@ -2926,12 +2926,12 @@ static int mov_read_seek(AVFormatContext *s, int stream_index, int64_t sample_ti
 }
 
 AVInputFormat ff_mov_demuxer = {
-    .name           = "mov,mp4,m4a,3gp,3g2,mj2",
-    .long_name      = NULL_IF_CONFIG_SMALL("QuickTime/MPEG-4/Motion JPEG 2000 format"),
-    .priv_data_size = sizeof(MOVContext),
-    .read_probe     = mov_probe,
-    .read_header    = mov_read_header,
-    .read_packet    = mov_read_packet,
-    .read_close     = mov_read_close,
-    .read_seek      = mov_read_seek,
+    "mov,mp4,m4a,3gp,3g2,mj2",
+    NULL_IF_CONFIG_SMALL("QuickTime/MPEG-4/Motion JPEG 2000 format"),
+    0, 0, 0, 0, 0, 0, sizeof(MOVContext),
+    mov_probe,
+    mov_read_header,
+    mov_read_packet,
+    mov_read_close,
+    mov_read_seek,
 };

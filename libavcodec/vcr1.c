@@ -137,15 +137,15 @@ static int vcr1_decode_frame(AVCodecContext *avctx, void *data,
 }
 
 AVCodec ff_vcr1_decoder = {
-    .name           = "vcr1",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_VCR1,
-    .priv_data_size = sizeof(VCR1Context),
-    .init           = vcr1_decode_init,
-    .close          = vcr1_decode_end,
-    .decode         = vcr1_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("ATI VCR1"),
+    "vcr1",
+    NULL_IF_CONFIG_SMALL("ATI VCR1"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_VCR1,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(VCR1Context),
+    0, 0, 0, 0, 0, vcr1_decode_init,
+    0, 0, vcr1_decode_frame,
+    vcr1_decode_end,
 };
 
 /* Disable the encoder. */
@@ -177,12 +177,12 @@ static int vcr1_encode_frame(AVCodecContext *avctx, unsigned char *buf,
 }
 
 AVCodec ff_vcr1_encoder = {
-    .name           = "vcr1",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_VCR1,
-    .priv_data_size = sizeof(VCR1Context),
-    .init           = vcr1_common_init,
-    .encode         = vcr1_encode_frame,
-    .long_name      = NULL_IF_CONFIG_SMALL("ATI VCR1"),
+    "vcr1",
+    NULL_IF_CONFIG_SMALL("ATI VCR1"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_VCR1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, sizeof(VCR1Context),
+    0, 0, 0, 0, 0, vcr1_common_init,
+    vcr1_encode_frame,
 };
 #endif /* CONFIG_VCR1_ENCODER */

@@ -661,13 +661,13 @@ static av_cold int decode_close(AVCodecContext *avctx)
 
 
 AVCodec ff_prores_decoder = {
-    .name           = "prores",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_PRORES,
-    .priv_data_size = sizeof(ProresContext),
-    .init           = decode_init,
-    .close          = decode_close,
-    .decode         = decode_frame,
-    .capabilities   = CODEC_CAP_DR1 | CODEC_CAP_SLICE_THREADS,
-    .long_name      = NULL_IF_CONFIG_SMALL("Apple ProRes (iCodec Pro)")
-};
+    "prores",
+    NULL_IF_CONFIG_SMALL("Apple ProRes (iCodec Pro)")
+,
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_PRORES,
+    CODEC_CAP_DR1 | CODEC_CAP_SLICE_THREADS,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(ProresContext),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame,
+    decode_close};

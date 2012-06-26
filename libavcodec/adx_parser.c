@@ -89,8 +89,8 @@ static int adx_parse(AVCodecParserContext *s1,
 }
 
 AVCodecParser ff_adx_parser = {
-    .codec_ids      = { CODEC_ID_ADPCM_ADX },
-    .priv_data_size = sizeof(ADXParseContext),
-    .parser_parse   = adx_parse,
-    .parser_close   = ff_parse_close,
+    { CODEC_ID_ADPCM_ADX },
+    sizeof(ADXParseContext),
+    0, adx_parse,
+    ff_parse_close,
 };

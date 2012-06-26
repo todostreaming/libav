@@ -171,13 +171,13 @@ int avfilter_config_links(AVFilterContext *filter)
             }
 
             if (link->time_base.num == 0 && link->time_base.den == 0)
-                link->time_base = link->src && link->src->nb_inputs ?
-                    link->src->inputs[0]->time_base : AV_TIME_BASE_Q;
+                { if (link->src && link->src->nb_inputs) { link->time_base = link->src->inputs[0]->time_base; }
+                  else { link->time_base.num = 1;link->time_base.den = AV_TIME_BASE; } }
 
             if (link->type == AVMEDIA_TYPE_VIDEO) {
                 if (!link->sample_aspect_ratio.num && !link->sample_aspect_ratio.den)
-                    link->sample_aspect_ratio = link->src->nb_inputs ?
-                        link->src->inputs[0]->sample_aspect_ratio : (AVRational){1,1};
+                    { if (link->src->nb_inputs) { link->sample_aspect_ratio = link->src->inputs[0]->sample_aspect_ratio; }
+                      else { link->sample_aspect_ratio.num = 1;link->sample_aspect_ratio.den = 1; } }
 
                 if (link->src->nb_inputs) {
                     if (!link->w)

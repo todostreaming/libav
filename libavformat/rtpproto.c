@@ -321,12 +321,12 @@ int ff_rtp_get_rtcp_file_handle(URLContext *h) {
 }
 
 URLProtocol ff_rtp_protocol = {
-    .name                = "rtp",
-    .url_open            = rtp_open,
-    .url_read            = rtp_read,
-    .url_write           = rtp_write,
-    .url_close           = rtp_close,
-    .url_get_file_handle = rtp_get_file_handle,
-    .priv_data_size      = sizeof(RTPContext),
-    .flags               = URL_PROTOCOL_FLAG_NETWORK,
+    "rtp",
+    rtp_open,
+    0, rtp_read,
+    rtp_write,
+    0, rtp_close,
+    0, 0, 0, rtp_get_file_handle,
+    0, sizeof(RTPContext),
+    0, URL_PROTOCOL_FLAG_NETWORK,
 };

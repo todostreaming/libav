@@ -163,13 +163,13 @@ static av_cold int decode_end(AVCodecContext *avctx){
 }
 
 AVCodec ff_qdraw_decoder = {
-    .name           = "qdraw",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_QDRAW,
-    .priv_data_size = sizeof(QdrawContext),
-    .init           = decode_init,
-    .close          = decode_end,
-    .decode         = decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("Apple QuickDraw"),
+    "qdraw",
+    NULL_IF_CONFIG_SMALL("Apple QuickDraw"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_QDRAW,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(QdrawContext),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame,
+    decode_end,
 };

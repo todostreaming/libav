@@ -73,14 +73,15 @@ static av_cold int xbm_encode_close(AVCodecContext *avctx)
     return 0;
 }
 
+static const enum PixelFormat tmp__0[] = { PIX_FMT_MONOWHITE,
+                                                 PIX_FMT_NONE };
 AVCodec ff_xbm_encoder = {
-    .name         = "xbm",
-    .type         = AVMEDIA_TYPE_VIDEO,
-    .id           = CODEC_ID_XBM,
-    .init         = xbm_encode_init,
-    .encode2      = xbm_encode_frame,
-    .close        = xbm_encode_close,
-    .pix_fmts     = (const enum PixelFormat[]) { PIX_FMT_MONOWHITE,
-                                                 PIX_FMT_NONE },
-    .long_name    = NULL_IF_CONFIG_SMALL("XBM (X BitMap) image"),
+    "xbm",
+    NULL_IF_CONFIG_SMALL("XBM (X BitMap) image"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_XBM,
+    0, 0, tmp__0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, xbm_encode_init,
+    0, xbm_encode_frame,
+    0, xbm_encode_close,
 };

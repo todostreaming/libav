@@ -398,13 +398,13 @@ static av_cold int dnxhd_decode_close(AVCodecContext *avctx)
 }
 
 AVCodec ff_dnxhd_decoder = {
-    .name           = "dnxhd",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_DNXHD,
-    .priv_data_size = sizeof(DNXHDContext),
-    .init           = dnxhd_decode_init,
-    .close          = dnxhd_decode_close,
-    .decode         = dnxhd_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("VC3/DNxHD"),
+    "dnxhd",
+    NULL_IF_CONFIG_SMALL("VC3/DNxHD"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_DNXHD,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(DNXHDContext),
+    0, 0, 0, 0, 0, dnxhd_decode_init,
+    0, 0, dnxhd_decode_frame,
+    dnxhd_decode_close,
 };

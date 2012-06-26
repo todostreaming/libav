@@ -267,12 +267,12 @@ static av_cold int decode_end(AVCodecContext *avctx)
 }
 
 AVCodec ff_vb_decoder = {
-    .name           = "vb",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_VB,
-    .priv_data_size = sizeof(VBDecContext),
-    .init           = decode_init,
-    .close          = decode_end,
-    .decode         = decode_frame,
-    .long_name      = NULL_IF_CONFIG_SMALL("Beam Software VB"),
+    "vb",
+    NULL_IF_CONFIG_SMALL("Beam Software VB"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_VB,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, sizeof(VBDecContext),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame,
+    decode_end,
 };

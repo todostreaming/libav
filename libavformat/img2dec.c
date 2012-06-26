@@ -281,45 +281,45 @@ static int read_packet(AVFormatContext *s1, AVPacket *pkt)
 #define OFFSET(x) offsetof(VideoDemuxData, x)
 #define DEC AV_OPT_FLAG_DECODING_PARAM
 static const AVOption options[] = {
-    { "pixel_format", "", OFFSET(pixel_format), AV_OPT_TYPE_STRING, {.str = NULL}, 0, 0, DEC },
-    { "video_size",   "", OFFSET(video_size),   AV_OPT_TYPE_STRING, {.str = NULL}, 0, 0, DEC },
-    { "framerate",    "", OFFSET(framerate),    AV_OPT_TYPE_STRING, {.str = "25"}, 0, 0, DEC },
-    { "loop",         "", OFFSET(loop),         AV_OPT_TYPE_INT,    {.dbl = 0},    0, 1, DEC },
-    { "start_number", "first number in the sequence", OFFSET(start_number), AV_OPT_TYPE_INT, {.dbl = 1}, 1, INT_MAX, DEC },
+    { "pixel_format", "", OFFSET(pixel_format), AV_OPT_TYPE_STRING, {0, NULL}, 0, 0, DEC },
+    { "video_size",   "", OFFSET(video_size),   AV_OPT_TYPE_STRING, {0, NULL}, 0, 0, DEC },
+    { "framerate",    "", OFFSET(framerate),    AV_OPT_TYPE_STRING, {0, "25"}, 0, 0, DEC },
+    { "loop",         "", OFFSET(loop),         AV_OPT_TYPE_INT,    {0},    0, 1, DEC },
+    { "start_number", "first number in the sequence", OFFSET(start_number), AV_OPT_TYPE_INT, {1}, 1, INT_MAX, DEC },
     { NULL },
 };
 
 #if CONFIG_IMAGE2_DEMUXER
 static const AVClass img2_class = {
-    .class_name = "image2 demuxer",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "image2 demuxer",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 AVInputFormat ff_image2_demuxer = {
-    .name           = "image2",
-    .long_name      = NULL_IF_CONFIG_SMALL("image2 sequence"),
-    .priv_data_size = sizeof(VideoDemuxData),
-    .read_probe     = read_probe,
-    .read_header    = read_header,
-    .read_packet    = read_packet,
-    .flags          = AVFMT_NOFILE,
-    .priv_class     = &img2_class,
+    "image2",
+    NULL_IF_CONFIG_SMALL("image2 sequence"),
+    AVFMT_NOFILE,
+    0, 0, &img2_class,
+    0, 0, sizeof(VideoDemuxData),
+    read_probe,
+    read_header,
+    read_packet,
 };
 #endif
 #if CONFIG_IMAGE2PIPE_DEMUXER
 static const AVClass img2pipe_class = {
-    .class_name = "image2pipe demuxer",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "image2pipe demuxer",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 AVInputFormat ff_image2pipe_demuxer = {
-    .name           = "image2pipe",
-    .long_name      = NULL_IF_CONFIG_SMALL("piped image2 sequence"),
-    .priv_data_size = sizeof(VideoDemuxData),
-    .read_header    = read_header,
-    .read_packet    = read_packet,
-    .priv_class     = &img2pipe_class,
+    "image2pipe",
+    NULL_IF_CONFIG_SMALL("piped image2 sequence"),
+    0, 0, 0, &img2pipe_class,
+    0, 0, sizeof(VideoDemuxData),
+    0, read_header,
+    read_packet,
 };
 #endif

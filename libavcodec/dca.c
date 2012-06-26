@@ -1954,18 +1954,19 @@ static const AVProfile profiles[] = {
     { FF_PROFILE_UNKNOWN },
 };
 
-AVCodec ff_dca_decoder = {
-    .name            = "dca",
-    .type            = AVMEDIA_TYPE_AUDIO,
-    .id              = CODEC_ID_DTS,
-    .priv_data_size  = sizeof(DCAContext),
-    .init            = dca_decode_init,
-    .decode          = dca_decode_frame,
-    .close           = dca_decode_end,
-    .long_name       = NULL_IF_CONFIG_SMALL("DCA (DTS Coherent Acoustics)"),
-    .capabilities    = CODEC_CAP_CHANNEL_CONF | CODEC_CAP_DR1,
-    .sample_fmts     = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_FLT,
+static const enum AVSampleFormat tmp__0[] = { AV_SAMPLE_FMT_FLT,
                                                        AV_SAMPLE_FMT_S16,
-                                                       AV_SAMPLE_FMT_NONE },
-    .profiles        = NULL_IF_CONFIG_SMALL(profiles),
+                                                       AV_SAMPLE_FMT_NONE };
+AVCodec ff_dca_decoder = {
+    "dca",
+    NULL_IF_CONFIG_SMALL("DCA (DTS Coherent Acoustics)"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_DTS,
+    CODEC_CAP_CHANNEL_CONF | CODEC_CAP_DR1,
+    0, 0, 0, tmp__0,
+    0, 0, 0, NULL_IF_CONFIG_SMALL(profiles),
+    sizeof(DCAContext),
+    0, 0, 0, 0, 0, dca_decode_init,
+    0, 0, dca_decode_frame,
+    dca_decode_end,
 };

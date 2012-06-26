@@ -401,13 +401,13 @@ static av_cold int atrac1_decode_init(AVCodecContext *avctx)
 
 
 AVCodec ff_atrac1_decoder = {
-    .name           = "atrac1",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_ATRAC1,
-    .priv_data_size = sizeof(AT1Ctx),
-    .init           = atrac1_decode_init,
-    .close          = atrac1_decode_end,
-    .decode         = atrac1_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("Atrac 1 (Adaptive TRansform Acoustic Coding)"),
+    "atrac1",
+    NULL_IF_CONFIG_SMALL("Atrac 1 (Adaptive TRansform Acoustic Coding)"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_ATRAC1,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(AT1Ctx),
+    0, 0, 0, 0, 0, atrac1_decode_init,
+    0, 0, atrac1_decode_frame,
+    atrac1_decode_end,
 };

@@ -628,13 +628,13 @@ static av_cold int shorten_decode_close(AVCodecContext *avctx)
 }
 
 AVCodec ff_shorten_decoder = {
-    .name           = "shorten",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_SHORTEN,
-    .priv_data_size = sizeof(ShortenContext),
-    .init           = shorten_decode_init,
-    .close          = shorten_decode_close,
-    .decode         = shorten_decode_frame,
-    .capabilities   = CODEC_CAP_DELAY | CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("Shorten"),
+    "shorten",
+    NULL_IF_CONFIG_SMALL("Shorten"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_SHORTEN,
+    CODEC_CAP_DELAY | CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(ShortenContext),
+    0, 0, 0, 0, 0, shorten_decode_init,
+    0, 0, shorten_decode_frame,
+    shorten_decode_close,
 };

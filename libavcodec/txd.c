@@ -153,13 +153,13 @@ static av_cold int txd_end(AVCodecContext *avctx) {
 }
 
 AVCodec ff_txd_decoder = {
-    .name           = "txd",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_TXD,
-    .priv_data_size = sizeof(TXDContext),
-    .init           = txd_init,
-    .close          = txd_end,
-    .decode         = txd_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("Renderware TXD (TeXture Dictionary) image"),
+    "txd",
+    NULL_IF_CONFIG_SMALL("Renderware TXD (TeXture Dictionary) image"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_TXD,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(TXDContext),
+    0, 0, 0, 0, 0, txd_init,
+    0, 0, txd_decode_frame,
+    txd_end,
 };

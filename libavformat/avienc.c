@@ -336,8 +336,8 @@ static int avi_write_header(AVFormatContext *s)
             AVRational dar;
             int num, den;
 
-            dar = av_mul_q(s->streams[i]->sample_aspect_ratio,
-                           (AVRational){stream->width, stream->height});
+            { AVRational tmp__0 = {stream->width, stream->height}; dar = av_mul_q(s->streams[i]->sample_aspect_ratio,
+                           tmp__0); }
             av_reduce(&num, &den, dar.num, dar.den, 0xFFFF);
 
             avio_wl32(pb, 0); //video format  = unknown
@@ -641,19 +641,20 @@ static int avi_write_trailer(AVFormatContext *s)
     return res;
 }
 
-AVOutputFormat ff_avi_muxer = {
-    .name              = "avi",
-    .long_name         = NULL_IF_CONFIG_SMALL("AVI format"),
-    .mime_type         = "video/x-msvideo",
-    .extensions        = "avi",
-    .priv_data_size    = sizeof(AVIContext),
-	.audio_codec       = CONFIG_LIBMP3LAME_ENCODER ? CODEC_ID_MP3 : CODEC_ID_AC3,
-    .video_codec       = CODEC_ID_MPEG4,
-    .write_header      = avi_write_header,
-    .write_packet      = avi_write_packet,
-    .write_trailer     = avi_write_trailer,
-    .codec_tag         = (const AVCodecTag* const []){
+static const AVCodecTag* const  tmp__1[] = {
         ff_codec_bmp_tags, ff_codec_wav_tags, 0
-    },
-    .flags             = AVFMT_VARIABLE_FPS,
+    };
+AVOutputFormat ff_avi_muxer = {
+    "avi",
+    NULL_IF_CONFIG_SMALL("AVI format"),
+    "video/x-msvideo",
+    "avi",
+    CONFIG_LIBMP3LAME_ENCODER ? CODEC_ID_MP3 : CODEC_ID_AC3,
+	CODEC_ID_MPEG4,
+    0, AVFMT_VARIABLE_FPS,
+    tmp__1,
+    0, 0, sizeof(AVIContext),
+    avi_write_header,
+    avi_write_packet,
+    avi_write_trailer,
 };

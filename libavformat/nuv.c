@@ -260,11 +260,11 @@ static int nuv_packet(AVFormatContext *s, AVPacket *pkt) {
 }
 
 AVInputFormat ff_nuv_demuxer = {
-    .name           = "nuv",
-    .long_name      = NULL_IF_CONFIG_SMALL("NuppelVideo format"),
-    .priv_data_size = sizeof(NUVContext),
-    .read_probe     = nuv_probe,
-    .read_header    = nuv_header,
-    .read_packet    = nuv_packet,
-    .flags          = AVFMT_GENERIC_INDEX,
+    "nuv",
+    NULL_IF_CONFIG_SMALL("NuppelVideo format"),
+    AVFMT_GENERIC_INDEX,
+    0, 0, 0, 0, 0, sizeof(NUVContext),
+    nuv_probe,
+    nuv_header,
+    nuv_packet,
 };

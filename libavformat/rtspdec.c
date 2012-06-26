@@ -535,9 +535,9 @@ static int rtsp_read_play(AVFormatContext *s)
                 if (!rtpctx || rtsp_st->stream_index < 0)
                     continue;
                 st = s->streams[rtsp_st->stream_index];
-                rtpctx->range_start_offset =
-                    av_rescale_q(reply->range_start, AV_TIME_BASE_Q,
-                                 st->time_base);
+                { AVRational tmp__0 = {1, AV_TIME_BASE}; rtpctx->range_start_offset =
+                    av_rescale_q(reply->range_start, tmp__0,
+                                 st->time_base); }
             }
         }
     }
@@ -888,9 +888,9 @@ static int rtsp_read_seek(AVFormatContext *s, int stream_index,
 {
     RTSPState *rt = s->priv_data;
 
-    rt->seek_timestamp = av_rescale_q(timestamp,
+    { AVRational tmp__1 = {1, AV_TIME_BASE}; rt->seek_timestamp = av_rescale_q(timestamp,
                                       s->streams[stream_index]->time_base,
-                                      AV_TIME_BASE_Q);
+                                      tmp__1); }
     switch(rt->state) {
     default:
     case RTSP_STATE_IDLE:
@@ -910,23 +910,23 @@ static int rtsp_read_seek(AVFormatContext *s, int stream_index,
 }
 
 static const AVClass rtsp_demuxer_class = {
-    .class_name     = "RTSP demuxer",
-    .item_name      = av_default_item_name,
-    .option         = ff_rtsp_options,
-    .version        = LIBAVUTIL_VERSION_INT,
+    "RTSP demuxer",
+    av_default_item_name,
+    ff_rtsp_options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 AVInputFormat ff_rtsp_demuxer = {
-    .name           = "rtsp",
-    .long_name      = NULL_IF_CONFIG_SMALL("RTSP input format"),
-    .priv_data_size = sizeof(RTSPState),
-    .read_probe     = rtsp_probe,
-    .read_header    = rtsp_read_header,
-    .read_packet    = rtsp_read_packet,
-    .read_close     = rtsp_read_close,
-    .read_seek      = rtsp_read_seek,
-    .flags          = AVFMT_NOFILE,
-    .read_play      = rtsp_read_play,
-    .read_pause     = rtsp_read_pause,
-    .priv_class     = &rtsp_demuxer_class,
+    "rtsp",
+    NULL_IF_CONFIG_SMALL("RTSP input format"),
+    AVFMT_NOFILE,
+    0, 0, &rtsp_demuxer_class,
+    0, 0, sizeof(RTSPState),
+    rtsp_probe,
+    rtsp_read_header,
+    rtsp_read_packet,
+    rtsp_read_close,
+    rtsp_read_seek,
+    0, rtsp_read_play,
+    rtsp_read_pause,
 };

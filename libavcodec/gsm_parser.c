@@ -82,8 +82,8 @@ static int gsm_parse(AVCodecParserContext *s1, AVCodecContext *avctx,
 }
 
 AVCodecParser ff_gsm_parser = {
-    .codec_ids      = { CODEC_ID_GSM, CODEC_ID_GSM_MS },
-    .priv_data_size = sizeof(GSMParseContext),
-    .parser_parse   = gsm_parse,
-    .parser_close   = ff_parse_close,
+    { CODEC_ID_GSM, CODEC_ID_GSM_MS },
+    sizeof(GSMParseContext),
+    0, gsm_parse,
+    ff_parse_close,
 };

@@ -52,15 +52,15 @@ typedef struct FPSContext {
 #define OFFSET(x) offsetof(FPSContext, x)
 #define V AV_OPT_FLAG_VIDEO_PARAM
 static const AVOption options[] = {
-    { "fps", "A string describing desired output framerate", OFFSET(fps), AV_OPT_TYPE_STRING, { .str = "25" }, .flags = V },
+    { "fps", "A string describing desired output framerate", OFFSET(fps), AV_OPT_TYPE_STRING, { 0, "25" }, 0, 0, V },
     { NULL },
 };
 
 static const AVClass class = {
-    .class_name = "FPS filter",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "FPS filter",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 static av_cold int init(AVFilterContext *ctx, const char *args)
@@ -115,7 +115,7 @@ static int config_props(AVFilterLink* link)
 {
     FPSContext   *s = link->src->priv;
 
-    link->time_base = (AVRational){ s->framerate.den, s->framerate.num };
+    {link->time_base.num = s->framerate.den;link->time_base.den = s->framerate.num ;}
     link->w         = link->src->inputs[0]->w;
     link->h         = link->src->inputs[0]->h;
     s->pts          = AV_NOPTS_VALUE;
@@ -250,24 +250,26 @@ static void null_draw_slice(AVFilterLink *link, int y, int h, int slice_dir)
 {
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, null_start_frame,
+                                    0, 0, end_frame,
+                                    null_draw_slice, },
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, request_frame,
+                                    config_props},
+                                  { NULL}};
 AVFilter avfilter_vf_fps = {
-    .name        = "fps",
-    .description = NULL_IF_CONFIG_SMALL("Force constant framerate"),
+    "fps",
+    NULL_IF_CONFIG_SMALL("Force constant framerate"),
 
-    .init      = init,
-    .uninit    = uninit,
+    tmp__0,
+    tmp__1,
 
-    .priv_size = sizeof(FPSContext),
+    init,
 
-    .inputs    = (AVFilterPad[]) {{ .name            = "default",
-                                    .type            = AVMEDIA_TYPE_VIDEO,
-                                    .start_frame     = null_start_frame,
-                                    .draw_slice      = null_draw_slice,
-                                    .end_frame       = end_frame, },
-                                  { .name = NULL}},
-    .outputs   = (AVFilterPad[]) {{ .name            = "default",
-                                    .type            = AVMEDIA_TYPE_VIDEO,
-                                    .request_frame   = request_frame,
-                                    .config_props    = config_props},
-                                  { .name = NULL}},
+    uninit,
+    0, sizeof(FPSContext),
 };

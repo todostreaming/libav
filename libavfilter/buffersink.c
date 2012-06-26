@@ -95,8 +95,8 @@ static int read_from_fifo(AVFilterContext *ctx, AVFilterBufferRef **pbuf,
     av_audio_fifo_read(s->audio_fifo, (void**)buf->extended_data, nb_samples);
 
     buf->pts = s->next_pts;
-    s->next_pts += av_rescale_q(nb_samples, (AVRational){1, link->sample_rate},
-                                link->time_base);
+    { AVRational tmp__0 = {1, link->sample_rate}; s->next_pts += av_rescale_q(nb_samples, tmp__0,
+                                link->time_base); }
 
     *pbuf = buf;
     return 0;
@@ -129,10 +129,10 @@ int av_buffersink_read_samples(AVFilterContext *ctx, AVFilterBufferRef **pbuf,
             return ret;
 
         if (buf->pts != AV_NOPTS_VALUE) {
-            s->next_pts = buf->pts -
+            { AVRational tmp__1 = { 1, link->sample_rate }; s->next_pts = buf->pts -
                           av_rescale_q(av_audio_fifo_size(s->audio_fifo),
-                                       (AVRational){ 1, link->sample_rate },
-                                       link->time_base);
+                                       tmp__1,
+                                       link->time_base); }
         }
 
         ret = av_audio_fifo_write(s->audio_fifo, (void**)buf->extended_data,
@@ -143,32 +143,36 @@ int av_buffersink_read_samples(AVFilterContext *ctx, AVFilterBufferRef **pbuf,
     return ret;
 }
 
+static AVFilterPad tmp__2[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    AV_PERM_READ,
+                                    0, start_frame,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 1 },
+                                  { NULL }};
+static AVFilterPad tmp__3[] = {{ NULL }};
 AVFilter avfilter_vsink_buffer = {
-    .name      = "buffersink",
-    .description = NULL_IF_CONFIG_SMALL("Buffer video frames, and make them available to the end of the filter graph."),
-    .priv_size = sizeof(BufferSinkContext),
-    .uninit    = uninit,
+    "buffersink",
+    NULL_IF_CONFIG_SMALL("Buffer video frames, and make them available to the end of the filter graph."),
+    tmp__2,
+    tmp__3,
 
-    .inputs    = (AVFilterPad[]) {{ .name          = "default",
-                                    .type          = AVMEDIA_TYPE_VIDEO,
-                                    .start_frame   = start_frame,
-                                    .min_perms     = AV_PERM_READ,
-                                    .needs_fifo    = 1 },
-                                  { .name = NULL }},
-    .outputs   = (AVFilterPad[]) {{ .name = NULL }},
+    0, uninit,
+    0, sizeof(BufferSinkContext),
 };
 
+static AVFilterPad tmp__4[] = {{ "default",
+                                    AVMEDIA_TYPE_AUDIO,
+                                    AV_PERM_READ,
+                                    0, 0, 0, 0, 0, 0, filter_samples,
+                                    0, 0, 0, 1 },
+                                  { NULL }};
+static AVFilterPad tmp__5[] = {{ NULL }};
 AVFilter avfilter_asink_abuffer = {
-    .name      = "abuffersink",
-    .description = NULL_IF_CONFIG_SMALL("Buffer audio frames, and make them available to the end of the filter graph."),
-    .priv_size = sizeof(BufferSinkContext),
-    .uninit    = uninit,
+    "abuffersink",
+    NULL_IF_CONFIG_SMALL("Buffer audio frames, and make them available to the end of the filter graph."),
+    tmp__4,
+    tmp__5,
 
-    .inputs    = (AVFilterPad[]) {{ .name           = "default",
-                                    .type           = AVMEDIA_TYPE_AUDIO,
-                                    .filter_samples = filter_samples,
-                                    .min_perms      = AV_PERM_READ,
-                                    .needs_fifo     = 1 },
-                                  { .name = NULL }},
-    .outputs   = (AVFilterPad[]) {{ .name = NULL }},
+    0, uninit,
+    0, sizeof(BufferSinkContext),
 };

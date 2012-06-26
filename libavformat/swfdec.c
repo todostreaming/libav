@@ -210,10 +210,10 @@ static int swf_read_packet(AVFormatContext *s, AVPacket *pkt)
 }
 
 AVInputFormat ff_swf_demuxer = {
-    .name           = "swf",
-    .long_name      = NULL_IF_CONFIG_SMALL("Flash format"),
-    .priv_data_size = sizeof(SWFContext),
-    .read_probe     = swf_probe,
-    .read_header    = swf_read_header,
-    .read_packet    = swf_read_packet,
+    "swf",
+    NULL_IF_CONFIG_SMALL("Flash format"),
+    0, 0, 0, 0, 0, 0, sizeof(SWFContext),
+    swf_probe,
+    swf_read_header,
+    swf_read_packet,
 };

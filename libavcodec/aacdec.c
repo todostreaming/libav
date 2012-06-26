@@ -175,17 +175,11 @@ static int assign_pair(struct elem_to_channel e2c_vec[MAX_ELEM_ID],
     uint64_t right, int pos)
 {
     if (layout_map[offset][0] == TYPE_CPE) {
-        e2c_vec[offset] = (struct elem_to_channel) {
-            .av_position = left | right, .syn_ele = TYPE_CPE,
-            .elem_id = layout_map[offset    ][1], .aac_position = pos };
+        {e2c_vec[offset].av_position = left | right;e2c_vec[offset].syn_ele = TYPE_CPE;e2c_vec[offset].elem_id = layout_map[offset    ][1];e2c_vec[offset].aac_position = pos ;}
         return 1;
     } else {
-        e2c_vec[offset]   = (struct elem_to_channel) {
-            .av_position = left, .syn_ele = TYPE_SCE,
-            .elem_id = layout_map[offset    ][1], .aac_position = pos };
-        e2c_vec[offset + 1] = (struct elem_to_channel) {
-            .av_position = right, .syn_ele = TYPE_SCE,
-            .elem_id = layout_map[offset + 1][1], .aac_position = pos };
+        {e2c_vec[offset].av_position = left;e2c_vec[offset].syn_ele = TYPE_SCE;e2c_vec[offset].elem_id = layout_map[offset    ][1];e2c_vec[offset].aac_position = pos ;}
+        {e2c_vec[offset + 1].av_position = right;e2c_vec[offset + 1].syn_ele = TYPE_SCE;e2c_vec[offset + 1].elem_id = layout_map[offset + 1][1];e2c_vec[offset + 1].aac_position = pos ;}
         return 2;
     }
 }
@@ -246,9 +240,7 @@ static uint64_t sniff_channel_order(uint8_t (*layout_map)[3], int tags)
 
     i = 0;
     if (num_front_channels & 1) {
-        e2c_vec[i] = (struct elem_to_channel) {
-            .av_position = AV_CH_FRONT_CENTER, .syn_ele = TYPE_SCE,
-            .elem_id = layout_map[i][1], .aac_position = AAC_CHANNEL_FRONT };
+        {e2c_vec[i].av_position = AV_CH_FRONT_CENTER;e2c_vec[i].syn_ele = TYPE_SCE;e2c_vec[i].elem_id = layout_map[i][1];e2c_vec[i].aac_position = AAC_CHANNEL_FRONT ;}
         i++;
         num_front_channels--;
     }
@@ -304,23 +296,17 @@ static uint64_t sniff_channel_order(uint8_t (*layout_map)[3], int tags)
         num_back_channels -= 2;
     }
     if (num_back_channels) {
-        e2c_vec[i] = (struct elem_to_channel) {
-          .av_position = AV_CH_BACK_CENTER, .syn_ele = TYPE_SCE,
-          .elem_id = layout_map[i][1], .aac_position = AAC_CHANNEL_BACK };
+        {e2c_vec[i].av_position = AV_CH_BACK_CENTER;e2c_vec[i].syn_ele = TYPE_SCE;e2c_vec[i].elem_id = layout_map[i][1];e2c_vec[i].aac_position = AAC_CHANNEL_BACK ;}
         i++;
         num_back_channels--;
     }
 
     if (i < tags && layout_map[i][2] == AAC_CHANNEL_LFE) {
-        e2c_vec[i] = (struct elem_to_channel) {
-          .av_position = AV_CH_LOW_FREQUENCY, .syn_ele = TYPE_LFE,
-          .elem_id = layout_map[i][1], .aac_position = AAC_CHANNEL_LFE };
+        {e2c_vec[i].av_position = AV_CH_LOW_FREQUENCY;e2c_vec[i].syn_ele = TYPE_LFE;e2c_vec[i].elem_id = layout_map[i][1];e2c_vec[i].aac_position = AAC_CHANNEL_LFE ;}
         i++;
     }
     while (i < tags && layout_map[i][2] == AAC_CHANNEL_LFE) {
-        e2c_vec[i] = (struct elem_to_channel) {
-          .av_position = UINT64_MAX, .syn_ele = TYPE_LFE,
-          .elem_id = layout_map[i][1], .aac_position = AAC_CHANNEL_LFE };
+        {e2c_vec[i].av_position = UINT64_MAX;e2c_vec[i].syn_ele = TYPE_LFE;e2c_vec[i].elem_id = layout_map[i][1];e2c_vec[i].aac_position = AAC_CHANNEL_LFE ;}
         i++;
     }
 
@@ -2839,20 +2825,21 @@ static av_cold int latm_decode_init(AVCodecContext *avctx)
 }
 
 
-AVCodec ff_aac_decoder = {
-    .name            = "aac",
-    .type            = AVMEDIA_TYPE_AUDIO,
-    .id              = CODEC_ID_AAC,
-    .priv_data_size  = sizeof(AACContext),
-    .init            = aac_decode_init,
-    .close           = aac_decode_close,
-    .decode          = aac_decode_frame,
-    .long_name       = NULL_IF_CONFIG_SMALL("Advanced Audio Coding"),
-    .sample_fmts     = (const enum AVSampleFormat[]) {
+static const enum AVSampleFormat tmp__0[] = {
         AV_SAMPLE_FMT_FLT, AV_SAMPLE_FMT_S16, AV_SAMPLE_FMT_NONE
-    },
-    .capabilities    = CODEC_CAP_CHANNEL_CONF | CODEC_CAP_DR1,
-    .channel_layouts = aac_channel_layout,
+    };
+AVCodec ff_aac_decoder = {
+    "aac",
+    NULL_IF_CONFIG_SMALL("Advanced Audio Coding"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_AAC,
+    CODEC_CAP_CHANNEL_CONF | CODEC_CAP_DR1,
+    0, 0, 0, tmp__0,
+    aac_channel_layout,
+    0, 0, 0, sizeof(AACContext),
+    0, 0, 0, 0, 0, aac_decode_init,
+    0, 0, aac_decode_frame,
+    aac_decode_close,
 };
 
 /*
@@ -2860,18 +2847,19 @@ AVCodec ff_aac_decoder = {
     in MPEG transport streams which only contain one program.
     To do a more complex LATM demuxing a separate LATM demuxer should be used.
 */
-AVCodec ff_aac_latm_decoder = {
-    .name            = "aac_latm",
-    .type            = AVMEDIA_TYPE_AUDIO,
-    .id              = CODEC_ID_AAC_LATM,
-    .priv_data_size  = sizeof(struct LATMContext),
-    .init            = latm_decode_init,
-    .close           = aac_decode_close,
-    .decode          = latm_decode_frame,
-    .long_name       = NULL_IF_CONFIG_SMALL("AAC LATM (Advanced Audio Codec LATM syntax)"),
-    .sample_fmts     = (const enum AVSampleFormat[]) {
+static const enum AVSampleFormat tmp__1[] = {
         AV_SAMPLE_FMT_FLT, AV_SAMPLE_FMT_S16, AV_SAMPLE_FMT_NONE
-    },
-    .capabilities    = CODEC_CAP_CHANNEL_CONF | CODEC_CAP_DR1,
-    .channel_layouts = aac_channel_layout,
+    };
+AVCodec ff_aac_latm_decoder = {
+    "aac_latm",
+    NULL_IF_CONFIG_SMALL("AAC LATM (Advanced Audio Codec LATM syntax)"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_AAC_LATM,
+    CODEC_CAP_CHANNEL_CONF | CODEC_CAP_DR1,
+    0, 0, 0, tmp__1,
+    aac_channel_layout,
+    0, 0, 0, sizeof(struct LATMContext),
+    0, 0, 0, 0, 0, latm_decode_init,
+    0, 0, latm_decode_frame,
+    aac_decode_close,
 };

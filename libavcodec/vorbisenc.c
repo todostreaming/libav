@@ -1206,16 +1206,17 @@ error:
     return ret;
 }
 
+static const enum AVSampleFormat tmp__20[] = { AV_SAMPLE_FMT_S16,
+                                                     AV_SAMPLE_FMT_NONE };
 AVCodec ff_vorbis_encoder = {
-    .name           = "vorbis",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_VORBIS,
-    .priv_data_size = sizeof(vorbis_enc_context),
-    .init           = vorbis_encode_init,
-    .encode2        = vorbis_encode_frame,
-    .close          = vorbis_encode_close,
-    .capabilities   = CODEC_CAP_DELAY | CODEC_CAP_EXPERIMENTAL,
-    .sample_fmts    = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_S16,
-                                                     AV_SAMPLE_FMT_NONE },
-    .long_name      = NULL_IF_CONFIG_SMALL("Vorbis"),
+    "vorbis",
+    NULL_IF_CONFIG_SMALL("Vorbis"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_VORBIS,
+    CODEC_CAP_DELAY | CODEC_CAP_EXPERIMENTAL,
+    0, 0, 0, tmp__20,
+    0, 0, 0, 0, sizeof(vorbis_enc_context),
+    0, 0, 0, 0, 0, vorbis_encode_init,
+    0, vorbis_encode_frame,
+    0, vorbis_encode_close,
 };

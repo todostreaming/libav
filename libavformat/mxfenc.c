@@ -1351,9 +1351,9 @@ static int mxf_parse_mpeg2_frame(AVFormatContext *s, AVStream *st,
         } else if (c == 0x1b3) { // seq
             e->flags |= 0x40;
             switch ((pkt->data[i+4]>>4) & 0xf) {
-            case 2:  sc->aspect_ratio = (AVRational){  4,  3}; break;
-            case 3:  sc->aspect_ratio = (AVRational){ 16,  9}; break;
-            case 4:  sc->aspect_ratio = (AVRational){221,100}; break;
+            case 2:  {sc->aspect_ratio.num = 4;sc->aspect_ratio.den = 3;}break;
+            case 3:  {sc->aspect_ratio.num = 16;sc->aspect_ratio.den = 9;}break;
+            case 4:  {sc->aspect_ratio.num = 221;sc->aspect_ratio.den = 100;}break;
             default:
                 av_reduce(&sc->aspect_ratio.num, &sc->aspect_ratio.den,
                           st->codec->width, st->codec->height, 1024*1024);
@@ -1432,11 +1432,11 @@ static int mxf_write_header(AVFormatContext *s)
             }
             if (fabs(av_q2d(st->codec->time_base) - 1/25.0) < 0.0001) {
                 samples_per_frame = PAL_samples_per_frame;
-                mxf->time_base = (AVRational){ 1, 25 };
+                {mxf->time_base.num = 1;mxf->time_base.den = 25 ;}
                 mxf->timecode_base = 25;
             } else if (fabs(av_q2d(st->codec->time_base) - 1001/30000.0) < 0.0001) {
                 samples_per_frame = NTSC_samples_per_frame;
-                mxf->time_base = (AVRational){ 1001, 30000 };
+                {mxf->time_base.num = 1001;mxf->time_base.den = 30000 ;}
                 mxf->timecode_base = 30;
             } else {
                 av_log(s, AV_LOG_ERROR, "unsupported video frame rate\n");
@@ -1889,30 +1889,30 @@ static int mxf_interleave(AVFormatContext *s, AVPacket *out, AVPacket *pkt, int 
 }
 
 AVOutputFormat ff_mxf_muxer = {
-    .name              = "mxf",
-    .long_name         = NULL_IF_CONFIG_SMALL("Material eXchange Format"),
-    .mime_type         = "application/mxf",
-    .extensions        = "mxf",
-    .priv_data_size    = sizeof(MXFContext),
-    .audio_codec       = CODEC_ID_PCM_S16LE,
-    .video_codec       = CODEC_ID_MPEG2VIDEO,
-    .write_header      = mxf_write_header,
-    .write_packet      = mxf_write_packet,
-    .write_trailer     = mxf_write_footer,
-    .flags             = AVFMT_NOTIMESTAMPS,
-    .interleave_packet = mxf_interleave,
+    "mxf",
+    NULL_IF_CONFIG_SMALL("Material eXchange Format"),
+    "application/mxf",
+    "mxf",
+    CODEC_ID_PCM_S16LE,
+    CODEC_ID_MPEG2VIDEO,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, sizeof(MXFContext),
+    mxf_write_header,
+    mxf_write_packet,
+    mxf_write_footer,
+    mxf_interleave,
 };
 
 AVOutputFormat ff_mxf_d10_muxer = {
-    .name              = "mxf_d10",
-    .long_name         = NULL_IF_CONFIG_SMALL("Material eXchange Format, D-10 Mapping"),
-    .mime_type         = "application/mxf",
-    .priv_data_size    = sizeof(MXFContext),
-    .audio_codec       = CODEC_ID_PCM_S16LE,
-    .video_codec       = CODEC_ID_MPEG2VIDEO,
-    .write_header      = mxf_write_header,
-    .write_packet      = mxf_write_packet,
-    .write_trailer     = mxf_write_footer,
-    .flags             = AVFMT_NOTIMESTAMPS,
-    .interleave_packet = mxf_interleave,
+    "mxf_d10",
+    NULL_IF_CONFIG_SMALL("Material eXchange Format, D-10 Mapping"),
+    "application/mxf",
+    0, CODEC_ID_PCM_S16LE,
+    CODEC_ID_MPEG2VIDEO,
+    0, AVFMT_NOTIMESTAMPS,
+    0, 0, 0, sizeof(MXFContext),
+    mxf_write_header,
+    mxf_write_packet,
+    mxf_write_footer,
+    mxf_interleave,
 };

@@ -675,9 +675,9 @@ static void flac_parse_close(AVCodecParserContext *c)
 }
 
 AVCodecParser ff_flac_parser = {
-    .codec_ids      = { CODEC_ID_FLAC },
-    .priv_data_size = sizeof(FLACParseContext),
-    .parser_init    = flac_parse_init,
-    .parser_parse   = flac_parse,
-    .parser_close   = flac_parse_close,
+    { CODEC_ID_FLAC },
+    sizeof(FLACParseContext),
+    flac_parse_init,
+    flac_parse,
+    flac_parse_close,
 };

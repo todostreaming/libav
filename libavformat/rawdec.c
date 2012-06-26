@@ -170,31 +170,31 @@ fail:
 #define OFFSET(x) offsetof(FFRawVideoDemuxerContext, x)
 #define DEC AV_OPT_FLAG_DECODING_PARAM
 const AVOption ff_rawvideo_options[] = {
-    { "framerate", "", OFFSET(framerate), AV_OPT_TYPE_STRING, {.str = "25"}, 0, 0, DEC},
+    { "framerate", "", OFFSET(framerate), AV_OPT_TYPE_STRING, {0, "25"}, 0, 0, DEC},
     { NULL },
 };
 
 #if CONFIG_G722_DEMUXER
 AVInputFormat ff_g722_demuxer = {
-    .name           = "g722",
-    .long_name      = NULL_IF_CONFIG_SMALL("raw G.722"),
-    .read_header    = ff_raw_read_header,
-    .read_packet    = ff_raw_read_partial_packet,
-    .flags          = AVFMT_GENERIC_INDEX,
-    .extensions     = "g722,722",
-    .raw_codec_id   = CODEC_ID_ADPCM_G722,
+    "g722",
+    NULL_IF_CONFIG_SMALL("raw G.722"),
+    AVFMT_GENERIC_INDEX,
+    "g722,722",
+    0, 0, 0, CODEC_ID_ADPCM_G722,
+    0, 0, ff_raw_read_header,
+    ff_raw_read_partial_packet,
 };
 #endif
 
 #if CONFIG_LATM_DEMUXER
 AVInputFormat ff_latm_demuxer = {
-    .name           = "latm",
-    .long_name      = NULL_IF_CONFIG_SMALL("raw LOAS/LATM"),
-    .read_header    = ff_raw_audio_read_header,
-    .read_packet    = ff_raw_read_partial_packet,
-    .flags          = AVFMT_GENERIC_INDEX,
-    .extensions     = "latm",
-    .raw_codec_id   = CODEC_ID_AAC_LATM,
+    "latm",
+    NULL_IF_CONFIG_SMALL("raw LOAS/LATM"),
+    AVFMT_GENERIC_INDEX,
+    "latm",
+    0, 0, 0, CODEC_ID_AAC_LATM,
+    0, 0, ff_raw_audio_read_header,
+    ff_raw_read_partial_packet,
 };
 #endif
 
@@ -204,37 +204,37 @@ FF_DEF_RAWVIDEO_DEMUXER(mjpeg, "raw MJPEG video", NULL, "mjpg,mjpeg", CODEC_ID_M
 
 #if CONFIG_MLP_DEMUXER
 AVInputFormat ff_mlp_demuxer = {
-    .name           = "mlp",
-    .long_name      = NULL_IF_CONFIG_SMALL("raw MLP"),
-    .read_header    = ff_raw_audio_read_header,
-    .read_packet    = ff_raw_read_partial_packet,
-    .flags          = AVFMT_GENERIC_INDEX,
-    .extensions     = "mlp",
-    .raw_codec_id   = CODEC_ID_MLP,
+    "mlp",
+    NULL_IF_CONFIG_SMALL("raw MLP"),
+    AVFMT_GENERIC_INDEX,
+    "mlp",
+    0, 0, 0, CODEC_ID_MLP,
+    0, 0, ff_raw_audio_read_header,
+    ff_raw_read_partial_packet,
 };
 #endif
 
 #if CONFIG_TRUEHD_DEMUXER
 AVInputFormat ff_truehd_demuxer = {
-    .name           = "truehd",
-    .long_name      = NULL_IF_CONFIG_SMALL("raw TrueHD"),
-    .read_header    = ff_raw_audio_read_header,
-    .read_packet    = ff_raw_read_partial_packet,
-    .flags          = AVFMT_GENERIC_INDEX,
-    .extensions     = "thd",
-    .raw_codec_id   = CODEC_ID_TRUEHD,
+    "truehd",
+    NULL_IF_CONFIG_SMALL("raw TrueHD"),
+    AVFMT_GENERIC_INDEX,
+    "thd",
+    0, 0, 0, CODEC_ID_TRUEHD,
+    0, 0, ff_raw_audio_read_header,
+    ff_raw_read_partial_packet,
 };
 #endif
 
 #if CONFIG_SHORTEN_DEMUXER
 AVInputFormat ff_shorten_demuxer = {
-    .name           = "shn",
-    .long_name      = NULL_IF_CONFIG_SMALL("raw Shorten"),
-    .read_header    = ff_raw_audio_read_header,
-    .read_packet    = ff_raw_read_partial_packet,
-    .flags          = AVFMT_NOBINSEARCH | AVFMT_NOGENSEARCH | AVFMT_NO_BYTE_SEEK,
-    .extensions     = "shn",
-    .raw_codec_id   = CODEC_ID_SHORTEN,
+    "shn",
+    NULL_IF_CONFIG_SMALL("raw Shorten"),
+    AVFMT_NOBINSEARCH | AVFMT_NOGENSEARCH | AVFMT_NO_BYTE_SEEK,
+    "shn",
+    0, 0, 0, CODEC_ID_SHORTEN,
+    0, 0, ff_raw_audio_read_header,
+    ff_raw_read_partial_packet,
 };
 #endif
 

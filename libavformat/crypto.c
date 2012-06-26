@@ -47,16 +47,16 @@ typedef struct {
 #define OFFSET(x) offsetof(CryptoContext, x)
 #define D AV_OPT_FLAG_DECODING_PARAM
 static const AVOption options[] = {
-    {"key", "AES decryption key", OFFSET(key), AV_OPT_TYPE_BINARY, .flags = D },
-    {"iv",  "AES decryption initialization vector", OFFSET(iv),  AV_OPT_TYPE_BINARY, .flags = D },
+    {"key", "AES decryption key", OFFSET(key), AV_OPT_TYPE_BINARY, { 0 }, 0, 0, D },
+    {"iv",  "AES decryption initialization vector", OFFSET(iv),  AV_OPT_TYPE_BINARY, { 0 }, 0, 0, D },
     { NULL }
 };
 
 static const AVClass crypto_class = {
-    .class_name     = "crypto",
-    .item_name      = av_default_item_name,
-    .option         = options,
-    .version        = LIBAVUTIL_VERSION_INT,
+    "crypto",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 static int crypto_open(URLContext *h, const char *uri, int flags)
@@ -160,11 +160,11 @@ static int crypto_close(URLContext *h)
 }
 
 URLProtocol ff_crypto_protocol = {
-    .name            = "crypto",
-    .url_open        = crypto_open,
-    .url_read        = crypto_read,
-    .url_close       = crypto_close,
-    .priv_data_size  = sizeof(CryptoContext),
-    .priv_data_class = &crypto_class,
-    .flags           = URL_PROTOCOL_FLAG_NESTED_SCHEME,
+    "crypto",
+    crypto_open,
+    0, crypto_read,
+    0, 0, crypto_close,
+    0, 0, 0, 0, 0, sizeof(CryptoContext),
+    &crypto_class,
+    URL_PROTOCOL_FLAG_NESTED_SCHEME,
 };

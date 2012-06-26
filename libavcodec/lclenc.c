@@ -182,14 +182,15 @@ static av_cold int encode_end(AVCodecContext *avctx)
     return 0;
 }
 
+static const enum PixelFormat tmp__0[] = { PIX_FMT_BGR24, PIX_FMT_NONE };
 AVCodec ff_zlib_encoder = {
-    .name           = "zlib",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_ZLIB,
-    .priv_data_size = sizeof(LclEncContext),
-    .init           = encode_init,
-    .encode2        = encode_frame,
-    .close          = encode_end,
-    .pix_fmts       = (const enum PixelFormat[]) { PIX_FMT_BGR24, PIX_FMT_NONE },
-    .long_name      = NULL_IF_CONFIG_SMALL("LCL (LossLess Codec Library) ZLIB"),
+    "zlib",
+    NULL_IF_CONFIG_SMALL("LCL (LossLess Codec Library) ZLIB"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_ZLIB,
+    0, 0, tmp__0,
+    0, 0, 0, 0, 0, 0, sizeof(LclEncContext),
+    0, 0, 0, 0, 0, encode_init,
+    0, encode_frame,
+    0, encode_end,
 };

@@ -2070,16 +2070,16 @@ static int vp8_decode_update_thread_context(AVCodecContext *dst, const AVCodecCo
 }
 
 AVCodec ff_vp8_decoder = {
-    .name                  = "vp8",
-    .type                  = AVMEDIA_TYPE_VIDEO,
-    .id                    = CODEC_ID_VP8,
-    .priv_data_size        = sizeof(VP8Context),
-    .init                  = vp8_decode_init,
-    .close                 = vp8_decode_free,
-    .decode                = vp8_decode_frame,
-    .capabilities          = CODEC_CAP_DR1 | CODEC_CAP_FRAME_THREADS | CODEC_CAP_SLICE_THREADS,
-    .flush                 = vp8_decode_flush,
-    .long_name             = NULL_IF_CONFIG_SMALL("On2 VP8"),
-    .init_thread_copy      = ONLY_IF_THREADS_ENABLED(vp8_decode_init_thread_copy),
-    .update_thread_context = ONLY_IF_THREADS_ENABLED(vp8_decode_update_thread_context),
+    "vp8",
+    NULL_IF_CONFIG_SMALL("On2 VP8"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_VP8,
+    CODEC_CAP_DR1 | CODEC_CAP_FRAME_THREADS | CODEC_CAP_SLICE_THREADS,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(VP8Context),
+    0, ONLY_IF_THREADS_ENABLED(vp8_decode_init_thread_copy),
+    ONLY_IF_THREADS_ENABLED(vp8_decode_update_thread_context),
+    0, 0, vp8_decode_init,
+    0, 0, vp8_decode_frame,
+    vp8_decode_free,
+    vp8_decode_flush,
 };

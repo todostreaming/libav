@@ -620,10 +620,10 @@ static int mms_read(URLContext *h, uint8_t *buf, int size)
 }
 
 URLProtocol ff_mmst_protocol = {
-    .name           = "mmst",
-    .url_open       = mms_open,
-    .url_read       = mms_read,
-    .url_close      = mms_close,
-    .priv_data_size = sizeof(MMSTContext),
-    .flags          = URL_PROTOCOL_FLAG_NETWORK,
+    "mmst",
+    mms_open,
+    0, mms_read,
+    0, 0, mms_close,
+    0, 0, 0, 0, 0, sizeof(MMSTContext),
+    0, URL_PROTOCOL_FLAG_NETWORK,
 };

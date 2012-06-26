@@ -976,17 +976,18 @@ static int dvvideo_encode_frame(AVCodecContext *c, AVPacket *pkt,
     return 0;
 }
 
-AVCodec ff_dvvideo_encoder = {
-    .name           = "dvvideo",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_DVVIDEO,
-    .priv_data_size = sizeof(DVVideoContext),
-    .init           = dvvideo_init_encoder,
-    .encode2        = dvvideo_encode_frame,
-    .capabilities   = CODEC_CAP_SLICE_THREADS,
-    .pix_fmts       = (const enum PixelFormat[]) {
+static const enum PixelFormat tmp__0[] = {
         PIX_FMT_YUV411P, PIX_FMT_YUV422P, PIX_FMT_YUV420P, PIX_FMT_NONE
-    },
-    .long_name      = NULL_IF_CONFIG_SMALL("DV (Digital Video)"),
+    };
+AVCodec ff_dvvideo_encoder = {
+    "dvvideo",
+    NULL_IF_CONFIG_SMALL("DV (Digital Video)"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_DVVIDEO,
+    CODEC_CAP_SLICE_THREADS,
+    0, tmp__0,
+    0, 0, 0, 0, 0, 0, sizeof(DVVideoContext),
+    0, 0, 0, 0, 0, dvvideo_init_encoder,
+    0, dvvideo_encode_frame,
 };
 #endif // CONFIG_DVVIDEO_ENCODER

@@ -1227,13 +1227,13 @@ static int check_recording_time(OutputStream *ost)
 {
     OutputFile *of = output_files[ost->file_index];
 
-    if (of->recording_time != INT64_MAX &&
+    { AVRational tmp__0 = {1, AV_TIME_BASE}; if (of->recording_time != INT64_MAX &&
         av_compare_ts(ost->sync_opts - ost->first_pts, ost->st->codec->time_base, of->recording_time,
-                      AV_TIME_BASE_Q) >= 0) {
+                      tmp__0) >= 0) {
         ost->is_past_recording_time = 1;
         return 0;
     }
-    return 1;
+    return 1; }
 }
 
 static void do_audio_out(AVFormatContext *s, OutputStream *ost,
@@ -1350,9 +1350,9 @@ static void do_subtitle_out(AVFormatContext *s,
         if (!check_recording_time(ost))
             return;
 
-        sub->pts = av_rescale_q(pts, ist->st->time_base, AV_TIME_BASE_Q);
+        { AVRational tmp__1 = {1, AV_TIME_BASE}; sub->pts = av_rescale_q(pts, ist->st->time_base, tmp__1); }
         // start_display_time is required to be 0
-        sub->pts               += av_rescale_q(sub->start_display_time, (AVRational){ 1, 1000 }, AV_TIME_BASE_Q);
+        { AVRational tmp__2 = { 1, 1000 }; { AVRational tmp__3 = {1, AV_TIME_BASE}; sub->pts               += av_rescale_q(sub->start_display_time, tmp__2, tmp__3); }}
         sub->end_display_time  -= sub->start_display_time;
         sub->start_display_time = 0;
         subtitle_out_size = avcodec_encode_subtitle(enc, subtitle_out,
@@ -1365,7 +1365,7 @@ static void do_subtitle_out(AVFormatContext *s,
         av_init_packet(&pkt);
         pkt.data = subtitle_out;
         pkt.size = subtitle_out_size;
-        pkt.pts  = av_rescale_q(sub->pts, AV_TIME_BASE_Q, ost->st->time_base);
+        { AVRational tmp__4 = {1, AV_TIME_BASE}; pkt.pts  = av_rescale_q(sub->pts, tmp__4, ost->st->time_base); }
         if (enc->codec_id == CODEC_ID_DVB_SUBTITLE) {
             /* XXX: the pts correction is handled here. Maybe handling
                it in the codec would be better */
@@ -1565,12 +1565,12 @@ static int poll_filters(void)
 
             avfilter_copy_buf_props(filtered_frame, picref);
             if (picref->pts != AV_NOPTS_VALUE) {
-                filtered_frame->pts = av_rescale_q(picref->pts,
+                { AVRational tmp__5 = {1, AV_TIME_BASE}; filtered_frame->pts = av_rescale_q(picref->pts,
                                                    ost->filter->filter->inputs[0]->time_base,
                                                    ost->st->codec->time_base) -
                                       av_rescale_q(of->start_time,
-                                                   AV_TIME_BASE_Q,
-                                                   ost->st->codec->time_base);
+                                                   tmp__5,
+                                                   ost->st->codec->time_base); }
 
                 if (of->start_time && filtered_frame->pts < 0) {
                     avfilter_unref_buffer(picref);
@@ -1818,7 +1818,7 @@ static void do_streamcopy(InputStream *ist, OutputStream *ost, const AVPacket *p
     int64_t ost_tb_start_time;
     AVPacket opkt;
 
-    ost_tb_start_time = av_rescale_q(of->start_time, AV_TIME_BASE_Q, ost->st->time_base);
+    { AVRational tmp__6 = {1, AV_TIME_BASE}; ost_tb_start_time = av_rescale_q(of->start_time, tmp__6, ost->st->time_base); }
     av_init_packet(&opkt);
 
     if ((!ost->frame_number && !(pkt->flags & AV_PKT_FLAG_KEY)) &&
@@ -1845,7 +1845,7 @@ static void do_streamcopy(InputStream *ist, OutputStream *ost, const AVPacket *p
         opkt.pts = AV_NOPTS_VALUE;
 
     if (pkt->dts == AV_NOPTS_VALUE)
-        opkt.dts = av_rescale_q(ist->last_dts, AV_TIME_BASE_Q, ost->st->time_base);
+        { AVRational tmp__7 = {1, AV_TIME_BASE}; opkt.dts = av_rescale_q(ist->last_dts, tmp__7, ost->st->time_base); }
     else
         opkt.dts = av_rescale_q(pkt->dts, ist->st->time_base, ost->st->time_base);
     opkt.dts -= ost_tb_start_time;
@@ -2036,9 +2036,9 @@ static int decode_audio(InputStream *ist, AVPacket *pkt, int *got_output)
     }
 
     if (decoded_frame->pts != AV_NOPTS_VALUE)
-        decoded_frame->pts = av_rescale_q(decoded_frame->pts,
+        { AVRational tmp__8 = {1, ist->st->codec->sample_rate}; decoded_frame->pts = av_rescale_q(decoded_frame->pts,
                                           ist->st->time_base,
-                                          (AVRational){1, ist->st->codec->sample_rate});
+                                          tmp__8); }
     for (i = 0; i < ist->nb_filters; i++)
         av_buffersrc_write_frame(ist->filters[i]->filter, decoded_frame);
 
@@ -2176,7 +2176,7 @@ static int output_packet(InputStream *ist, const AVPacket *pkt)
     }
 
     if (pkt->dts != AV_NOPTS_VALUE)
-        ist->next_dts = ist->last_dts = av_rescale_q(pkt->dts, ist->st->time_base, AV_TIME_BASE_Q);
+        { AVRational tmp__9 = {1, AV_TIME_BASE}; ist->next_dts = ist->last_dts = av_rescale_q(pkt->dts, ist->st->time_base, tmp__9); }
 
     // while we have more to decode or while the decoder did output something on EOF
     while (ist->decoding_needed && (avpkt.size > 0 || (!pkt && got_output))) {
@@ -2198,15 +2198,15 @@ static int output_packet(InputStream *ist, const AVPacket *pkt)
         case AVMEDIA_TYPE_VIDEO:
             ret = decode_video    (ist, &avpkt, &got_output);
             if (avpkt.duration)
-                ist->next_dts += av_rescale_q(avpkt.duration, ist->st->time_base, AV_TIME_BASE_Q);
+                { AVRational tmp__10 = {1, AV_TIME_BASE}; ist->next_dts += av_rescale_q(avpkt.duration, ist->st->time_base, tmp__10); }
             else if (ist->st->r_frame_rate.num) {
                 AVRational framerate = { ist->st->r_frame_rate.den, ist->st->r_frame_rate.num };
-                ist->next_dts += av_rescale_q(1, framerate,
-                                              AV_TIME_BASE_Q);
+                { AVRational tmp__11 = {1, AV_TIME_BASE}; ist->next_dts += av_rescale_q(1, framerate,
+                                              tmp__11); }
             } else if (ist->st->codec->time_base.num != 0) {
                 int ticks      = ist->st->parser ? ist->st->parser->repeat_pict + 1 :
                                                    ist->st->codec->ticks_per_frame;
-                ist->next_dts += av_rescale_q(ticks, ist->st->codec->time_base, AV_TIME_BASE_Q);
+                { AVRational tmp__12 = {1, AV_TIME_BASE}; ist->next_dts += av_rescale_q(ticks, ist->st->codec->time_base, tmp__12); }
             }
             break;
         case AVMEDIA_TYPE_SUBTITLE:
@@ -2365,7 +2365,7 @@ static void parse_forced_key_frames(char *kf, OutputStream *ost,
             *next++ = 0;
 
         t = parse_time_or_die("force_key_frames", p, 1);
-        ost->forced_kf_pts[i] = av_rescale_q(t, AV_TIME_BASE_Q, avctx->time_base);
+        { AVRational tmp__13 = {1, AV_TIME_BASE}; ost->forced_kf_pts[i] = av_rescale_q(t, tmp__13, avctx->time_base); }
 
         p = next;
     }
@@ -2487,7 +2487,7 @@ static int transcode_init(void)
 					else if (ist->st->codec->sample_aspect_ratio.num)
                         codec->sample_aspect_ratio = ist->st->codec->sample_aspect_ratio;
 					else
-						codec->sample_aspect_ratio = (AVRational) { 0, 1 };
+						{codec->sample_aspect_ratio.num = 0;codec->sample_aspect_ratio.den = 1 ;}
                     ost->st->sample_aspect_ratio = codec->sample_aspect_ratio;
                 }
                 break;
@@ -2531,7 +2531,7 @@ static int transcode_init(void)
                 (video_sync_method ==  VSYNC_CFR ||
                  (video_sync_method ==  VSYNC_AUTO &&
                   !(oc->oformat->flags & (AVFMT_NOTIMESTAMPS | AVFMT_VARIABLE_FPS))))) {
-                ost->frame_rate = ist->st->r_frame_rate.num ? ist->st->r_frame_rate : (AVRational){25, 1};
+                { if (ist->st->r_frame_rate.num) { ost->frame_rate = ist->st->r_frame_rate; } else { ost->frame_rate.num = 25;ost->frame_rate.den = 1; } }
                 if (ost->enc && ost->enc->supported_framerates && !ost->force_fps) {
                     int idx = av_find_nearest_q_idx(ost->frame_rate, ost->enc->supported_framerates);
                     ost->frame_rate = ost->enc->supported_framerates[idx];
@@ -2555,7 +2555,7 @@ static int transcode_init(void)
                 codec->sample_rate    = ost->filter->filter->inputs[0]->sample_rate;
                 codec->channel_layout = ost->filter->filter->inputs[0]->channel_layout;
                 codec->channels       = av_get_channel_layout_nb_channels(codec->channel_layout);
-                codec->time_base      = (AVRational){ 1, codec->sample_rate };
+                {codec->time_base.num = 1;codec->time_base.den = codec->sample_rate ;}
                 break;
             case AVMEDIA_TYPE_VIDEO:
                 codec->time_base = ost->filter->filter->inputs[0]->time_base;
@@ -2579,7 +2579,7 @@ static int transcode_init(void)
                                             ost->st->codec);
                 break;
             case AVMEDIA_TYPE_SUBTITLE:
-                codec->time_base = (AVRational){1, 1000};
+                {codec->time_base.num = 1;codec->time_base.den = 1000;}
                 break;
             default:
                 abort();
@@ -3036,9 +3036,9 @@ static int transcode(void)
             goto discard_packet;
 
         if (pkt.dts != AV_NOPTS_VALUE)
-            pkt.dts += av_rescale_q(input_files[ist->file_index]->ts_offset, AV_TIME_BASE_Q, ist->st->time_base);
+            { AVRational tmp__14 = {1, AV_TIME_BASE}; pkt.dts += av_rescale_q(input_files[ist->file_index]->ts_offset, tmp__14, ist->st->time_base); }
         if (pkt.pts != AV_NOPTS_VALUE)
-            pkt.pts += av_rescale_q(input_files[ist->file_index]->ts_offset, AV_TIME_BASE_Q, ist->st->time_base);
+            { AVRational tmp__15 = {1, AV_TIME_BASE}; pkt.pts += av_rescale_q(input_files[ist->file_index]->ts_offset, tmp__15, ist->st->time_base); }
 
         if (pkt.pts != AV_NOPTS_VALUE)
             pkt.pts *= ist->ts_scale;
@@ -3053,16 +3053,16 @@ static int transcode(void)
             && (is->iformat->flags & AVFMT_TS_DISCONT)) {
             int64_t pkt_dts, delta;
 
-            pkt_dts = av_rescale_q(pkt.dts, ist->st->time_base, AV_TIME_BASE_Q);
+            { AVRational tmp__16 = {1, AV_TIME_BASE}; pkt_dts = av_rescale_q(pkt.dts, ist->st->time_base, tmp__16); }
             delta   = pkt_dts - ist->next_dts;
             if ((FFABS(delta) > 1LL * dts_delta_threshold * AV_TIME_BASE || pkt_dts + 1 < ist->last_dts) && !copy_ts) {
                 input_files[ist->file_index]->ts_offset -= delta;
                 av_log(NULL, AV_LOG_DEBUG,
                        "timestamp discontinuity %"PRId64", new offset= %"PRId64"\n",
                        delta, input_files[ist->file_index]->ts_offset);
-                pkt.dts-= av_rescale_q(delta, AV_TIME_BASE_Q, ist->st->time_base);
+                { AVRational tmp__17 = {1, AV_TIME_BASE}; pkt.dts-= av_rescale_q(delta, tmp__17, ist->st->time_base); }
                 if (pkt.pts != AV_NOPTS_VALUE)
-                    pkt.pts-= av_rescale_q(delta, AV_TIME_BASE_Q, ist->st->time_base);
+                    { AVRational tmp__18 = {1, AV_TIME_BASE}; pkt.pts-= av_rescale_q(delta, tmp__18, ist->st->time_base); }
             }
         }
 
@@ -4097,10 +4097,10 @@ static int copy_chapters(InputFile *ifile, OutputFile *ofile, int copy_metadata)
         AVChapter *in_ch = is->chapters[i], *out_ch;
         int64_t ts_off, rt;
 
-        ts_off   = av_rescale_q(ofile->start_time - ifile->ts_offset,
-                                AV_TIME_BASE_Q, in_ch->time_base);
-        rt       = (ofile->recording_time == INT64_MAX) ? INT64_MAX :
-                    av_rescale_q(ofile->recording_time, AV_TIME_BASE_Q, in_ch->time_base);
+        { AVRational tmp__19 = {1, AV_TIME_BASE}; ts_off   = av_rescale_q(ofile->start_time - ifile->ts_offset,
+                                tmp__19, in_ch->time_base); }
+        { AVRational tmp__20 = {1, AV_TIME_BASE}; rt       = (ofile->recording_time == INT64_MAX) ? INT64_MAX :
+                    av_rescale_q(ofile->recording_time, tmp__20, in_ch->time_base); }
 
         if (in_ch->end < ts_off)
             continue;
@@ -4864,22 +4864,22 @@ static int opt_filter_complex(const char *opt, const char *arg)
 static const OptionDef options[] = {
     /* main options */
 #include "cmdutils_common_opts.h"
-    { "f", HAS_ARG | OPT_STRING | OPT_OFFSET, {.off = OFFSET(format)}, "force format", "fmt" },
+    { "f", HAS_ARG | OPT_STRING | OPT_OFFSET, {OFFSET(format)}, "force format", "fmt" },
     { "i", HAS_ARG | OPT_FUNC2, {(void*)opt_input_file}, "input file name", "filename" },
     { "y", OPT_BOOL, {(void*)&file_overwrite}, "overwrite output files" },
-    { "c", HAS_ARG | OPT_STRING | OPT_SPEC, {.off = OFFSET(codec_names)}, "codec name", "codec" },
-    { "codec", HAS_ARG | OPT_STRING | OPT_SPEC, {.off = OFFSET(codec_names)}, "codec name", "codec" },
-    { "pre", HAS_ARG | OPT_STRING | OPT_SPEC, {.off = OFFSET(presets)}, "preset name", "preset" },
+    { "c", HAS_ARG | OPT_STRING | OPT_SPEC, {OFFSET(codec_names)}, "codec name", "codec" },
+    { "codec", HAS_ARG | OPT_STRING | OPT_SPEC, {OFFSET(codec_names)}, "codec name", "codec" },
+    { "pre", HAS_ARG | OPT_STRING | OPT_SPEC, {OFFSET(presets)}, "preset name", "preset" },
     { "map", HAS_ARG | OPT_EXPERT | OPT_FUNC2, {(void*)opt_map}, "set input stream mapping", "[-]input_file_id[:stream_specifier][,sync_file_id[:stream_specifier]]" },
-    { "map_metadata", HAS_ARG | OPT_STRING | OPT_SPEC, {.off = OFFSET(metadata_map)}, "set metadata information of outfile from infile",
+    { "map_metadata", HAS_ARG | OPT_STRING | OPT_SPEC, {OFFSET(metadata_map)}, "set metadata information of outfile from infile",
       "outfile[,metadata]:infile[,metadata]" },
-    { "map_chapters",  OPT_INT | HAS_ARG | OPT_EXPERT | OPT_OFFSET, {.off = OFFSET(chapters_input_file)},  "set chapters mapping", "input_file_index" },
-    { "t", HAS_ARG | OPT_TIME | OPT_OFFSET, {.off = OFFSET(recording_time)}, "record or transcode \"duration\" seconds of audio/video", "duration" },
-    { "fs", HAS_ARG | OPT_INT64 | OPT_OFFSET, {.off = OFFSET(limit_filesize)}, "set the limit file size in bytes", "limit_size" }, //
-    { "ss", HAS_ARG | OPT_TIME | OPT_OFFSET, {.off = OFFSET(start_time)}, "set the start time offset", "time_off" },
-    { "itsoffset", HAS_ARG | OPT_TIME | OPT_OFFSET, {.off = OFFSET(input_ts_offset)}, "set the input ts offset", "time_off" },
-    { "itsscale", HAS_ARG | OPT_DOUBLE | OPT_SPEC, {.off = OFFSET(ts_scale)}, "set the input ts scale", "scale" },
-    { "metadata", HAS_ARG | OPT_STRING | OPT_SPEC, {.off = OFFSET(metadata)}, "add metadata", "string=string" },
+    { "map_chapters",  OPT_INT | HAS_ARG | OPT_EXPERT | OPT_OFFSET, {OFFSET(chapters_input_file)},  "set chapters mapping", "input_file_index" },
+    { "t", HAS_ARG | OPT_TIME | OPT_OFFSET, {OFFSET(recording_time)}, "record or transcode \"duration\" seconds of audio/video", "duration" },
+    { "fs", HAS_ARG | OPT_INT64 | OPT_OFFSET, {OFFSET(limit_filesize)}, "set the limit file size in bytes", "limit_size" }, //
+    { "ss", HAS_ARG | OPT_TIME | OPT_OFFSET, {OFFSET(start_time)}, "set the start time offset", "time_off" },
+    { "itsoffset", HAS_ARG | OPT_TIME | OPT_OFFSET, {OFFSET(input_ts_offset)}, "set the input ts offset", "time_off" },
+    { "itsscale", HAS_ARG | OPT_DOUBLE | OPT_SPEC, {OFFSET(ts_scale)}, "set the input ts scale", "scale" },
+    { "metadata", HAS_ARG | OPT_STRING | OPT_SPEC, {OFFSET(metadata)}, "add metadata", "string=string" },
     { "dframes", HAS_ARG | OPT_FUNC2, {(void*)opt_data_frames}, "set the number of data frames to record", "number" },
     { "benchmark", OPT_BOOL | OPT_EXPERT, {(void*)&do_benchmark},
       "add timings for benchmarking" },
@@ -4888,7 +4888,7 @@ static const OptionDef options[] = {
       "dump each input packet" },
     { "hex", OPT_BOOL | OPT_EXPERT, {(void*)&do_hex_dump},
       "when dumping packets, also dump the payload" },
-    { "re", OPT_BOOL | OPT_EXPERT | OPT_OFFSET, {.off = OFFSET(rate_emu)}, "read input at native frame rate", "" },
+    { "re", OPT_BOOL | OPT_EXPERT | OPT_OFFSET, {OFFSET(rate_emu)}, "read input at native frame rate", "" },
     { "target", HAS_ARG | OPT_FUNC2, {(void*)opt_target}, "specify target file type (\"vcd\", \"svcd\", \"dvd\", \"dv\", \"dv50\", \"pal-vcd\", \"ntsc-svcd\", ...)", "type" },
     { "vsync", HAS_ARG | OPT_EXPERT, {(void*)opt_vsync}, "video sync method", "" },
     { "async", HAS_ARG | OPT_INT | OPT_EXPERT, {(void*)&audio_sync_method}, "audio sync method", "" },
@@ -4898,27 +4898,27 @@ static const OptionDef options[] = {
     { "shortest", OPT_BOOL | OPT_EXPERT, {(void*)&opt_shortest}, "finish encoding within shortest input" }, //
     { "dts_delta_threshold", HAS_ARG | OPT_FLOAT | OPT_EXPERT, {(void*)&dts_delta_threshold}, "timestamp discontinuity delta threshold", "threshold" },
     { "xerror", OPT_BOOL, {(void*)&exit_on_error}, "exit on error", "error" },
-    { "copyinkf", OPT_BOOL | OPT_EXPERT | OPT_SPEC, {.off = OFFSET(copy_initial_nonkeyframes)}, "copy initial non-keyframes" },
-    { "frames", OPT_INT64 | HAS_ARG | OPT_SPEC, {.off = OFFSET(max_frames)}, "set the number of frames to record", "number" },
-    { "tag",   OPT_STRING | HAS_ARG | OPT_SPEC, {.off = OFFSET(codec_tags)}, "force codec tag/fourcc", "fourcc/tag" },
-    { "q", HAS_ARG | OPT_EXPERT | OPT_DOUBLE | OPT_SPEC, {.off = OFFSET(qscale)}, "use fixed quality scale (VBR)", "q" },
-    { "qscale", HAS_ARG | OPT_EXPERT | OPT_DOUBLE | OPT_SPEC, {.off = OFFSET(qscale)}, "use fixed quality scale (VBR)", "q" },
-    { "filter", HAS_ARG | OPT_STRING | OPT_SPEC, {.off = OFFSET(filters)}, "set stream filterchain", "filter_list" },
+    { "copyinkf", OPT_BOOL | OPT_EXPERT | OPT_SPEC, {OFFSET(copy_initial_nonkeyframes)}, "copy initial non-keyframes" },
+    { "frames", OPT_INT64 | HAS_ARG | OPT_SPEC, {OFFSET(max_frames)}, "set the number of frames to record", "number" },
+    { "tag",   OPT_STRING | HAS_ARG | OPT_SPEC, {OFFSET(codec_tags)}, "force codec tag/fourcc", "fourcc/tag" },
+    { "q", HAS_ARG | OPT_EXPERT | OPT_DOUBLE | OPT_SPEC, {OFFSET(qscale)}, "use fixed quality scale (VBR)", "q" },
+    { "qscale", HAS_ARG | OPT_EXPERT | OPT_DOUBLE | OPT_SPEC, {OFFSET(qscale)}, "use fixed quality scale (VBR)", "q" },
+    { "filter", HAS_ARG | OPT_STRING | OPT_SPEC, {OFFSET(filters)}, "set stream filterchain", "filter_list" },
     { "filter_complex", HAS_ARG | OPT_EXPERT, {(void*)opt_filter_complex}, "create a complex filtergraph", "graph_description" },
     { "stats", OPT_BOOL, {&print_stats}, "print progress report during encoding", },
     { "attach", HAS_ARG | OPT_FUNC2, {(void*)opt_attach}, "add an attachment to the output file", "filename" },
-    { "dump_attachment", HAS_ARG | OPT_STRING | OPT_SPEC, {.off = OFFSET(dump_attachment)}, "extract an attachment into a file", "filename" },
+    { "dump_attachment", HAS_ARG | OPT_STRING | OPT_SPEC, {OFFSET(dump_attachment)}, "extract an attachment into a file", "filename" },
     { "cpuflags", HAS_ARG | OPT_EXPERT, {(void*)opt_cpuflags}, "set CPU flags mask", "mask" },
 
     /* video options */
     { "vframes", HAS_ARG | OPT_VIDEO | OPT_FUNC2, {(void*)opt_video_frames}, "set the number of video frames to record", "number" },
-    { "r", HAS_ARG | OPT_VIDEO | OPT_STRING | OPT_SPEC, {.off = OFFSET(frame_rates)}, "set frame rate (Hz value, fraction or abbreviation)", "rate" },
-    { "s", HAS_ARG | OPT_VIDEO | OPT_STRING | OPT_SPEC, {.off = OFFSET(frame_sizes)}, "set frame size (WxH or abbreviation)", "size" },
-    { "aspect", HAS_ARG | OPT_VIDEO | OPT_STRING | OPT_SPEC, {.off = OFFSET(frame_aspect_ratios)}, "set aspect ratio (4:3, 16:9 or 1.3333, 1.7777)", "aspect" },
-    { "pix_fmt", HAS_ARG | OPT_EXPERT | OPT_VIDEO | OPT_STRING | OPT_SPEC, {.off = OFFSET(frame_pix_fmts)}, "set pixel format", "format" },
-    { "vn", OPT_BOOL | OPT_VIDEO | OPT_OFFSET, {.off = OFFSET(video_disable)}, "disable video" },
+    { "r", HAS_ARG | OPT_VIDEO | OPT_STRING | OPT_SPEC, {OFFSET(frame_rates)}, "set frame rate (Hz value, fraction or abbreviation)", "rate" },
+    { "s", HAS_ARG | OPT_VIDEO | OPT_STRING | OPT_SPEC, {OFFSET(frame_sizes)}, "set frame size (WxH or abbreviation)", "size" },
+    { "aspect", HAS_ARG | OPT_VIDEO | OPT_STRING | OPT_SPEC, {OFFSET(frame_aspect_ratios)}, "set aspect ratio (4:3, 16:9 or 1.3333, 1.7777)", "aspect" },
+    { "pix_fmt", HAS_ARG | OPT_EXPERT | OPT_VIDEO | OPT_STRING | OPT_SPEC, {OFFSET(frame_pix_fmts)}, "set pixel format", "format" },
+    { "vn", OPT_BOOL | OPT_VIDEO | OPT_OFFSET, {OFFSET(video_disable)}, "disable video" },
     { "vdt", OPT_INT | HAS_ARG | OPT_EXPERT | OPT_VIDEO, {(void*)&video_discard}, "discard threshold", "n" },
-    { "rc_override", HAS_ARG | OPT_EXPERT | OPT_VIDEO | OPT_STRING | OPT_SPEC, {.off = OFFSET(rc_overrides)}, "rate control override for specific intervals", "override" },
+    { "rc_override", HAS_ARG | OPT_EXPERT | OPT_VIDEO | OPT_STRING | OPT_SPEC, {OFFSET(rc_overrides)}, "rate control override for specific intervals", "override" },
     { "vcodec", HAS_ARG | OPT_VIDEO | OPT_FUNC2, {(void*)opt_video_codec}, "force video codec ('copy' to copy stream)", "codec" },
     { "same_quant", OPT_BOOL | OPT_VIDEO, {(void*)&same_quant},
       "use same quantizer as source (implies VBR)" },
@@ -4929,31 +4929,31 @@ static const OptionDef options[] = {
     { "vstats", OPT_EXPERT | OPT_VIDEO, {(void*)&opt_vstats}, "dump video coding statistics to file" },
     { "vstats_file", HAS_ARG | OPT_EXPERT | OPT_VIDEO, {(void*)opt_vstats_file}, "dump video coding statistics to file", "file" },
     { "vf", HAS_ARG | OPT_VIDEO | OPT_FUNC2, {(void*)opt_video_filters}, "video filters", "filter list" },
-    { "intra_matrix", HAS_ARG | OPT_EXPERT | OPT_VIDEO | OPT_STRING | OPT_SPEC, {.off = OFFSET(intra_matrices)}, "specify intra matrix coeffs", "matrix" },
-    { "inter_matrix", HAS_ARG | OPT_EXPERT | OPT_VIDEO | OPT_STRING | OPT_SPEC, {.off = OFFSET(inter_matrices)}, "specify inter matrix coeffs", "matrix" },
-    { "top", HAS_ARG | OPT_EXPERT | OPT_VIDEO | OPT_INT| OPT_SPEC, {.off = OFFSET(top_field_first)}, "top=1/bottom=0/auto=-1 field first", "" },
+    { "intra_matrix", HAS_ARG | OPT_EXPERT | OPT_VIDEO | OPT_STRING | OPT_SPEC, {OFFSET(intra_matrices)}, "specify intra matrix coeffs", "matrix" },
+    { "inter_matrix", HAS_ARG | OPT_EXPERT | OPT_VIDEO | OPT_STRING | OPT_SPEC, {OFFSET(inter_matrices)}, "specify inter matrix coeffs", "matrix" },
+    { "top", HAS_ARG | OPT_EXPERT | OPT_VIDEO | OPT_INT| OPT_SPEC, {OFFSET(top_field_first)}, "top=1/bottom=0/auto=-1 field first", "" },
     { "dc", OPT_INT | HAS_ARG | OPT_EXPERT | OPT_VIDEO, {(void*)&intra_dc_precision}, "intra_dc_precision", "precision" },
     { "vtag", HAS_ARG | OPT_EXPERT | OPT_VIDEO | OPT_FUNC2, {(void*)opt_video_tag}, "force video tag/fourcc", "fourcc/tag" },
     { "qphist", OPT_BOOL | OPT_EXPERT | OPT_VIDEO, { (void *)&qp_hist }, "show QP histogram" },
-    { "force_fps", OPT_BOOL | OPT_EXPERT | OPT_VIDEO | OPT_SPEC, {.off = OFFSET(force_fps)}, "force the selected framerate, disable the best supported framerate selection" },
+    { "force_fps", OPT_BOOL | OPT_EXPERT | OPT_VIDEO | OPT_SPEC, {OFFSET(force_fps)}, "force the selected framerate, disable the best supported framerate selection" },
     { "streamid", HAS_ARG | OPT_EXPERT | OPT_FUNC2, {(void*)opt_streamid}, "set the value of an outfile streamid", "streamIndex:value" },
-    { "force_key_frames", OPT_STRING | HAS_ARG | OPT_EXPERT | OPT_VIDEO | OPT_SPEC, {.off = OFFSET(forced_key_frames)}, "force key frames at specified timestamps", "timestamps" },
+    { "force_key_frames", OPT_STRING | HAS_ARG | OPT_EXPERT | OPT_VIDEO | OPT_SPEC, {OFFSET(forced_key_frames)}, "force key frames at specified timestamps", "timestamps" },
 
     /* audio options */
     { "aframes", HAS_ARG | OPT_AUDIO | OPT_FUNC2, {(void*)opt_audio_frames}, "set the number of audio frames to record", "number" },
     { "aq", HAS_ARG | OPT_AUDIO | OPT_FUNC2, {(void*)opt_audio_qscale}, "set audio quality (codec-specific)", "quality", },
-    { "ar", HAS_ARG | OPT_AUDIO | OPT_INT | OPT_SPEC, {.off = OFFSET(audio_sample_rate)}, "set audio sampling rate (in Hz)", "rate" },
-    { "ac", HAS_ARG | OPT_AUDIO | OPT_INT | OPT_SPEC, {.off = OFFSET(audio_channels)}, "set number of audio channels", "channels" },
-    { "an", OPT_BOOL | OPT_AUDIO | OPT_OFFSET, {.off = OFFSET(audio_disable)}, "disable audio" },
+    { "ar", HAS_ARG | OPT_AUDIO | OPT_INT | OPT_SPEC, {OFFSET(audio_sample_rate)}, "set audio sampling rate (in Hz)", "rate" },
+    { "ac", HAS_ARG | OPT_AUDIO | OPT_INT | OPT_SPEC, {OFFSET(audio_channels)}, "set number of audio channels", "channels" },
+    { "an", OPT_BOOL | OPT_AUDIO | OPT_OFFSET, {OFFSET(audio_disable)}, "disable audio" },
     { "acodec", HAS_ARG | OPT_AUDIO | OPT_FUNC2, {(void*)opt_audio_codec}, "force audio codec ('copy' to copy stream)", "codec" },
     { "atag", HAS_ARG | OPT_EXPERT | OPT_AUDIO | OPT_FUNC2, {(void*)opt_audio_tag}, "force audio tag/fourcc", "fourcc/tag" },
     { "vol", OPT_INT | HAS_ARG | OPT_AUDIO, {(void*)&audio_volume}, "change audio volume (256=normal)" , "volume" }, //
-    { "sample_fmt", HAS_ARG | OPT_EXPERT | OPT_AUDIO | OPT_SPEC | OPT_STRING, {.off = OFFSET(sample_fmts)}, "set sample format", "format" },
+    { "sample_fmt", HAS_ARG | OPT_EXPERT | OPT_AUDIO | OPT_SPEC | OPT_STRING, {OFFSET(sample_fmts)}, "set sample format", "format" },
     { "channel_layout", HAS_ARG | OPT_EXPERT | OPT_AUDIO | OPT_FUNC2, {(void*)opt_channel_layout}, "set channel layout", "layout" },
     { "af", HAS_ARG | OPT_AUDIO | OPT_FUNC2, {(void*)opt_audio_filters}, "audio filters", "filter list" },
 
     /* subtitle options */
-    { "sn", OPT_BOOL | OPT_SUBTITLE | OPT_OFFSET, {.off = OFFSET(subtitle_disable)}, "disable subtitle" },
+    { "sn", OPT_BOOL | OPT_SUBTITLE | OPT_OFFSET, {OFFSET(subtitle_disable)}, "disable subtitle" },
     { "scodec", HAS_ARG | OPT_SUBTITLE | OPT_FUNC2, {(void*)opt_subtitle_codec}, "force subtitle codec ('copy' to copy stream)", "codec" },
     { "stag", HAS_ARG | OPT_EXPERT | OPT_SUBTITLE | OPT_FUNC2, {(void*)opt_subtitle_tag}, "force subtitle tag/fourcc", "fourcc/tag" },
 
@@ -4961,10 +4961,10 @@ static const OptionDef options[] = {
     { "isync", OPT_BOOL | OPT_EXPERT | OPT_GRAB, {(void*)&input_sync}, "sync read on input", "" },
 
     /* muxer options */
-    { "muxdelay", OPT_FLOAT | HAS_ARG | OPT_EXPERT   | OPT_OFFSET, {.off = OFFSET(mux_max_delay)}, "set the maximum demux-decode delay", "seconds" },
-    { "muxpreload", OPT_FLOAT | HAS_ARG | OPT_EXPERT | OPT_OFFSET, {.off = OFFSET(mux_preload)},   "set the initial demux-decode delay", "seconds" },
+    { "muxdelay", OPT_FLOAT | HAS_ARG | OPT_EXPERT   | OPT_OFFSET, {OFFSET(mux_max_delay)}, "set the maximum demux-decode delay", "seconds" },
+    { "muxpreload", OPT_FLOAT | HAS_ARG | OPT_EXPERT | OPT_OFFSET, {OFFSET(mux_preload)},   "set the initial demux-decode delay", "seconds" },
 
-    { "bsf", HAS_ARG | OPT_STRING | OPT_SPEC, {.off = OFFSET(bitstream_filters)}, "A comma-separated list of bitstream filters", "bitstream_filters" },
+    { "bsf", HAS_ARG | OPT_STRING | OPT_SPEC, {OFFSET(bitstream_filters)}, "A comma-separated list of bitstream filters", "bitstream_filters" },
 
     /* data codec support */
     { "dcodec", HAS_ARG | OPT_DATA | OPT_FUNC2, {(void*)opt_data_codec}, "force data codec ('copy' to copy stream)", "codec" },

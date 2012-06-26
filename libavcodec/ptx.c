@@ -117,13 +117,13 @@ static av_cold int ptx_end(AVCodecContext *avctx) {
 }
 
 AVCodec ff_ptx_decoder = {
-    .name           = "ptx",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_PTX,
-    .priv_data_size = sizeof(PTXContext),
-    .init           = ptx_init,
-    .close          = ptx_end,
-    .decode         = ptx_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("V.Flash PTX image"),
+    "ptx",
+    NULL_IF_CONFIG_SMALL("V.Flash PTX image"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_PTX,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(PTXContext),
+    0, 0, 0, 0, 0, ptx_init,
+    0, 0, ptx_decode_frame,
+    ptx_end,
 };

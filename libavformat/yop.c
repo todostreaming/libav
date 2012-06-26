@@ -88,7 +88,7 @@ static int yop_read_header(AVFormatContext *s)
     video_dec->width        = avio_rl16(pb);
     video_dec->height       = avio_rl16(pb);
 
-    video_stream->sample_aspect_ratio = (AVRational){1, 2};
+    {video_stream->sample_aspect_ratio.num = 1;video_stream->sample_aspect_ratio.den = 2;}
 
     ret = avio_read(pb, video_dec->extradata, 8);
     if (ret < 8)
@@ -205,14 +205,14 @@ static int yop_read_seek(AVFormatContext *s, int stream_index,
 }
 
 AVInputFormat ff_yop_demuxer = {
-    .name           = "yop",
-    .long_name      = NULL_IF_CONFIG_SMALL("Psygnosis YOP Format"),
-    .priv_data_size = sizeof(YopDecContext),
-    .read_probe     = yop_probe,
-    .read_header    = yop_read_header,
-    .read_packet    = yop_read_packet,
-    .read_close     = yop_read_close,
-    .read_seek      = yop_read_seek,
-    .extensions     = "yop",
-    .flags          = AVFMT_GENERIC_INDEX,
+    "yop",
+    NULL_IF_CONFIG_SMALL("Psygnosis YOP Format"),
+    AVFMT_GENERIC_INDEX,
+    "yop",
+    0, 0, 0, 0, sizeof(YopDecContext),
+    yop_probe,
+    yop_read_header,
+    yop_read_packet,
+    yop_read_close,
+    yop_read_seek,
 };

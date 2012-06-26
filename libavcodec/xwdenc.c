@@ -219,14 +219,7 @@ static av_cold int xwd_encode_close(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec ff_xwd_encoder = {
-    .name         = "xwd",
-    .type         = AVMEDIA_TYPE_VIDEO,
-    .id           = CODEC_ID_XWD,
-    .init         = xwd_encode_init,
-    .encode2      = xwd_encode_frame,
-    .close        = xwd_encode_close,
-    .pix_fmts     = (const enum PixelFormat[]) { PIX_FMT_BGRA,
+static const enum PixelFormat tmp__0[] = { PIX_FMT_BGRA,
                                                  PIX_FMT_RGBA,
                                                  PIX_FMT_ARGB,
                                                  PIX_FMT_ABGR,
@@ -246,6 +239,14 @@ AVCodec ff_xwd_encoder = {
                                                  PIX_FMT_BGR4_BYTE,
                                                  PIX_FMT_PAL8,
                                                  PIX_FMT_MONOWHITE,
-                                                 PIX_FMT_NONE },
-    .long_name    = NULL_IF_CONFIG_SMALL("XWD (X Window Dump) image"),
+                                                 PIX_FMT_NONE };
+AVCodec ff_xwd_encoder = {
+    "xwd",
+    NULL_IF_CONFIG_SMALL("XWD (X Window Dump) image"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_XWD,
+    0, 0, tmp__0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, xwd_encode_init,
+    0, xwd_encode_frame,
+    0, xwd_encode_close,
 };

@@ -80,15 +80,15 @@ typedef struct {
 } ASFContext;
 
 static const AVOption options[] = {
-    {"no_resync_search", "Don't try to resynchronize by looking for a certain optional start code", offsetof(ASFContext, no_resync_search), AV_OPT_TYPE_INT, {.dbl = 0}, 0, 1, AV_OPT_FLAG_DECODING_PARAM },
+    {"no_resync_search", "Don't try to resynchronize by looking for a certain optional start code", offsetof(ASFContext, no_resync_search), AV_OPT_TYPE_INT, {0}, 0, 1, AV_OPT_FLAG_DECODING_PARAM },
     { NULL },
 };
 
 static const AVClass asf_class = {
-    .class_name = "asf demuxer",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "asf demuxer",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 #undef NDEBUG
@@ -671,7 +671,7 @@ static int asf_read_marker(AVFormatContext *s, int64_t size)
         name_len = avio_rl32(pb);  // name length
         if ((ret = avio_get_str16le(pb, name_len * 2, name, sizeof(name))) < name_len)
             avio_skip(pb, name_len - ret);
-        avpriv_new_chapter(s, i, (AVRational){1, 10000000}, pres_time, AV_NOPTS_VALUE, name );
+        { AVRational tmp__0 = {1, 10000000}; avpriv_new_chapter(s, i, tmp__0, pres_time, AV_NOPTS_VALUE, name ); }
     }
 
     return 0;
@@ -1400,15 +1400,15 @@ static int asf_read_seek(AVFormatContext *s, int stream_index, int64_t pts, int 
 }
 
 AVInputFormat ff_asf_demuxer = {
-    .name           = "asf",
-    .long_name      = NULL_IF_CONFIG_SMALL("ASF format"),
-    .priv_data_size = sizeof(ASFContext),
-    .read_probe     = asf_probe,
-    .read_header    = asf_read_header,
-    .read_packet    = asf_read_packet,
-    .read_close     = asf_read_close,
-    .read_seek      = asf_read_seek,
-    .read_timestamp = asf_read_pts,
-    .flags          = AVFMT_NOBINSEARCH | AVFMT_NOGENSEARCH,
-    .priv_class     = &asf_class,
+    "asf",
+    NULL_IF_CONFIG_SMALL("ASF format"),
+    AVFMT_NOBINSEARCH | AVFMT_NOGENSEARCH,
+    0, 0, &asf_class,
+    0, 0, sizeof(ASFContext),
+    asf_probe,
+    asf_read_header,
+    asf_read_packet,
+    asf_read_close,
+    asf_read_seek,
+    asf_read_pts,
 };

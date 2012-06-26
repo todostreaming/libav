@@ -31,11 +31,11 @@ static struct {
     uint8_t  bits;
     uint32_t poly;
 } av_crc_table_params[AV_CRC_MAX] = {
-    [AV_CRC_8_ATM]      = { 0,  8,       0x07 },
-    [AV_CRC_16_ANSI]    = { 0, 16,     0x8005 },
-    [AV_CRC_16_CCITT]   = { 0, 16,     0x1021 },
-    [AV_CRC_32_IEEE]    = { 0, 32, 0x04C11DB7 },
-    [AV_CRC_32_IEEE_LE] = { 1, 32, 0xEDB88320 },
+    /* AV_CRC_8_ATM */ { 0,  8,       0x07 },
+    /* AV_CRC_16_ANSI */ { 0, 16,     0x8005 },
+    /* AV_CRC_16_CCITT */ { 0, 16,     0x1021 },
+    /* AV_CRC_32_IEEE */ { 0, 32, 0x04C11DB7 },
+    /* AV_CRC_32_IEEE_LE */ { 1, 32, 0xEDB88320 },
 };
 static AVCRC av_crc_table[AV_CRC_MAX][257];
 #endif

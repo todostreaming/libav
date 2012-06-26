@@ -226,13 +226,13 @@ static av_cold int mm_decode_end(AVCodecContext *avctx)
 }
 
 AVCodec ff_mmvideo_decoder = {
-    .name           = "mmvideo",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_MMVIDEO,
-    .priv_data_size = sizeof(MmContext),
-    .init           = mm_decode_init,
-    .close          = mm_decode_end,
-    .decode         = mm_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("American Laser Games MM Video"),
+    "mmvideo",
+    NULL_IF_CONFIG_SMALL("American Laser Games MM Video"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_MMVIDEO,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(MmContext),
+    0, 0, 0, 0, 0, mm_decode_init,
+    0, 0, mm_decode_frame,
+    mm_decode_end,
 };

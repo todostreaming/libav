@@ -978,22 +978,22 @@ static const AVOption options[] = {
 };
 
 static const AVClass ape_decoder_class = {
-    .class_name = "APE decoder",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "APE decoder",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 AVCodec ff_ape_decoder = {
-    .name           = "ape",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_APE,
-    .priv_data_size = sizeof(APEContext),
-    .init           = ape_decode_init,
-    .close          = ape_decode_close,
-    .decode         = ape_decode_frame,
-    .capabilities   = CODEC_CAP_SUBFRAMES | CODEC_CAP_DELAY | CODEC_CAP_DR1,
-    .flush          = ape_flush,
-    .long_name      = NULL_IF_CONFIG_SMALL("Monkey's Audio"),
-    .priv_class     = &ape_decoder_class,
+    "ape",
+    NULL_IF_CONFIG_SMALL("Monkey's Audio"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_APE,
+    CODEC_CAP_SUBFRAMES | CODEC_CAP_DELAY | CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, &ape_decoder_class,
+    0, sizeof(APEContext),
+    0, 0, 0, 0, 0, ape_decode_init,
+    0, 0, ape_decode_frame,
+    ape_decode_close,
+    ape_flush,
 };

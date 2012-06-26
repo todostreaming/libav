@@ -952,13 +952,13 @@ static av_cold int decode_end(AVCodecContext *avctx){
 }
 
 AVCodec ff_truemotion2_decoder = {
-    .name           = "truemotion2",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_TRUEMOTION2,
-    .priv_data_size = sizeof(TM2Context),
-    .init           = decode_init,
-    .close          = decode_end,
-    .decode         = decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("Duck TrueMotion 2.0"),
+    "truemotion2",
+    NULL_IF_CONFIG_SMALL("Duck TrueMotion 2.0"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_TRUEMOTION2,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(TM2Context),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame,
+    decode_end,
 };

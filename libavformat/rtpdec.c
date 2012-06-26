@@ -43,9 +43,9 @@
 */
 
 static RTPDynamicProtocolHandler ff_realmedia_mp3_dynamic_handler = {
-    .enc_name           = "X-MP3-draft-00",
-    .codec_type         = AVMEDIA_TYPE_AUDIO,
-    .codec_id           = CODEC_ID_MP3ADU,
+    "X-MP3-draft-00",
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_MP3ADU,
 };
 
 /* statistics functions */

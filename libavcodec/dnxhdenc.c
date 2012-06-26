@@ -38,7 +38,7 @@
 #define DNX10BIT_QMAT_SHIFT 18 // The largest value that will not lead to overflow for 10bit samples.
 
 static const AVOption options[]={
-    {"nitris_compat", "encode with Avid Nitris compatibility", offsetof(DNXHDEncContext, nitris_compat), AV_OPT_TYPE_INT, {.dbl = 0}, 0, 1, VE},
+    {"nitris_compat", "encode with Avid Nitris compatibility", offsetof(DNXHDEncContext, nitris_compat), AV_OPT_TYPE_INT, {0}, 0, 1, VE},
 {NULL}
 };
 static const AVClass class = { "dnxhd", av_default_item_name, options, LIBAVUTIL_VERSION_INT };
@@ -998,18 +998,19 @@ static int dnxhd_encode_end(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec ff_dnxhd_encoder = {
-    .name           = "dnxhd",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_DNXHD,
-    .priv_data_size = sizeof(DNXHDEncContext),
-    .init           = dnxhd_encode_init,
-    .encode2        = dnxhd_encode_picture,
-    .close          = dnxhd_encode_end,
-    .capabilities   = CODEC_CAP_SLICE_THREADS,
-    .pix_fmts       = (const enum PixelFormat[]){ PIX_FMT_YUV422P,
+static const enum PixelFormat tmp__0[] = { PIX_FMT_YUV422P,
                                                   PIX_FMT_YUV422P10,
-                                                  PIX_FMT_NONE },
-    .long_name      = NULL_IF_CONFIG_SMALL("VC3/DNxHD"),
-    .priv_class     = &class,
+                                                  PIX_FMT_NONE };
+AVCodec ff_dnxhd_encoder = {
+    "dnxhd",
+    NULL_IF_CONFIG_SMALL("VC3/DNxHD"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_DNXHD,
+    CODEC_CAP_SLICE_THREADS,
+    0, tmp__0,
+    0, 0, 0, 0, &class,
+    0, sizeof(DNXHDEncContext),
+    0, 0, 0, 0, 0, dnxhd_encode_init,
+    0, dnxhd_encode_picture,
+    0, dnxhd_encode_end,
 };

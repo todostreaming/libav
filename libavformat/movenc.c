@@ -44,30 +44,30 @@
 #include <assert.h>
 
 static const AVOption options[] = {
-    { "movflags", "MOV muxer flags", offsetof(MOVMuxContext, flags), AV_OPT_TYPE_FLAGS, {.dbl = 0}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
-    { "rtphint", "Add RTP hint tracks", 0, AV_OPT_TYPE_CONST, {.dbl = FF_MOV_FLAG_RTP_HINT}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
-    { "empty_moov", "Make the initial moov atom empty (not supported by QuickTime)", 0, AV_OPT_TYPE_CONST, {.dbl = FF_MOV_FLAG_EMPTY_MOOV}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
-    { "frag_keyframe", "Fragment at video keyframes", 0, AV_OPT_TYPE_CONST, {.dbl = FF_MOV_FLAG_FRAG_KEYFRAME}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
-    { "separate_moof", "Write separate moof/mdat atoms for each track", 0, AV_OPT_TYPE_CONST, {.dbl = FF_MOV_FLAG_SEPARATE_MOOF}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
-    { "frag_custom", "Flush fragments on caller requests", 0, AV_OPT_TYPE_CONST, {.dbl = FF_MOV_FLAG_FRAG_CUSTOM}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
-    { "isml", "Create a live smooth streaming feed (for pushing to a publishing point)", 0, AV_OPT_TYPE_CONST, {.dbl = FF_MOV_FLAG_ISML}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
+    { "movflags", "MOV muxer flags", offsetof(MOVMuxContext, flags), AV_OPT_TYPE_FLAGS, {0}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
+    { "rtphint", "Add RTP hint tracks", 0, AV_OPT_TYPE_CONST, {FF_MOV_FLAG_RTP_HINT}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
+    { "empty_moov", "Make the initial moov atom empty (not supported by QuickTime)", 0, AV_OPT_TYPE_CONST, {FF_MOV_FLAG_EMPTY_MOOV}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
+    { "frag_keyframe", "Fragment at video keyframes", 0, AV_OPT_TYPE_CONST, {FF_MOV_FLAG_FRAG_KEYFRAME}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
+    { "separate_moof", "Write separate moof/mdat atoms for each track", 0, AV_OPT_TYPE_CONST, {FF_MOV_FLAG_SEPARATE_MOOF}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
+    { "frag_custom", "Flush fragments on caller requests", 0, AV_OPT_TYPE_CONST, {FF_MOV_FLAG_FRAG_CUSTOM}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
+    { "isml", "Create a live smooth streaming feed (for pushing to a publishing point)", 0, AV_OPT_TYPE_CONST, {FF_MOV_FLAG_ISML}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
     FF_RTP_FLAG_OPTS(MOVMuxContext, rtp_flags),
-    { "skip_iods", "Skip writing iods atom.", offsetof(MOVMuxContext, iods_skip), AV_OPT_TYPE_INT, {.dbl = 0}, 0, 1, AV_OPT_FLAG_ENCODING_PARAM},
-    { "iods_audio_profile", "iods audio profile atom.", offsetof(MOVMuxContext, iods_audio_profile), AV_OPT_TYPE_INT, {.dbl = -1}, -1, 255, AV_OPT_FLAG_ENCODING_PARAM},
-    { "iods_video_profile", "iods video profile atom.", offsetof(MOVMuxContext, iods_video_profile), AV_OPT_TYPE_INT, {.dbl = -1}, -1, 255, AV_OPT_FLAG_ENCODING_PARAM},
-    { "frag_duration", "Maximum fragment duration", offsetof(MOVMuxContext, max_fragment_duration), AV_OPT_TYPE_INT, {.dbl = 0}, 0, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM},
-    { "min_frag_duration", "Minimum fragment duration", offsetof(MOVMuxContext, min_fragment_duration), AV_OPT_TYPE_INT, {.dbl = 0}, 0, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM},
-    { "frag_size", "Maximum fragment size", offsetof(MOVMuxContext, max_fragment_size), AV_OPT_TYPE_INT, {.dbl = 0}, 0, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM},
-    { "ism_lookahead", "Number of lookahead entries for ISM files", offsetof(MOVMuxContext, ism_lookahead), AV_OPT_TYPE_INT, {.dbl = 0}, 0, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM},
+    { "skip_iods", "Skip writing iods atom.", offsetof(MOVMuxContext, iods_skip), AV_OPT_TYPE_INT, {0}, 0, 1, AV_OPT_FLAG_ENCODING_PARAM},
+    { "iods_audio_profile", "iods audio profile atom.", offsetof(MOVMuxContext, iods_audio_profile), AV_OPT_TYPE_INT, {-1}, -1, 255, AV_OPT_FLAG_ENCODING_PARAM},
+    { "iods_video_profile", "iods video profile atom.", offsetof(MOVMuxContext, iods_video_profile), AV_OPT_TYPE_INT, {-1}, -1, 255, AV_OPT_FLAG_ENCODING_PARAM},
+    { "frag_duration", "Maximum fragment duration", offsetof(MOVMuxContext, max_fragment_duration), AV_OPT_TYPE_INT, {0}, 0, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM},
+    { "min_frag_duration", "Minimum fragment duration", offsetof(MOVMuxContext, min_fragment_duration), AV_OPT_TYPE_INT, {0}, 0, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM},
+    { "frag_size", "Maximum fragment size", offsetof(MOVMuxContext, max_fragment_size), AV_OPT_TYPE_INT, {0}, 0, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM},
+    { "ism_lookahead", "Number of lookahead entries for ISM files", offsetof(MOVMuxContext, ism_lookahead), AV_OPT_TYPE_INT, {0}, 0, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM},
     { NULL },
 };
 
 #define MOV_CLASS(flavor)\
 static const AVClass flavor ## _muxer_class = {\
-    .class_name = #flavor " muxer",\
-    .item_name  = av_default_item_name,\
-    .option     = options,\
-    .version    = LIBAVUTIL_VERSION_INT,\
+    #flavor " muxer",\
+    av_default_item_name,\
+    options,\
+    LIBAVUTIL_VERSION_INT,\
 };
 
 //FIXME support 64 bit variant with wide placeholders
@@ -1896,7 +1896,7 @@ static int mov_write_chpl_tag(AVIOContext *pb, AVFormatContext *s)
     for (i = 0; i < nb_chapters; i++) {
         AVChapter *c = s->chapters[i];
         AVDictionaryEntry *t;
-        avio_wb64(pb, av_rescale_q(c->start, c->time_base, (AVRational){1,10000000}));
+        { AVRational tmp__0 = {1,10000000}; avio_wb64(pb, av_rescale_q(c->start, c->time_base, tmp__0)); }
 
         if ((t = av_dict_get(c->metadata, "title", NULL, 0))) {
             int len = FFMIN(strlen(t->value), 255);
@@ -2938,9 +2938,9 @@ static int mov_write_packet(AVFormatContext *s, AVPacket *pkt)
         if (!pkt->size) return 0; /* Discard 0 sized packets */
 
         if (trk->entry)
-            frag_duration = av_rescale_q(pkt->dts - trk->cluster[0].dts,
+            { AVRational tmp__1 = {1, AV_TIME_BASE}; frag_duration = av_rescale_q(pkt->dts - trk->cluster[0].dts,
                                          s->streams[pkt->stream_index]->time_base,
-                                         AV_TIME_BASE_Q);
+                                         tmp__1); }
         if ((mov->max_fragment_duration &&
              frag_duration >= mov->max_fragment_duration) ||
              (mov->max_fragment_size && mov->mdat_size + size >= mov->max_fragment_size) ||
@@ -2961,7 +2961,7 @@ static void mov_create_chapter_track(AVFormatContext *s, int tracknum)
 {
     MOVMuxContext *mov = s->priv_data;
     MOVTrack *track = &mov->tracks[tracknum];
-    AVPacket pkt = { .stream_index = tracknum, .flags = AV_PKT_FLAG_KEY };
+    AVPacket pkt = { 0, 0, 0, 0, tracknum, AV_PKT_FLAG_KEY };
     int i, len;
 
     track->mode = mov->mode;
@@ -2974,8 +2974,8 @@ static void mov_create_chapter_track(AVFormatContext *s, int tracknum)
         AVChapter *c = s->chapters[i];
         AVDictionaryEntry *t;
 
-        int64_t end = av_rescale_q(c->end, c->time_base, (AVRational){1,MOV_TIMESCALE});
-        pkt.pts = pkt.dts = av_rescale_q(c->start, c->time_base, (AVRational){1,MOV_TIMESCALE});
+        int64_t end;{ AVRational tmp__2 = {1,MOV_TIMESCALE};  end = av_rescale_q(c->end, c->time_base, tmp__2); }
+        { AVRational tmp__3 = {1,MOV_TIMESCALE}; pkt.pts = pkt.dts = av_rescale_q(c->start, c->time_base, tmp__3); }
         pkt.duration = end - pkt.dts;
 
         if ((t = av_dict_get(c->metadata, "title", NULL, 0))) {
@@ -3246,125 +3246,132 @@ static int mov_write_trailer(AVFormatContext *s)
 
 #if CONFIG_MOV_MUXER
 MOV_CLASS(mov)
-AVOutputFormat ff_mov_muxer = {
-    .name              = "mov",
-    .long_name         = NULL_IF_CONFIG_SMALL("MOV format"),
-    .extensions        = "mov",
-    .priv_data_size    = sizeof(MOVMuxContext),
-    .audio_codec       = CODEC_ID_AAC,
-    .video_codec       = CONFIG_LIBX264_ENCODER ? CODEC_ID_H264 : CODEC_ID_MPEG4,
-    .write_header      = mov_write_header,
-    .write_packet      = mov_write_packet,
-    .write_trailer     = mov_write_trailer,
-    .flags             = AVFMT_GLOBALHEADER | AVFMT_ALLOW_FLUSH,
-    .codec_tag         = (const AVCodecTag* const []){
+static const AVCodecTag* const  tmp__4[] = {
         ff_codec_movvideo_tags, ff_codec_movaudio_tags, 0
-    },
-    .priv_class        = &mov_muxer_class,
+    };
+AVOutputFormat ff_mov_muxer = {
+    "mov",
+    NULL_IF_CONFIG_SMALL("MOV format"),
+    0, "mov",
+    CODEC_ID_AAC,
+    CONFIG_LIBX264_ENCODER ? CODEC_ID_H264 : CODEC_ID_MPEG4,
+    0, AVFMT_GLOBALHEADER | AVFMT_ALLOW_FLUSH,
+    tmp__4,
+    &mov_muxer_class,
+    0, sizeof(MOVMuxContext),
+    mov_write_header,
+    mov_write_packet,
+    mov_write_trailer,
 };
 #endif
 #if CONFIG_TGP_MUXER
 MOV_CLASS(tgp)
+static const AVCodecTag* const  tmp__5[] = { codec_3gp_tags, 0 };
 AVOutputFormat ff_tgp_muxer = {
-    .name              = "3gp",
-    .long_name         = NULL_IF_CONFIG_SMALL("3GP format"),
-    .extensions        = "3gp",
-    .priv_data_size    = sizeof(MOVMuxContext),
-    .audio_codec       = CODEC_ID_AMR_NB,
-    .video_codec       = CODEC_ID_H263,
-    .write_header      = mov_write_header,
-    .write_packet      = mov_write_packet,
-    .write_trailer     = mov_write_trailer,
-    .flags             = AVFMT_GLOBALHEADER | AVFMT_ALLOW_FLUSH,
-    .codec_tag         = (const AVCodecTag* const []){ codec_3gp_tags, 0 },
-    .priv_class        = &tgp_muxer_class,
+    "3gp",
+    NULL_IF_CONFIG_SMALL("3GP format"),
+    0, "3gp",
+    CODEC_ID_AMR_NB,
+    CODEC_ID_H263,
+    0, AVFMT_GLOBALHEADER | AVFMT_ALLOW_FLUSH,
+    tmp__5,
+    &tgp_muxer_class,
+    0, sizeof(MOVMuxContext),
+    mov_write_header,
+    mov_write_packet,
+    mov_write_trailer,
 };
 #endif
 #if CONFIG_MP4_MUXER
 MOV_CLASS(mp4)
+static const AVCodecTag* const  tmp__6[] = { ff_mp4_obj_type, 0 };
 AVOutputFormat ff_mp4_muxer = {
-    .name              = "mp4",
-    .long_name         = NULL_IF_CONFIG_SMALL("MP4 format"),
-    .mime_type         = "application/mp4",
-    .extensions        = "mp4",
-    .priv_data_size    = sizeof(MOVMuxContext),
-    .audio_codec       = CODEC_ID_AAC,
-    .video_codec       = CONFIG_LIBX264_ENCODER ? CODEC_ID_H264 : CODEC_ID_MPEG4,
-    .write_header      = mov_write_header,
-    .write_packet      = mov_write_packet,
-    .write_trailer     = mov_write_trailer,
-    .flags             = AVFMT_GLOBALHEADER | AVFMT_ALLOW_FLUSH,
-    .codec_tag         = (const AVCodecTag* const []){ ff_mp4_obj_type, 0 },
-    .priv_class        = &mp4_muxer_class,
+    "mp4",
+    NULL_IF_CONFIG_SMALL("MP4 format"),
+    "application/mp4",
+    "mp4",
+    CODEC_ID_AAC,
+    CONFIG_LIBX264_ENCODER ? CODEC_ID_H264 : CODEC_ID_MPEG4,
+    0, AVFMT_GLOBALHEADER | AVFMT_ALLOW_FLUSH,
+    tmp__6,
+    &mp4_muxer_class,
+    0, sizeof(MOVMuxContext),
+    mov_write_header,
+    mov_write_packet,
+    mov_write_trailer,
 };
 #endif
 #if CONFIG_PSP_MUXER
 MOV_CLASS(psp)
+static const AVCodecTag* const  tmp__7[] = { ff_mp4_obj_type, 0 };
 AVOutputFormat ff_psp_muxer = {
-    .name              = "psp",
-    .long_name         = NULL_IF_CONFIG_SMALL("PSP MP4 format"),
-    .extensions        = "mp4,psp",
-    .priv_data_size    = sizeof(MOVMuxContext),
-    .audio_codec       = CODEC_ID_AAC,
-    .video_codec       = CONFIG_LIBX264_ENCODER ? CODEC_ID_H264 : CODEC_ID_MPEG4,
-    .write_header      = mov_write_header,
-    .write_packet      = mov_write_packet,
-    .write_trailer     = mov_write_trailer,
-    .flags             = AVFMT_GLOBALHEADER | AVFMT_ALLOW_FLUSH,
-    .codec_tag         = (const AVCodecTag* const []){ ff_mp4_obj_type, 0 },
-    .priv_class        = &psp_muxer_class,
+    "psp",
+    NULL_IF_CONFIG_SMALL("PSP MP4 format"),
+    0, "mp4,psp",
+    CODEC_ID_AAC,
+    CONFIG_LIBX264_ENCODER ? CODEC_ID_H264 : CODEC_ID_MPEG4,
+    0, AVFMT_GLOBALHEADER | AVFMT_ALLOW_FLUSH,
+    tmp__7,
+    &psp_muxer_class,
+    0, sizeof(MOVMuxContext),
+    mov_write_header,
+    mov_write_packet,
+    mov_write_trailer,
 };
 #endif
 #if CONFIG_TG2_MUXER
 MOV_CLASS(tg2)
+static const AVCodecTag* const  tmp__8[] = { codec_3gp_tags, 0 };
 AVOutputFormat ff_tg2_muxer = {
-    .name              = "3g2",
-    .long_name         = NULL_IF_CONFIG_SMALL("3GP2 format"),
-    .extensions        = "3g2",
-    .priv_data_size    = sizeof(MOVMuxContext),
-    .audio_codec       = CODEC_ID_AMR_NB,
-    .video_codec       = CODEC_ID_H263,
-    .write_header      = mov_write_header,
-    .write_packet      = mov_write_packet,
-    .write_trailer     = mov_write_trailer,
-    .flags             = AVFMT_GLOBALHEADER | AVFMT_ALLOW_FLUSH,
-    .codec_tag         = (const AVCodecTag* const []){ codec_3gp_tags, 0 },
-    .priv_class        = &tg2_muxer_class,
+    "3g2",
+    NULL_IF_CONFIG_SMALL("3GP2 format"),
+    0, "3g2",
+    CODEC_ID_AMR_NB,
+    CODEC_ID_H263,
+    0, AVFMT_GLOBALHEADER | AVFMT_ALLOW_FLUSH,
+    tmp__8,
+    &tg2_muxer_class,
+    0, sizeof(MOVMuxContext),
+    mov_write_header,
+    mov_write_packet,
+    mov_write_trailer,
 };
 #endif
 #if CONFIG_IPOD_MUXER
 MOV_CLASS(ipod)
+static const AVCodecTag* const  tmp__9[] = { codec_ipod_tags, 0 };
 AVOutputFormat ff_ipod_muxer = {
-    .name              = "ipod",
-    .long_name         = NULL_IF_CONFIG_SMALL("iPod H.264 MP4 format"),
-    .mime_type         = "application/mp4",
-    .extensions        = "m4v,m4a",
-    .priv_data_size    = sizeof(MOVMuxContext),
-    .audio_codec       = CODEC_ID_AAC,
-    .video_codec       = CODEC_ID_H264,
-    .write_header      = mov_write_header,
-    .write_packet      = mov_write_packet,
-    .write_trailer     = mov_write_trailer,
-    .flags             = AVFMT_GLOBALHEADER | AVFMT_ALLOW_FLUSH,
-    .codec_tag         = (const AVCodecTag* const []){ codec_ipod_tags, 0 },
-    .priv_class        = &ipod_muxer_class,
+    "ipod",
+    NULL_IF_CONFIG_SMALL("iPod H.264 MP4 format"),
+    "application/mp4",
+    "m4v,m4a",
+    CODEC_ID_AAC,
+    CODEC_ID_H264,
+    0, AVFMT_GLOBALHEADER | AVFMT_ALLOW_FLUSH,
+    tmp__9,
+    &ipod_muxer_class,
+    0, sizeof(MOVMuxContext),
+    mov_write_header,
+    mov_write_packet,
+    mov_write_trailer,
 };
 #endif
 #if CONFIG_ISMV_MUXER
 MOV_CLASS(ismv)
+static const AVCodecTag* const  tmp__10[] = { ff_mp4_obj_type, 0 };
 AVOutputFormat ff_ismv_muxer = {
-    .name              = "ismv",
-    .long_name         = NULL_IF_CONFIG_SMALL("ISMV/ISMA (Smooth Streaming) format"),
-    .mime_type         = "application/mp4",
-    .extensions        = "ismv,isma",
-    .priv_data_size    = sizeof(MOVMuxContext),
-    .audio_codec       = CODEC_ID_AAC,
-    .video_codec       = CODEC_ID_H264,
-    .write_header      = mov_write_header,
-    .write_packet      = mov_write_packet,
-    .write_trailer     = mov_write_trailer,
-    .flags             = AVFMT_GLOBALHEADER | AVFMT_ALLOW_FLUSH,
-    .codec_tag         = (const AVCodecTag* const []){ ff_mp4_obj_type, 0 },
-    .priv_class        = &ismv_muxer_class,
+    "ismv",
+    NULL_IF_CONFIG_SMALL("ISMV/ISMA (Smooth Streaming) format"),
+    "application/mp4",
+    "ismv,isma",
+    CODEC_ID_AAC,
+    CODEC_ID_H264,
+    0, AVFMT_GLOBALHEADER | AVFMT_ALLOW_FLUSH,
+    tmp__10,
+    &ismv_muxer_class,
+    0, sizeof(MOVMuxContext),
+    mov_write_header,
+    mov_write_packet,
+    mov_write_trailer,
 };
 #endif

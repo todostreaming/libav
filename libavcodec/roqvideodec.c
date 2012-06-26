@@ -213,13 +213,13 @@ static av_cold int roq_decode_end(AVCodecContext *avctx)
 }
 
 AVCodec ff_roq_decoder = {
-    .name           = "roqvideo",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_ROQ,
-    .priv_data_size = sizeof(RoqContext),
-    .init           = roq_decode_init,
-    .close          = roq_decode_end,
-    .decode         = roq_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("id RoQ video"),
+    "roqvideo",
+    NULL_IF_CONFIG_SMALL("id RoQ video"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_ROQ,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(RoqContext),
+    0, 0, 0, 0, 0, roq_decode_init,
+    0, 0, roq_decode_frame,
+    roq_decode_end,
 };

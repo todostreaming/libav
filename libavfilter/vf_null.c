@@ -25,20 +25,22 @@
 #include "internal.h"
 #include "video.h"
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, ff_null_start_frame,
+                                    ff_null_get_video_buffer,
+                                    0, ff_null_end_frame },
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO, },
+                                  { NULL}};
 AVFilter avfilter_vf_null = {
-    .name      = "null",
-    .description = NULL_IF_CONFIG_SMALL("Pass the source unchanged to the output."),
+    "null",
+    NULL_IF_CONFIG_SMALL("Pass the source unchanged to the output."),
 
-    .priv_size = 0,
+    tmp__0,
 
-    .inputs    = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .get_video_buffer = ff_null_get_video_buffer,
-                                    .start_frame      = ff_null_start_frame,
-                                    .end_frame        = ff_null_end_frame },
-                                  { .name = NULL}},
+    tmp__1,
 
-    .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO, },
-                                  { .name = NULL}},
+    0, 0, 0, 0,
 };

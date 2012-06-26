@@ -241,13 +241,13 @@ static int tcp_get_file_handle(URLContext *h)
 }
 
 URLProtocol ff_tcp_protocol = {
-    .name                = "tcp",
-    .url_open            = tcp_open,
-    .url_read            = tcp_read,
-    .url_write           = tcp_write,
-    .url_close           = tcp_close,
-    .url_get_file_handle = tcp_get_file_handle,
-    .url_shutdown        = tcp_shutdown,
-    .priv_data_size      = sizeof(TCPContext),
-    .flags               = URL_PROTOCOL_FLAG_NETWORK,
+    "tcp",
+    tcp_open,
+    0, tcp_read,
+    tcp_write,
+    0, tcp_close,
+    0, 0, 0, tcp_get_file_handle,
+    tcp_shutdown,
+    sizeof(TCPContext),
+    0, URL_PROTOCOL_FLAG_NETWORK,
 };

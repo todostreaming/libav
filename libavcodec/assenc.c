@@ -58,10 +58,10 @@ static int ass_encode_frame(AVCodecContext *avctx,
 }
 
 AVCodec ff_ass_encoder = {
-    .name         = "ass",
-    .long_name    = NULL_IF_CONFIG_SMALL("Advanced SubStation Alpha subtitle"),
-    .type         = AVMEDIA_TYPE_SUBTITLE,
-    .id           = CODEC_ID_SSA,
-    .init         = ass_encode_init,
-    .encode       = ass_encode_frame,
+    "ass",
+    NULL_IF_CONFIG_SMALL("Advanced SubStation Alpha subtitle"),
+    AVMEDIA_TYPE_SUBTITLE,
+    CODEC_ID_SSA,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ass_encode_init,
+    ass_encode_frame,
 };

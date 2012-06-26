@@ -279,13 +279,13 @@ static av_cold int vp5_decode_init(AVCodecContext *avctx)
 }
 
 AVCodec ff_vp5_decoder = {
-    .name           = "vp5",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_VP5,
-    .priv_data_size = sizeof(VP56Context),
-    .init           = vp5_decode_init,
-    .close          = ff_vp56_free,
-    .decode         = ff_vp56_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("On2 VP5"),
+    "vp5",
+    NULL_IF_CONFIG_SMALL("On2 VP5"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_VP5,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(VP56Context),
+    0, 0, 0, 0, 0, vp5_decode_init,
+    0, 0, ff_vp56_decode_frame,
+    ff_vp56_free,
 };

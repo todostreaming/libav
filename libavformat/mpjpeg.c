@@ -54,13 +54,13 @@ static int mpjpeg_write_trailer(AVFormatContext *s)
 }
 
 AVOutputFormat ff_mpjpeg_muxer = {
-    .name              = "mpjpeg",
-    .long_name         = NULL_IF_CONFIG_SMALL("MIME multipart JPEG format"),
-    .mime_type         = "multipart/x-mixed-replace;boundary=" BOUNDARY_TAG,
-    .extensions        = "mjpg",
-    .audio_codec       = CODEC_ID_NONE,
-    .video_codec       = CODEC_ID_MJPEG,
-    .write_header      = mpjpeg_write_header,
-    .write_packet      = mpjpeg_write_packet,
-    .write_trailer     = mpjpeg_write_trailer,
+    "mpjpeg",
+    NULL_IF_CONFIG_SMALL("MIME multipart JPEG format"),
+    "multipart/x-mixed-replace;boundary=" BOUNDARY_TAG,
+    "mjpg",
+    CODEC_ID_NONE,
+    CODEC_ID_MJPEG,
+    0, 0, 0, 0, 0, 0, mpjpeg_write_header,
+    mpjpeg_write_packet,
+    mpjpeg_write_trailer,
 };

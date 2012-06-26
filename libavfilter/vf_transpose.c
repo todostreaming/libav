@@ -106,7 +106,7 @@ static int config_props_output(AVFilterLink *outlink)
     outlink->h = inlink->w;
 
     if (inlink->sample_aspect_ratio.num){
-        outlink->sample_aspect_ratio = av_div_q((AVRational){1,1}, inlink->sample_aspect_ratio);
+        { AVRational tmp__0 = {1,1}; outlink->sample_aspect_ratio = av_div_q(tmp__0, inlink->sample_aspect_ratio); }
     } else
         outlink->sample_aspect_ratio = inlink->sample_aspect_ratio;
 
@@ -198,23 +198,25 @@ static void end_frame(AVFilterLink *inlink)
     avfilter_unref_buffer(outpic);
 }
 
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    AV_PERM_READ,
+                                    0, start_frame,
+                                    0, 0, end_frame, },
+                                  { NULL}};
+static AVFilterPad tmp__2[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, config_props_output, },
+                                  { NULL}};
 AVFilter avfilter_vf_transpose = {
-    .name      = "transpose",
-    .description = NULL_IF_CONFIG_SMALL("Transpose input video."),
+    "transpose",
+    NULL_IF_CONFIG_SMALL("Transpose input video."),
 
-    .init = init,
-    .priv_size = sizeof(TransContext),
+    tmp__1,
+    tmp__2,
 
-    .query_formats = query_formats,
+    init,
 
-    .inputs    = (AVFilterPad[]) {{ .name            = "default",
-                                    .type            = AVMEDIA_TYPE_VIDEO,
-                                    .start_frame     = start_frame,
-                                    .end_frame       = end_frame,
-                                    .min_perms       = AV_PERM_READ, },
-                                  { .name = NULL}},
-    .outputs   = (AVFilterPad[]) {{ .name            = "default",
-                                    .config_props    = config_props_output,
-                                    .type            = AVMEDIA_TYPE_VIDEO, },
-                                  { .name = NULL}},
+    0, query_formats,
+    sizeof(TransContext),
 };

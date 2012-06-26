@@ -686,12 +686,12 @@ static void show_format(AVFormatContext *fmt_ctx)
     probe_int("nb_streams",       fmt_ctx->nb_streams);
     probe_str("format_name",      fmt_ctx->iformat->name);
     probe_str("format_long_name", fmt_ctx->iformat->long_name);
-    probe_str("start_time",
+    { AVRational tmp__0 = {1, AV_TIME_BASE}; probe_str("start_time",
                        time_value_string(val_str, sizeof(val_str),
-                                         fmt_ctx->start_time, &AV_TIME_BASE_Q));
-    probe_str("duration",
+                                         fmt_ctx->start_time, &tmp__0)); }
+    { AVRational tmp__1 = {1, AV_TIME_BASE}; probe_str("duration",
                        time_value_string(val_str, sizeof(val_str),
-                                         fmt_ctx->duration, &AV_TIME_BASE_Q));
+                                         fmt_ctx->duration, &tmp__1)); }
     probe_str("size",
                        size >= 0 ? value_string(val_str, sizeof(val_str),
                                                 size, unit_byte_str)

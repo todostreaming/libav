@@ -403,10 +403,10 @@ static int dvbsub_encode(AVCodecContext *avctx,
 }
 
 AVCodec ff_dvbsub_encoder = {
-    .name           = "dvbsub",
-    .type           = AVMEDIA_TYPE_SUBTITLE,
-    .id             = CODEC_ID_DVB_SUBTITLE,
-    .priv_data_size = sizeof(DVBSubtitleContext),
-    .encode         = dvbsub_encode,
-    .long_name      = NULL_IF_CONFIG_SMALL("DVB subtitles"),
+    "dvbsub",
+    NULL_IF_CONFIG_SMALL("DVB subtitles"),
+    AVMEDIA_TYPE_SUBTITLE,
+    CODEC_ID_DVB_SUBTITLE,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, sizeof(DVBSubtitleContext),
+    0, 0, 0, 0, 0, 0, dvbsub_encode,
 };

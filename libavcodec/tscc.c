@@ -203,13 +203,13 @@ static av_cold int decode_end(AVCodecContext *avctx)
 }
 
 AVCodec ff_tscc_decoder = {
-    .name           = "camtasia",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_TSCC,
-    .priv_data_size = sizeof(CamtasiaContext),
-    .init           = decode_init,
-    .close          = decode_end,
-    .decode         = decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("TechSmith Screen Capture Codec"),
+    "camtasia",
+    NULL_IF_CONFIG_SMALL("TechSmith Screen Capture Codec"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_TSCC,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(CamtasiaContext),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame,
+    decode_end,
 };

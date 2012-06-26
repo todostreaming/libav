@@ -25,18 +25,20 @@
 #include "avfilter.h"
 #include "internal.h"
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_AUDIO,
+                                    0, 0, 0, 0, ff_null_get_audio_buffer, },
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_AUDIO, },
+                                  { NULL}};
 AVFilter avfilter_af_anull = {
-    .name      = "anull",
-    .description = NULL_IF_CONFIG_SMALL("Pass the source unchanged to the output."),
+    "anull",
+    NULL_IF_CONFIG_SMALL("Pass the source unchanged to the output."),
 
-    .priv_size = 0,
+    tmp__0,
 
-    .inputs    = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_AUDIO,
-                                    .get_audio_buffer = ff_null_get_audio_buffer, },
-                                  { .name = NULL}},
+    tmp__1,
 
-    .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_AUDIO, },
-                                  { .name = NULL}},
+    0, 0, 0, 0,
 };

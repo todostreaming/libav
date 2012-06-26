@@ -391,27 +391,29 @@ static int config_props(AVFilterLink *link)
     return 0;
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, start_frame,
+                                    get_video_buffer,
+                                    0, end_frame,
+                                    null_draw_slice, },
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, 0, 0, 0, 0, 0, 0, poll_frame,
+                                    request_frame,
+                                    config_props, },
+                                  { NULL}};
 AVFilter avfilter_vf_yadif = {
-    .name          = "yadif",
-    .description   = NULL_IF_CONFIG_SMALL("Deinterlace the input image"),
+    "yadif",
+    NULL_IF_CONFIG_SMALL("Deinterlace the input image"),
 
-    .priv_size     = sizeof(YADIFContext),
-    .init          = init,
-    .uninit        = uninit,
-    .query_formats = query_formats,
+    tmp__0,
+    tmp__1,
+    init,
+    uninit,
 
-    .inputs    = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .start_frame      = start_frame,
-                                    .get_video_buffer = get_video_buffer,
-                                    .draw_slice       = null_draw_slice,
-                                    .end_frame        = end_frame, },
-                                  { .name = NULL}},
+    query_formats,
 
-    .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .poll_frame       = poll_frame,
-                                    .request_frame    = request_frame,
-                                    .config_props     = config_props, },
-                                  { .name = NULL}},
+    sizeof(YADIFContext),
 };

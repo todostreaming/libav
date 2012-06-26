@@ -286,12 +286,12 @@ static int flac_probe(AVProbeData *p)
 }
 
 AVInputFormat ff_flac_demuxer = {
-    .name           = "flac",
-    .long_name      = NULL_IF_CONFIG_SMALL("raw FLAC"),
-    .read_probe     = flac_probe,
-    .read_header    = flac_read_header,
-    .read_packet    = ff_raw_read_partial_packet,
-    .flags          = AVFMT_GENERIC_INDEX,
-    .extensions     = "flac",
-    .raw_codec_id   = CODEC_ID_FLAC,
+    "flac",
+    NULL_IF_CONFIG_SMALL("raw FLAC"),
+    AVFMT_GENERIC_INDEX,
+    "flac",
+    0, 0, 0, CODEC_ID_FLAC,
+    0, flac_probe,
+    flac_read_header,
+    ff_raw_read_partial_packet,
 };

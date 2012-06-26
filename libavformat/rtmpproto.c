@@ -1407,53 +1407,53 @@ static int rtmp_write(URLContext *s, const uint8_t *buf, int size)
 #define ENC AV_OPT_FLAG_ENCODING_PARAM
 
 static const AVOption rtmp_options[] = {
-    {"rtmp_app", "Name of application to connect to on the RTMP server", OFFSET(app), AV_OPT_TYPE_STRING, {.str = NULL }, 0, 0, DEC|ENC},
+    {"rtmp_app", "Name of application to connect to on the RTMP server", OFFSET(app), AV_OPT_TYPE_STRING, {0, NULL }, 0, 0, DEC|ENC},
     {"rtmp_buffer", "Set buffer time in milliseconds. The default is 3000.", OFFSET(client_buffer_time), AV_OPT_TYPE_INT, {3000}, 0, INT_MAX, DEC|ENC},
-    {"rtmp_conn", "Append arbitrary AMF data to the Connect message", OFFSET(conn), AV_OPT_TYPE_STRING, {.str = NULL }, 0, 0, DEC|ENC},
-    {"rtmp_flashver", "Version of the Flash plugin used to run the SWF player.", OFFSET(flashver), AV_OPT_TYPE_STRING, {.str = NULL }, 0, 0, DEC|ENC},
+    {"rtmp_conn", "Append arbitrary AMF data to the Connect message", OFFSET(conn), AV_OPT_TYPE_STRING, {0, NULL }, 0, 0, DEC|ENC},
+    {"rtmp_flashver", "Version of the Flash plugin used to run the SWF player.", OFFSET(flashver), AV_OPT_TYPE_STRING, {0, NULL }, 0, 0, DEC|ENC},
     {"rtmp_flush_interval", "Number of packets flushed in the same request (RTMPT only).", OFFSET(flush_interval), AV_OPT_TYPE_INT, {10}, 0, INT_MAX, ENC},
     {"rtmp_live", "Specify that the media is a live stream.", OFFSET(live), AV_OPT_TYPE_INT, {-2}, INT_MIN, INT_MAX, DEC, "rtmp_live"},
     {"any", "both", 0, AV_OPT_TYPE_CONST, {-2}, 0, 0, DEC, "rtmp_live"},
     {"live", "live stream", 0, AV_OPT_TYPE_CONST, {-1}, 0, 0, DEC, "rtmp_live"},
     {"recorded", "recorded stream", 0, AV_OPT_TYPE_CONST, {0}, 0, 0, DEC, "rtmp_live"},
-    {"rtmp_playpath", "Stream identifier to play or to publish", OFFSET(playpath), AV_OPT_TYPE_STRING, {.str = NULL }, 0, 0, DEC|ENC},
-    {"rtmp_swfurl", "URL of the SWF player. By default no value will be sent", OFFSET(swfurl), AV_OPT_TYPE_STRING, {.str = NULL }, 0, 0, DEC|ENC},
-    {"rtmp_tcurl", "URL of the target stream. Defaults to rtmp://host[:port]/app.", OFFSET(tcurl), AV_OPT_TYPE_STRING, {.str = NULL }, 0, 0, DEC|ENC},
+    {"rtmp_playpath", "Stream identifier to play or to publish", OFFSET(playpath), AV_OPT_TYPE_STRING, {0, NULL }, 0, 0, DEC|ENC},
+    {"rtmp_swfurl", "URL of the SWF player. By default no value will be sent", OFFSET(swfurl), AV_OPT_TYPE_STRING, {0, NULL }, 0, 0, DEC|ENC},
+    {"rtmp_tcurl", "URL of the target stream. Defaults to rtmp://host[:port]/app.", OFFSET(tcurl), AV_OPT_TYPE_STRING, {0, NULL }, 0, 0, DEC|ENC},
     { NULL },
 };
 
 static const AVClass rtmp_class = {
-    .class_name = "rtmp",
-    .item_name  = av_default_item_name,
-    .option     = rtmp_options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "rtmp",
+    av_default_item_name,
+    rtmp_options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 URLProtocol ff_rtmp_protocol = {
-    .name           = "rtmp",
-    .url_open       = rtmp_open,
-    .url_read       = rtmp_read,
-    .url_write      = rtmp_write,
-    .url_close      = rtmp_close,
-    .priv_data_size = sizeof(RTMPContext),
-    .flags          = URL_PROTOCOL_FLAG_NETWORK,
-    .priv_data_class= &rtmp_class,
+    "rtmp",
+    rtmp_open,
+    0, rtmp_read,
+    rtmp_write,
+    0, rtmp_close,
+    0, 0, 0, 0, 0, sizeof(RTMPContext),
+    &rtmp_class,
+    URL_PROTOCOL_FLAG_NETWORK,
 };
 
 static const AVClass rtmpt_class = {
-    .class_name = "rtmpt",
-    .item_name  = av_default_item_name,
-    .option     = rtmp_options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "rtmpt",
+    av_default_item_name,
+    rtmp_options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 URLProtocol ff_rtmpt_protocol = {
-    .name            = "rtmpt",
-    .url_open        = rtmp_open,
-    .url_read        = rtmp_read,
-    .url_write       = rtmp_write,
-    .url_close       = rtmp_close,
-    .priv_data_size  = sizeof(RTMPContext),
-    .flags           = URL_PROTOCOL_FLAG_NETWORK,
-    .priv_data_class = &rtmpt_class,
+    "rtmpt",
+    rtmp_open,
+    0, rtmp_read,
+    rtmp_write,
+    0, rtmp_close,
+    0, 0, 0, 0, 0, sizeof(RTMPContext),
+    &rtmpt_class,
+    URL_PROTOCOL_FLAG_NETWORK,
 };

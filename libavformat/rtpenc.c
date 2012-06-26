@@ -32,16 +32,16 @@
 
 static const AVOption options[] = {
     FF_RTP_FLAG_OPTS(RTPMuxContext, flags),
-    { "payload_type", "Specify RTP payload type", offsetof(RTPMuxContext, payload_type), AV_OPT_TYPE_INT, {.dbl = -1 }, -1, 127, AV_OPT_FLAG_ENCODING_PARAM },
+    { "payload_type", "Specify RTP payload type", offsetof(RTPMuxContext, payload_type), AV_OPT_TYPE_INT, {-1 }, -1, 127, AV_OPT_FLAG_ENCODING_PARAM },
     { "ssrc", "Stream identifier", offsetof(RTPMuxContext, ssrc), AV_OPT_TYPE_INT, { 0 }, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM },
     { NULL },
 };
 
 static const AVClass rtp_muxer_class = {
-    .class_name = "RTP muxer",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "RTP muxer",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 #define RTCP_SR_SIZE 28
@@ -137,16 +137,16 @@ static int rtp_write_header(AVFormatContext *s1)
             if (frame_size == 0) {
                 av_log(s1, AV_LOG_ERROR, "Cannot respect max delay: frame size = 0\n");
             } else {
-                s->max_frames_per_packet =
+                { AVRational tmp__0 = {1, AV_TIME_BASE}; { AVRational tmp__1 = { frame_size, st->codec->sample_rate }; s->max_frames_per_packet =
                         av_rescale_q_rnd(s1->max_delay,
-                                         AV_TIME_BASE_Q,
-                                         (AVRational){ frame_size, st->codec->sample_rate },
-                                         AV_ROUND_DOWN);
+                                         tmp__0,
+                                         tmp__1,
+                                         AV_ROUND_DOWN); }}
             }
         }
         if (st->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
             /* FIXME: We should round down here... */
-            s->max_frames_per_packet = av_rescale_q(s1->max_delay, (AVRational){1, 1000000}, st->codec->time_base);
+            { AVRational tmp__2 = {1, 1000000}; s->max_frames_per_packet = av_rescale_q(s1->max_delay, tmp__2, st->codec->time_base); }
         }
     }
 
@@ -242,8 +242,8 @@ static void rtcp_send_sr(AVFormatContext *s1, int64_t ntp_time)
     av_dlog(s1, "RTCP: %02x %"PRIx64" %x\n", s->payload_type, ntp_time, s->timestamp);
 
     s->last_rtcp_ntp_time = ntp_time;
-    rtp_ts = av_rescale_q(ntp_time - s->first_rtcp_ntp_time, (AVRational){1, 1000000},
-                          s1->streams[0]->time_base) + s->base_timestamp;
+    { AVRational tmp__3 = {1, 1000000}; rtp_ts = av_rescale_q(ntp_time - s->first_rtcp_ntp_time, tmp__3,
+                          s1->streams[0]->time_base) + s->base_timestamp; }
     avio_w8(s1->pb, (RTP_VERSION << 6));
     avio_w8(s1->pb, RTCP_SR);
     avio_wb16(s1->pb, 6); /* length in words - 1 */
@@ -545,13 +545,13 @@ static int rtp_write_trailer(AVFormatContext *s1)
 }
 
 AVOutputFormat ff_rtp_muxer = {
-    .name              = "rtp",
-    .long_name         = NULL_IF_CONFIG_SMALL("RTP output format"),
-    .priv_data_size    = sizeof(RTPMuxContext),
-    .audio_codec       = CODEC_ID_PCM_MULAW,
-    .video_codec       = CODEC_ID_MPEG4,
-    .write_header      = rtp_write_header,
-    .write_packet      = rtp_write_packet,
-    .write_trailer     = rtp_write_trailer,
-    .priv_class        = &rtp_muxer_class,
+    "rtp",
+    NULL_IF_CONFIG_SMALL("RTP output format"),
+    0, 0, CODEC_ID_PCM_MULAW,
+    CODEC_ID_MPEG4,
+    0, 0, 0, &rtp_muxer_class,
+    0, sizeof(RTPMuxContext),
+    rtp_write_header,
+    rtp_write_packet,
+    rtp_write_trailer,
 };

@@ -88,12 +88,13 @@ static int rso_read_packet(AVFormatContext *s, AVPacket *pkt)
     return 0;
 }
 
+static const AVCodecTag* const  tmp__0[] = {ff_codec_rso_tags, 0};
 AVInputFormat ff_rso_demuxer = {
-    .name           =   "rso",
-    .long_name      =   NULL_IF_CONFIG_SMALL("Lego Mindstorms RSO format"),
-    .extensions     =   "rso",
-    .read_header    =   rso_read_header,
-    .read_packet    =   rso_read_packet,
-    .read_seek      =   ff_pcm_read_seek,
-    .codec_tag      =   (const AVCodecTag* const []){ff_codec_rso_tags, 0},
+    "rso",
+    NULL_IF_CONFIG_SMALL("Lego Mindstorms RSO format"),
+    0, "rso",
+    tmp__0,
+    0, 0, 0, 0, 0, rso_read_header,
+    rso_read_packet,
+    0, ff_pcm_read_seek,
 };

@@ -65,10 +65,10 @@ static const AVOption options[] = {
 };
 
 static const AVClass av_resample_context_class = {
-    .class_name = "AVAudioResampleContext",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "AVAudioResampleContext",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 AVAudioResampleContext *avresample_alloc_context(void)

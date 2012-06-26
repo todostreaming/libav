@@ -98,7 +98,7 @@ static void tnput(uint8_t ** p, int n, const uint8_t * val, enum TiffTypes type,
 {
     int i;
 #if HAVE_BIGENDIAN
-    flip ^= ((int[]) {0, 0, 0, 1, 3, 3})[type];
+    { int tmp__0[] = {0, 0, 0, 1, 3, 3}; flip ^= (tmp__0)[type]; }
 #endif
     for (i = 0; i < n * type_sizes2[type]; i++)
         *(*p)++ = val[i ^ flip];
@@ -460,25 +460,26 @@ static const AVOption options[] = {
 };
 
 static const AVClass tiffenc_class = {
-    .class_name = "TIFF encoder",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "TIFF encoder",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
-AVCodec ff_tiff_encoder = {
-    .name           = "tiff",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_TIFF,
-    .priv_data_size = sizeof(TiffEncoderContext),
-    .encode2        = encode_frame,
-    .pix_fmts       = (const enum PixelFormat[]) {
+static const enum PixelFormat tmp__1[] = {
         PIX_FMT_RGB24, PIX_FMT_PAL8, PIX_FMT_GRAY8,
         PIX_FMT_MONOBLACK, PIX_FMT_MONOWHITE,
         PIX_FMT_YUV420P, PIX_FMT_YUV422P, PIX_FMT_YUV444P,
         PIX_FMT_YUV410P, PIX_FMT_YUV411P,
         PIX_FMT_NONE
-    },
-    .long_name      = NULL_IF_CONFIG_SMALL("TIFF image"),
-    .priv_class     = &tiffenc_class,
+    };
+AVCodec ff_tiff_encoder = {
+    "tiff",
+    NULL_IF_CONFIG_SMALL("TIFF image"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_TIFF,
+    0, 0, tmp__1,
+    0, 0, 0, 0, &tiffenc_class,
+    0, sizeof(TiffEncoderContext),
+    0, 0, 0, 0, 0, 0, 0, encode_frame,
 };

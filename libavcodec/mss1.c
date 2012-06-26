@@ -839,13 +839,13 @@ static av_cold int mss1_decode_end(AVCodecContext *avctx)
 }
 
 AVCodec ff_mss1_decoder = {
-    .name           = "mss1",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_MSS1,
-    .priv_data_size = sizeof(MSS1Context),
-    .init           = mss1_decode_init,
-    .close          = mss1_decode_end,
-    .decode         = mss1_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("MS Screen 1"),
+    "mss1",
+    NULL_IF_CONFIG_SMALL("MS Screen 1"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_MSS1,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(MSS1Context),
+    0, 0, 0, 0, 0, mss1_decode_init,
+    0, 0, mss1_decode_frame,
+    mss1_decode_end,
 };

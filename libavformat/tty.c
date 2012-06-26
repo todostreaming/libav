@@ -142,25 +142,25 @@ static int read_packet(AVFormatContext *avctx, AVPacket *pkt)
 #define OFFSET(x) offsetof(TtyDemuxContext, x)
 #define DEC AV_OPT_FLAG_DECODING_PARAM
 static const AVOption options[] = {
-    { "chars_per_frame", "", offsetof(TtyDemuxContext, chars_per_frame), AV_OPT_TYPE_INT, {.dbl = 6000}, 1, INT_MAX, AV_OPT_FLAG_DECODING_PARAM},
-    { "video_size", "A string describing frame size, such as 640x480 or hd720.", OFFSET(video_size), AV_OPT_TYPE_STRING, {.str = NULL}, 0, 0, DEC },
-    { "framerate", "", OFFSET(framerate), AV_OPT_TYPE_STRING, {.str = "25"}, 0, 0, DEC },
+    { "chars_per_frame", "", offsetof(TtyDemuxContext, chars_per_frame), AV_OPT_TYPE_INT, {6000}, 1, INT_MAX, AV_OPT_FLAG_DECODING_PARAM},
+    { "video_size", "A string describing frame size, such as 640x480 or hd720.", OFFSET(video_size), AV_OPT_TYPE_STRING, {0, NULL}, 0, 0, DEC },
+    { "framerate", "", OFFSET(framerate), AV_OPT_TYPE_STRING, {0, "25"}, 0, 0, DEC },
     { NULL },
 };
 
 static const AVClass tty_demuxer_class = {
-    .class_name     = "TTY demuxer",
-    .item_name      = av_default_item_name,
-    .option         = options,
-    .version        = LIBAVUTIL_VERSION_INT,
+    "TTY demuxer",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 AVInputFormat ff_tty_demuxer = {
-    .name           = "tty",
-    .long_name      = NULL_IF_CONFIG_SMALL("Tele-typewriter"),
-    .priv_data_size = sizeof(TtyDemuxContext),
-    .read_header    = read_header,
-    .read_packet    = read_packet,
-    .extensions     = "ans,art,asc,diz,ice,nfo,txt,vt",
-    .priv_class     = &tty_demuxer_class,
+    "tty",
+    NULL_IF_CONFIG_SMALL("Tele-typewriter"),
+    0, "ans,art,asc,diz,ice,nfo,txt,vt",
+    0, &tty_demuxer_class,
+    0, 0, sizeof(TtyDemuxContext),
+    0, read_header,
+    read_packet,
 };

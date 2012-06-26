@@ -523,14 +523,14 @@ static void decode_flush(AVCodecContext *avctx)
 
 
 AVCodec ff_ralf_decoder = {
-    .name           = "ralf",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_RALF,
-    .priv_data_size = sizeof(RALFContext),
-    .init           = decode_init,
-    .close          = decode_close,
-    .decode         = decode_frame,
-    .flush          = decode_flush,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("RealAudio Lossless"),
+    "ralf",
+    NULL_IF_CONFIG_SMALL("RealAudio Lossless"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_RALF,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(RALFContext),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame,
+    decode_close,
+    decode_flush,
 };

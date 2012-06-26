@@ -1919,20 +1919,20 @@ static const AVOption options[] = {
 };
 
 static const AVClass snowenc_class = {
-    .class_name = "snow encoder",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "snow encoder",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 AVCodec ff_snow_encoder = {
-    .name           = "snow",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_SNOW,
-    .priv_data_size = sizeof(SnowContext),
-    .init           = encode_init,
-    .encode2        = encode_frame,
-    .close          = encode_end,
-    .long_name      = NULL_IF_CONFIG_SMALL("Snow"),
-    .priv_class     = &snowenc_class,
+    "snow",
+    NULL_IF_CONFIG_SMALL("Snow"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_SNOW,
+    0, 0, 0, 0, 0, 0, 0, &snowenc_class,
+    0, sizeof(SnowContext),
+    0, 0, 0, 0, 0, encode_init,
+    0, encode_frame,
+    0, encode_end,
 };

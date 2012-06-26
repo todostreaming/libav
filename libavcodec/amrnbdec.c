@@ -1054,15 +1054,16 @@ static int amrnb_decode_frame(AVCodecContext *avctx, void *data,
 }
 
 
+static const enum AVSampleFormat tmp__0[] = { AV_SAMPLE_FMT_FLT,
+                                                     AV_SAMPLE_FMT_NONE };
 AVCodec ff_amrnb_decoder = {
-    .name           = "amrnb",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_AMR_NB,
-    .priv_data_size = sizeof(AMRContext),
-    .init           = amrnb_decode_init,
-    .decode         = amrnb_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("Adaptive Multi-Rate NarrowBand"),
-    .sample_fmts    = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_FLT,
-                                                     AV_SAMPLE_FMT_NONE },
+    "amrnb",
+    NULL_IF_CONFIG_SMALL("Adaptive Multi-Rate NarrowBand"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_AMR_NB,
+    CODEC_CAP_DR1,
+    0, 0, 0, tmp__0,
+    0, 0, 0, 0, sizeof(AMRContext),
+    0, 0, 0, 0, 0, amrnb_decode_init,
+    0, 0, amrnb_decode_frame,
 };

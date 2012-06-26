@@ -173,16 +173,16 @@ static int yuv4_write_header(AVFormatContext *s)
 }
 
 AVOutputFormat ff_yuv4mpegpipe_muxer = {
-    .name              = "yuv4mpegpipe",
-    .long_name         = NULL_IF_CONFIG_SMALL("YUV4MPEG pipe format"),
-    .mime_type         = "",
-    .extensions        = "y4m",
-    .priv_data_size    = sizeof(int),
-    .audio_codec       = CODEC_ID_NONE,
-    .video_codec       = CODEC_ID_RAWVIDEO,
-    .write_header      = yuv4_write_header,
-    .write_packet      = yuv4_write_packet,
-    .flags             = AVFMT_RAWPICTURE,
+    "yuv4mpegpipe",
+    NULL_IF_CONFIG_SMALL("YUV4MPEG pipe format"),
+    "",
+    "y4m",
+    CODEC_ID_NONE,
+    CODEC_ID_RAWVIDEO,
+    0, AVFMT_RAWPICTURE,
+    0, 0, 0, sizeof(int),
+    yuv4_write_header,
+    yuv4_write_packet,
 };
 #endif
 
@@ -357,7 +357,7 @@ static int yuv4_read_header(AVFormatContext *s)
     st->codec->pix_fmt                = pix_fmt;
     st->codec->codec_type             = AVMEDIA_TYPE_VIDEO;
     st->codec->codec_id               = CODEC_ID_RAWVIDEO;
-    st->sample_aspect_ratio           = (AVRational){ aspectn, aspectd };
+    {st->sample_aspect_ratio.num = aspectn;st->sample_aspect_ratio.den = aspectd ;}
     st->codec->chroma_sample_location = chroma_sample_location;
 
     return 0;
@@ -413,12 +413,12 @@ static int yuv4_probe(AVProbeData *pd)
 
 #if CONFIG_YUV4MPEGPIPE_DEMUXER
 AVInputFormat ff_yuv4mpegpipe_demuxer = {
-    .name           = "yuv4mpegpipe",
-    .long_name      = NULL_IF_CONFIG_SMALL("YUV4MPEG pipe format"),
-    .priv_data_size = sizeof(struct frame_attributes),
-    .read_probe     = yuv4_probe,
-    .read_header    = yuv4_read_header,
-    .read_packet    = yuv4_read_packet,
-    .extensions     = "y4m",
+    "yuv4mpegpipe",
+    NULL_IF_CONFIG_SMALL("YUV4MPEG pipe format"),
+    0, "y4m",
+    0, 0, 0, 0, sizeof(struct frame_attributes),
+    yuv4_probe,
+    yuv4_read_header,
+    yuv4_read_packet,
 };
 #endif

@@ -337,12 +337,13 @@ static int lxf_read_packet(AVFormatContext *s, AVPacket *pkt)
     return ret;
 }
 
+static const AVCodecTag* const  tmp__0[] = {lxf_tags, 0};
 AVInputFormat ff_lxf_demuxer = {
-    .name           = "lxf",
-    .long_name      = NULL_IF_CONFIG_SMALL("VR native stream format (LXF)"),
-    .priv_data_size = sizeof(LXFDemuxContext),
-    .read_probe     = lxf_probe,
-    .read_header    = lxf_read_header,
-    .read_packet    = lxf_read_packet,
-    .codec_tag      = (const AVCodecTag* const []){lxf_tags, 0},
+    "lxf",
+    NULL_IF_CONFIG_SMALL("VR native stream format (LXF)"),
+    0, 0, tmp__0,
+    0, 0, 0, sizeof(LXFDemuxContext),
+    lxf_probe,
+    lxf_read_header,
+    lxf_read_packet,
 };

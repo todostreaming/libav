@@ -144,8 +144,8 @@ static int mp3_parse_vbr_tags(AVFormatContext *s, AVStream *st, int64_t base)
 
     spf = c.lsf ? 576 : 1152; /* Samples per frame, layer 3 */
     if(frames)
-        st->duration = av_rescale_q(frames, (AVRational){spf, c.sample_rate},
-                                    st->time_base);
+        { AVRational tmp__0 = {spf, c.sample_rate}; st->duration = av_rescale_q(frames, tmp__0,
+                                    st->time_base); }
     if(size && frames)
         st->codec->bit_rate = av_rescale(size, 8 * c.sample_rate, frames * (int64_t)spf);
 
@@ -208,11 +208,11 @@ static int mp3_read_packet(AVFormatContext *s, AVPacket *pkt)
 }
 
 AVInputFormat ff_mp3_demuxer = {
-    .name           = "mp3",
-    .long_name      = NULL_IF_CONFIG_SMALL("MPEG audio layer 2/3"),
-    .read_probe     = mp3_read_probe,
-    .read_header    = mp3_read_header,
-    .read_packet    = mp3_read_packet,
-    .flags          = AVFMT_GENERIC_INDEX,
-    .extensions     = "mp2,mp3,m2a", /* XXX: use probe */
+    "mp3",
+    NULL_IF_CONFIG_SMALL("MPEG audio layer 2/3"),
+    AVFMT_GENERIC_INDEX,
+    "mp2,mp3,m2a",
+    0, 0, 0, 0, 0, mp3_read_probe,
+    mp3_read_header,
+    mp3_read_packet, /* XXX: use probe */
 };

@@ -507,12 +507,12 @@ static int ffm_probe(AVProbeData *p)
 }
 
 AVInputFormat ff_ffm_demuxer = {
-    .name           = "ffm",
-    .long_name      = NULL_IF_CONFIG_SMALL("FFM (AVserver live feed) format"),
-    .priv_data_size = sizeof(FFMContext),
-    .read_probe     = ffm_probe,
-    .read_header    = ffm_read_header,
-    .read_packet    = ffm_read_packet,
-    .read_close     = ffm_close,
-    .read_seek      = ffm_seek,
+    "ffm",
+    NULL_IF_CONFIG_SMALL("FFM (AVserver live feed) format"),
+    0, 0, 0, 0, 0, 0, sizeof(FFMContext),
+    ffm_probe,
+    ffm_read_header,
+    ffm_read_packet,
+    ffm_close,
+    ffm_seek,
 };

@@ -4087,37 +4087,38 @@ static const AVProfile profiles[] = {
 };
 
 AVCodec ff_h264_decoder = {
-    .name                  = "h264",
-    .type                  = AVMEDIA_TYPE_VIDEO,
-    .id                    = CODEC_ID_H264,
-    .priv_data_size        = sizeof(H264Context),
-    .init                  = ff_h264_decode_init,
-    .close                 = h264_decode_end,
-    .decode                = decode_frame,
-    .capabilities          = /*CODEC_CAP_DRAW_HORIZ_BAND |*/ CODEC_CAP_DR1 |
+    "h264",
+    NULL_IF_CONFIG_SMALL("H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_H264,
+    /*CODEC_CAP_DRAW_HORIZ_BAND |*/ CODEC_CAP_DR1 |
                              CODEC_CAP_DELAY | CODEC_CAP_SLICE_THREADS |
                              CODEC_CAP_FRAME_THREADS,
-    .flush                 = flush_dpb,
-    .long_name             = NULL_IF_CONFIG_SMALL("H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10"),
-    .init_thread_copy      = ONLY_IF_THREADS_ENABLED(decode_init_thread_copy),
-    .update_thread_context = ONLY_IF_THREADS_ENABLED(decode_update_thread_context),
-    .profiles              = NULL_IF_CONFIG_SMALL(profiles),
+    0, 0, 0, 0, 0, 0, 0, NULL_IF_CONFIG_SMALL(profiles),
+    sizeof(H264Context),
+    0, ONLY_IF_THREADS_ENABLED(decode_init_thread_copy),
+    ONLY_IF_THREADS_ENABLED(decode_update_thread_context),
+    0, 0, ff_h264_decode_init,
+    0, 0, decode_frame,
+    h264_decode_end,
+    flush_dpb,
 };
 
 #if CONFIG_H264_VDPAU_DECODER
+static const enum PixelFormat tmp__0[] = { PIX_FMT_VDPAU_H264,
+                                                   PIX_FMT_NONE};
 AVCodec ff_h264_vdpau_decoder = {
-    .name           = "h264_vdpau",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_H264,
-    .priv_data_size = sizeof(H264Context),
-    .init           = ff_h264_decode_init,
-    .close          = h264_decode_end,
-    .decode         = decode_frame,
-    .capabilities   = CODEC_CAP_DR1 | CODEC_CAP_DELAY | CODEC_CAP_HWACCEL_VDPAU,
-    .flush          = flush_dpb,
-    .long_name      = NULL_IF_CONFIG_SMALL("H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 (VDPAU acceleration)"),
-    .pix_fmts       = (const enum PixelFormat[]) { PIX_FMT_VDPAU_H264,
-                                                   PIX_FMT_NONE},
-    .profiles       = NULL_IF_CONFIG_SMALL(profiles),
+    "h264_vdpau",
+    NULL_IF_CONFIG_SMALL("H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 (VDPAU acceleration)"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_H264,
+    CODEC_CAP_DR1 | CODEC_CAP_DELAY | CODEC_CAP_HWACCEL_VDPAU,
+    0, tmp__0,
+    0, 0, 0, 0, 0, NULL_IF_CONFIG_SMALL(profiles),
+    sizeof(H264Context),
+    0, 0, 0, 0, 0, ff_h264_decode_init,
+    0, 0, decode_frame,
+    h264_decode_end,
+    flush_dpb,
 };
 #endif

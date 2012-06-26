@@ -469,12 +469,12 @@ static int decode(AVCodecContext *avctx, void *data, int *data_size,
 }
 
 AVCodec ff_pgssub_decoder = {
-    .name           = "pgssub",
-    .type           = AVMEDIA_TYPE_SUBTITLE,
-    .id             = CODEC_ID_HDMV_PGS_SUBTITLE,
-    .priv_data_size = sizeof(PGSSubContext),
-    .init           = init_decoder,
-    .close          = close_decoder,
-    .decode         = decode,
-    .long_name      = NULL_IF_CONFIG_SMALL("HDMV Presentation Graphic Stream subtitles"),
+    "pgssub",
+    NULL_IF_CONFIG_SMALL("HDMV Presentation Graphic Stream subtitles"),
+    AVMEDIA_TYPE_SUBTITLE,
+    CODEC_ID_HDMV_PGS_SUBTITLE,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, sizeof(PGSSubContext),
+    0, 0, 0, 0, 0, init_decoder,
+    0, 0, decode,
+    close_decoder,
 };

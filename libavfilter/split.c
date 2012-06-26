@@ -93,21 +93,23 @@ static void end_frame(AVFilterLink *inlink)
     avfilter_unref_buffer(inlink->cur_buf);
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, start_frame,
+                                    ff_null_get_video_buffer,
+                                    0, end_frame,
+                                    draw_slice, },
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ NULL}};
 AVFilter avfilter_vf_split = {
-    .name      = "split",
-    .description = NULL_IF_CONFIG_SMALL("Pass on the input to two outputs."),
+    "split",
+    NULL_IF_CONFIG_SMALL("Pass on the input to two outputs."),
 
-    .init   = split_init,
-    .uninit = split_uninit,
+    tmp__0,
+    tmp__1,
 
-    .inputs    = (AVFilterPad[]) {{ .name            = "default",
-                                    .type            = AVMEDIA_TYPE_VIDEO,
-                                    .get_video_buffer= ff_null_get_video_buffer,
-                                    .start_frame     = start_frame,
-                                    .draw_slice      = draw_slice,
-                                    .end_frame       = end_frame, },
-                                  { .name = NULL}},
-    .outputs   = (AVFilterPad[]) {{ .name = NULL}},
+    split_init,
+    split_uninit,
 };
 
 static int filter_samples(AVFilterLink *inlink, AVFilterBufferRef *samplesref)
@@ -125,17 +127,19 @@ static int filter_samples(AVFilterLink *inlink, AVFilterBufferRef *samplesref)
     return ret;
 }
 
+static const AVFilterPad tmp__2[] = {{ "default",
+                                        AVMEDIA_TYPE_AUDIO,
+                                        0, 0, 0, 0, ff_null_get_audio_buffer,
+                                        0, 0, filter_samples },
+                                      { NULL }};
+static const AVFilterPad tmp__3[] = {{ NULL }};
 AVFilter avfilter_af_asplit = {
-    .name        = "asplit",
-    .description = NULL_IF_CONFIG_SMALL("Pass on the audio input to N audio outputs."),
+    "asplit",
+    NULL_IF_CONFIG_SMALL("Pass on the audio input to N audio outputs."),
 
-    .init   = split_init,
-    .uninit = split_uninit,
+    tmp__2,
+    tmp__3,
 
-    .inputs  = (const AVFilterPad[]) {{ .name             = "default",
-                                        .type             = AVMEDIA_TYPE_AUDIO,
-                                        .get_audio_buffer = ff_null_get_audio_buffer,
-                                        .filter_samples   = filter_samples },
-                                      { .name = NULL }},
-    .outputs = (const AVFilterPad[]) {{ .name = NULL }},
+    split_init,
+    split_uninit,
 };

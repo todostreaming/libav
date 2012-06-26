@@ -83,7 +83,7 @@ static int skeleton_header(AVFormatContext *s, int idx)
 }
 
 const struct ogg_codec ff_skeleton_codec = {
-    .magic = "fishead",
-    .magicsize = 8,
-    .header = skeleton_header,
+    "fishead",
+    8,
+    0, skeleton_header,
 };

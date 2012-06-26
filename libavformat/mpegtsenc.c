@@ -89,25 +89,25 @@ typedef struct MpegTSWrite {
 
 static const AVOption options[] = {
     { "mpegts_transport_stream_id", "Set transport_stream_id field.",
-      offsetof(MpegTSWrite, transport_stream_id), AV_OPT_TYPE_INT, {.dbl = 0x0001 }, 0x0001, 0xffff, AV_OPT_FLAG_ENCODING_PARAM},
+      offsetof(MpegTSWrite, transport_stream_id), AV_OPT_TYPE_INT, {0x0001 }, 0x0001, 0xffff, AV_OPT_FLAG_ENCODING_PARAM},
     { "mpegts_original_network_id", "Set original_network_id field.",
-      offsetof(MpegTSWrite, original_network_id), AV_OPT_TYPE_INT, {.dbl = 0x0001 }, 0x0001, 0xffff, AV_OPT_FLAG_ENCODING_PARAM},
+      offsetof(MpegTSWrite, original_network_id), AV_OPT_TYPE_INT, {0x0001 }, 0x0001, 0xffff, AV_OPT_FLAG_ENCODING_PARAM},
     { "mpegts_service_id", "Set service_id field.",
-      offsetof(MpegTSWrite, service_id), AV_OPT_TYPE_INT, {.dbl = 0x0001 }, 0x0001, 0xffff, AV_OPT_FLAG_ENCODING_PARAM},
+      offsetof(MpegTSWrite, service_id), AV_OPT_TYPE_INT, {0x0001 }, 0x0001, 0xffff, AV_OPT_FLAG_ENCODING_PARAM},
     { "mpegts_pmt_start_pid", "Set the first pid of the PMT.",
-      offsetof(MpegTSWrite, pmt_start_pid), AV_OPT_TYPE_INT, {.dbl = 0x1000 }, 0x1000, 0x1f00, AV_OPT_FLAG_ENCODING_PARAM},
+      offsetof(MpegTSWrite, pmt_start_pid), AV_OPT_TYPE_INT, {0x1000 }, 0x1000, 0x1f00, AV_OPT_FLAG_ENCODING_PARAM},
     { "mpegts_start_pid", "Set the first pid.",
-      offsetof(MpegTSWrite, start_pid), AV_OPT_TYPE_INT, {.dbl = 0x0100 }, 0x0100, 0x0f00, AV_OPT_FLAG_ENCODING_PARAM},
+      offsetof(MpegTSWrite, start_pid), AV_OPT_TYPE_INT, {0x0100 }, 0x0100, 0x0f00, AV_OPT_FLAG_ENCODING_PARAM},
     { "muxrate", NULL, offsetof(MpegTSWrite, mux_rate), AV_OPT_TYPE_INT, {1}, 0, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM},
     { "pes_payload_size", "Minimum PES packet payload in bytes",
       offsetof(MpegTSWrite, pes_payload_size), AV_OPT_TYPE_INT, {DEFAULT_PES_PAYLOAD_SIZE}, 0, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM},
-    { "mpegts_flags", "MPEG-TS muxing flags", offsetof(MpegTSWrite, flags), AV_OPT_TYPE_FLAGS, {.dbl = 0}, 0, INT_MAX,
+    { "mpegts_flags", "MPEG-TS muxing flags", offsetof(MpegTSWrite, flags), AV_OPT_TYPE_FLAGS, {0}, 0, INT_MAX,
       AV_OPT_FLAG_ENCODING_PARAM, "mpegts_flags" },
     { "resend_headers", "Reemit PAT/PMT before writing the next packet",
-      0, AV_OPT_TYPE_CONST, {.dbl = MPEGTS_FLAG_REEMIT_PAT_PMT}, 0, INT_MAX,
+      0, AV_OPT_TYPE_CONST, {MPEGTS_FLAG_REEMIT_PAT_PMT}, 0, INT_MAX,
       AV_OPT_FLAG_ENCODING_PARAM, "mpegts_flags"},
     { "latm", "Use LATM packetization for AAC",
-      0, AV_OPT_TYPE_CONST, {.dbl = MPEGTS_FLAG_AAC_LATM}, 0, INT_MAX,
+      0, AV_OPT_TYPE_CONST, {MPEGTS_FLAG_AAC_LATM}, 0, INT_MAX,
       AV_OPT_FLAG_ENCODING_PARAM, "mpegts_flags"},
     // backward compatibility
     { "resend_headers", "Reemit PAT/PMT before writing the next packet",
@@ -116,10 +116,10 @@ static const AVOption options[] = {
 };
 
 static const AVClass mpegts_muxer_class = {
-    .class_name     = "MPEGTS muxer",
-    .item_name      = av_default_item_name,
-    .option         = options,
-    .version        = LIBAVUTIL_VERSION_INT,
+    "MPEGTS muxer",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 /* NOTE: 4 bytes must be left at the end for the crc32 */
@@ -1161,16 +1161,16 @@ static int mpegts_write_end(AVFormatContext *s)
 }
 
 AVOutputFormat ff_mpegts_muxer = {
-    .name              = "mpegts",
-    .long_name         = NULL_IF_CONFIG_SMALL("MPEG-2 transport stream format"),
-    .mime_type         = "video/x-mpegts",
-    .extensions        = "ts,m2t",
-    .priv_data_size    = sizeof(MpegTSWrite),
-    .audio_codec       = CODEC_ID_MP2,
-    .video_codec       = CODEC_ID_MPEG2VIDEO,
-    .write_header      = mpegts_write_header,
-    .write_packet      = mpegts_write_packet,
-    .write_trailer     = mpegts_write_end,
-    .flags             = AVFMT_ALLOW_FLUSH,
-    .priv_class        = &mpegts_muxer_class,
+    "mpegts",
+    NULL_IF_CONFIG_SMALL("MPEG-2 transport stream format"),
+    "video/x-mpegts",
+    "ts,m2t",
+    CODEC_ID_MP2,
+    CODEC_ID_MPEG2VIDEO,
+    0, AVFMT_ALLOW_FLUSH,
+    0, &mpegts_muxer_class,
+    0, sizeof(MpegTSWrite),
+    mpegts_write_header,
+    mpegts_write_packet,
+    mpegts_write_end,
 };

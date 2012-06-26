@@ -717,7 +717,7 @@ static int nut_write_packet(AVFormatContext *s, AVPacket *pkt){
 //FIXME: Ensure store_sp is 1 in the first place.
 
     if(store_sp){
-        Syncpoint *sp, dummy= {.pos= INT64_MAX};
+        Syncpoint *sp, dummy= {INT64_MAX};
 
         ff_nut_reset_ts(nut, *nus->time_base, pkt->dts);
         for(i=0; i<s->nb_streams; i++){
@@ -860,21 +860,22 @@ static int nut_write_trailer(AVFormatContext *s){
     return 0;
 }
 
-AVOutputFormat ff_nut_muxer = {
-    .name           = "nut",
-    .long_name      = NULL_IF_CONFIG_SMALL("NUT format"),
-    .mime_type      = "video/x-nut",
-    .extensions     = "nut",
-    .priv_data_size = sizeof(NUTContext),
-    .audio_codec    = CONFIG_LIBVORBIS ? CODEC_ID_VORBIS :
-                      CONFIG_LIBMP3LAME ? CODEC_ID_MP3 : CODEC_ID_MP2,
-    .video_codec    = CODEC_ID_MPEG4,
-    .write_header   = nut_write_header,
-    .write_packet   = nut_write_packet,
-    .write_trailer  = nut_write_trailer,
-    .flags          = AVFMT_GLOBALHEADER | AVFMT_VARIABLE_FPS,
-    .codec_tag      = (const AVCodecTag * const []){
+static const AVCodecTag * const  tmp__0[] = {
         ff_codec_bmp_tags, ff_nut_video_tags, ff_codec_wav_tags,
         ff_nut_subtitle_tags, 0
-    },
+    };
+AVOutputFormat ff_nut_muxer = {
+    "nut",
+    NULL_IF_CONFIG_SMALL("NUT format"),
+    "video/x-nut",
+    "nut",
+    CONFIG_LIBVORBIS ? CODEC_ID_VORBIS :
+                      CONFIG_LIBMP3LAME ? CODEC_ID_MP3 : CODEC_ID_MP2,
+    CODEC_ID_MPEG4,
+    0, AVFMT_GLOBALHEADER | AVFMT_VARIABLE_FPS,
+    tmp__0,
+    0, 0, sizeof(NUTContext),
+    nut_write_header,
+    nut_write_packet,
+    nut_write_trailer,
 };

@@ -81,9 +81,9 @@ static int md5_close(URLContext *h)
 
 
 URLProtocol ff_md5_protocol = {
-    .name                = "md5",
-    .url_open            = md5_open,
-    .url_write           = md5_write,
-    .url_close           = md5_close,
-    .priv_data_size      = PRIV_SIZE,
+    "md5",
+    md5_open,
+    0, 0, md5_write,
+    0, md5_close,
+    0, 0, 0, 0, 0, PRIV_SIZE,
 };

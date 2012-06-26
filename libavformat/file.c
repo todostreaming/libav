@@ -111,15 +111,14 @@ static int file_close(URLContext *h)
 }
 
 URLProtocol ff_file_protocol = {
-    .name                = "file",
-    .url_open            = file_open,
-    .url_read            = file_read,
-    .url_write           = file_write,
-    .url_seek            = file_seek,
-    .url_close           = file_close,
-    .url_get_file_handle = file_get_handle,
-    .url_check           = file_check,
-};
+    "file",
+    file_open,
+    0, file_read,
+    file_write,
+    file_seek,
+    file_close,
+    0, 0, 0, file_get_handle,
+    0, 0, 0, 0, };
 
 #endif /* CONFIG_FILE_PROTOCOL */
 
@@ -148,12 +147,11 @@ static int pipe_open(URLContext *h, const char *filename, int flags)
 }
 
 URLProtocol ff_pipe_protocol = {
-    .name                = "pipe",
-    .url_open            = pipe_open,
-    .url_read            = file_read,
-    .url_write           = file_write,
-    .url_get_file_handle = file_get_handle,
-    .url_check           = file_check,
-};
+    "pipe",
+    pipe_open,
+    0, file_read,
+    file_write,
+    0, 0, 0, 0, 0, file_get_handle,
+    0, 0, 0, 0, };
 
 #endif /* CONFIG_PIPE_PROTOCOL */

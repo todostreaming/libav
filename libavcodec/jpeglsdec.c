@@ -363,13 +363,13 @@ int ff_jpegls_decode_picture(MJpegDecodeContext *s, int near, int point_transfor
 
 
 AVCodec ff_jpegls_decoder = {
-    .name           = "jpegls",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_JPEGLS,
-    .priv_data_size = sizeof(MJpegDecodeContext),
-    .init           = ff_mjpeg_decode_init,
-    .close          = ff_mjpeg_decode_end,
-    .decode         = ff_mjpeg_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("JPEG-LS"),
+    "jpegls",
+    NULL_IF_CONFIG_SMALL("JPEG-LS"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_JPEGLS,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(MJpegDecodeContext),
+    0, 0, 0, 0, 0, ff_mjpeg_decode_init,
+    0, 0, ff_mjpeg_decode_frame,
+    ff_mjpeg_decode_end,
 };

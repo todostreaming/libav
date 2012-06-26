@@ -149,16 +149,17 @@ static int aiff_write_trailer(AVFormatContext *s)
     return 0;
 }
 
+static const AVCodecTag* const  tmp__0[] = { ff_codec_aiff_tags, 0 };
 AVOutputFormat ff_aiff_muxer = {
-    .name              = "aiff",
-    .long_name         = NULL_IF_CONFIG_SMALL("Audio IFF"),
-    .mime_type         = "audio/aiff",
-    .extensions        = "aif,aiff,afc,aifc",
-    .priv_data_size    = sizeof(AIFFOutputContext),
-    .audio_codec       = CODEC_ID_PCM_S16BE,
-    .video_codec       = CODEC_ID_NONE,
-    .write_header      = aiff_write_header,
-    .write_packet      = aiff_write_packet,
-    .write_trailer     = aiff_write_trailer,
-    .codec_tag         = (const AVCodecTag* const []){ ff_codec_aiff_tags, 0 },
+    "aiff",
+    NULL_IF_CONFIG_SMALL("Audio IFF"),
+    "audio/aiff",
+    "aif,aiff,afc,aifc",
+    CODEC_ID_PCM_S16BE,
+    CODEC_ID_NONE,
+    0, 0, tmp__0,
+    0, 0, sizeof(AIFFOutputContext),
+    aiff_write_header,
+    aiff_write_packet,
+    aiff_write_trailer,
 };

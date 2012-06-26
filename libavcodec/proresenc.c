@@ -120,36 +120,36 @@ static const struct prores_profile {
     int         quant;
 } prores_profile_info[4] = {
     {
-        .full_name = "proxy",
-        .tag       = MKTAG('a', 'p', 'c', 'o'),
-        .min_quant = 4,
-        .max_quant = 8,
-        .br_tab    = { 300, 242, 220, 194 },
-        .quant     = QUANT_MAT_PROXY,
+        "proxy",
+        MKTAG('a', 'p', 'c', 'o'),
+        4,
+        8,
+        { 300, 242, 220, 194 },
+        QUANT_MAT_PROXY,
     },
     {
-        .full_name = "LT",
-        .tag       = MKTAG('a', 'p', 'c', 's'),
-        .min_quant = 1,
-        .max_quant = 9,
-        .br_tab    = { 720, 560, 490, 440 },
-        .quant     = QUANT_MAT_LT,
+        "LT",
+        MKTAG('a', 'p', 'c', 's'),
+        1,
+        9,
+        { 720, 560, 490, 440 },
+        QUANT_MAT_LT,
     },
     {
-        .full_name = "standard",
-        .tag       = MKTAG('a', 'p', 'c', 'n'),
-        .min_quant = 1,
-        .max_quant = 6,
-        .br_tab    = { 1050, 808, 710, 632 },
-        .quant     = QUANT_MAT_STANDARD,
+        "standard",
+        MKTAG('a', 'p', 'c', 'n'),
+        1,
+        6,
+        { 1050, 808, 710, 632 },
+        QUANT_MAT_STANDARD,
     },
     {
-        .full_name = "high quality",
-        .tag       = MKTAG('a', 'p', 'c', 'h'),
-        .min_quant = 1,
-        .max_quant = 6,
-        .br_tab    = { 1566, 1216, 1070, 950 },
-        .quant     = QUANT_MAT_HQ,
+        "high quality",
+        MKTAG('a', 'p', 'c', 'h'),
+        1,
+        6,
+        { 1566, 1216, 1070, 950 },
+        QUANT_MAT_HQ,
     }
 // for 4444 profile bitrate numbers are { 2350, 1828, 1600, 1425 }
 };
@@ -991,7 +991,7 @@ static const AVOption options[] = {
     { "hq",            NULL, 0, AV_OPT_TYPE_CONST, { PRORES_PROFILE_HQ },
         0, 0, VE, "profile" },
     { "vendor", "vendor ID", OFFSET(vendor),
-        AV_OPT_TYPE_STRING, { .str = "Lavc" }, CHAR_MIN, CHAR_MAX, VE },
+        AV_OPT_TYPE_STRING, { 0, "Lavc" }, CHAR_MIN, CHAR_MAX, VE },
     { "bits_per_mb", "desired bits per macroblock", OFFSET(bits_per_mb),
         AV_OPT_TYPE_INT, { 0 }, 0, 8192, VE },
     { "quant_mat", "quantiser matrix", OFFSET(quant_sel), AV_OPT_TYPE_INT,
@@ -1012,24 +1012,25 @@ static const AVOption options[] = {
 };
 
 static const AVClass proresenc_class = {
-    .class_name = "ProRes encoder",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "ProRes encoder",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
-AVCodec ff_prores_encoder = {
-    .name           = "prores",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_PRORES,
-    .priv_data_size = sizeof(ProresContext),
-    .init           = encode_init,
-    .close          = encode_close,
-    .encode2        = encode_frame,
-    .capabilities   = CODEC_CAP_SLICE_THREADS,
-    .long_name      = NULL_IF_CONFIG_SMALL("Apple ProRes (iCodec Pro)"),
-    .pix_fmts       = (const enum PixelFormat[]) {
+static const enum PixelFormat tmp__0[] = {
                           PIX_FMT_YUV422P10, PIX_FMT_YUV444P10, PIX_FMT_NONE
-                      },
-    .priv_class     = &proresenc_class,
+                      };
+AVCodec ff_prores_encoder = {
+    "prores",
+    NULL_IF_CONFIG_SMALL("Apple ProRes (iCodec Pro)"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_PRORES,
+    CODEC_CAP_SLICE_THREADS,
+    0, tmp__0,
+    0, 0, 0, 0, &proresenc_class,
+    0, sizeof(ProresContext),
+    0, 0, 0, 0, 0, encode_init,
+    0, encode_frame,
+    0, encode_close,
 };

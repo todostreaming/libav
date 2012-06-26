@@ -737,16 +737,16 @@ av_log(avctx, AV_LOG_DEBUG, "%"PRId64"\n", rdtsc()-time);
 }
 
 AVCodec ff_h263_decoder = {
-    .name           = "h263",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_H263,
-    .priv_data_size = sizeof(MpegEncContext),
-    .init           = ff_h263_decode_init,
-    .close          = ff_h263_decode_end,
-    .decode         = ff_h263_decode_frame,
-    .capabilities   = CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1 |
+    "h263",
+    NULL_IF_CONFIG_SMALL("H.263 / H.263-1996, H.263+ / H.263-1998 / H.263 version 2"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_H263,
+    CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1 |
                       CODEC_CAP_TRUNCATED | CODEC_CAP_DELAY,
-    .flush          = ff_mpeg_flush,
-    .long_name      = NULL_IF_CONFIG_SMALL("H.263 / H.263-1996, H.263+ / H.263-1998 / H.263 version 2"),
-    .pix_fmts       = ff_hwaccel_pixfmt_list_420,
+    0, ff_hwaccel_pixfmt_list_420,
+    0, 0, 0, 0, 0, 0, sizeof(MpegEncContext),
+    0, 0, 0, 0, 0, ff_h263_decode_init,
+    0, 0, ff_h263_decode_frame,
+    ff_h263_decode_end,
+    ff_mpeg_flush,
 };

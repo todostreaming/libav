@@ -172,18 +172,19 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     return 0;
 }
 
-AVCodec ff_dpx_encoder = {
-    .name = "dpx",
-    .type = AVMEDIA_TYPE_VIDEO,
-    .id   = CODEC_ID_DPX,
-    .priv_data_size = sizeof(DPXContext),
-    .init   = encode_init,
-    .encode2 = encode_frame,
-    .pix_fmts = (const enum PixelFormat[]){
+static const enum PixelFormat tmp__0[] = {
         PIX_FMT_RGB24,
         PIX_FMT_RGBA,
         PIX_FMT_RGB48LE,
         PIX_FMT_RGB48BE,
-        PIX_FMT_NONE},
-    .long_name = NULL_IF_CONFIG_SMALL("DPX image"),
+        PIX_FMT_NONE};
+AVCodec ff_dpx_encoder = {
+    "dpx",
+    NULL_IF_CONFIG_SMALL("DPX image"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_DPX,
+    0, 0, tmp__0,
+    0, 0, 0, 0, 0, 0, sizeof(DPXContext),
+    0, 0, 0, 0, 0, encode_init,
+    0, encode_frame,
 };

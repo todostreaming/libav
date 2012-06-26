@@ -329,13 +329,13 @@ static av_cold int mxpeg_decode_end(AVCodecContext *avctx)
 }
 
 AVCodec ff_mxpeg_decoder = {
-    .name           = "mxpeg",
-    .long_name      = NULL_IF_CONFIG_SMALL("Mobotix MxPEG video"),
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_MXPEG,
-    .priv_data_size = sizeof(MXpegDecodeContext),
-    .init           = mxpeg_decode_init,
-    .close          = mxpeg_decode_end,
-    .decode         = mxpeg_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
+    "mxpeg",
+    NULL_IF_CONFIG_SMALL("Mobotix MxPEG video"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_MXPEG,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(MXpegDecodeContext),
+    0, 0, 0, 0, 0, mxpeg_decode_init,
+    0, 0, mxpeg_decode_frame,
+    mxpeg_decode_end,
 };

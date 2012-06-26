@@ -128,40 +128,40 @@ static int write_packet(AVFormatContext *s, AVPacket *pkt)
 #define OFFSET(x) offsetof(VideoMuxData, x)
 #define ENC AV_OPT_FLAG_ENCODING_PARAM
 static const AVOption muxoptions[] = {
-    { "start_number", "first number in the sequence", OFFSET(img_number), AV_OPT_TYPE_INT, {.dbl = 1}, 1, INT_MAX, ENC },
+    { "start_number", "first number in the sequence", OFFSET(img_number), AV_OPT_TYPE_INT, {1}, 1, INT_MAX, ENC },
     { NULL },
 };
 
 #if CONFIG_IMAGE2_MUXER
 static const AVClass img2mux_class = {
-    .class_name = "image2 muxer",
-    .item_name  = av_default_item_name,
-    .option     = muxoptions,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "image2 muxer",
+    av_default_item_name,
+    muxoptions,
+    LIBAVUTIL_VERSION_INT,
 };
 
 AVOutputFormat ff_image2_muxer = {
-    .name           = "image2",
-    .long_name      = NULL_IF_CONFIG_SMALL("image2 sequence"),
-    .extensions     = "bmp,dpx,jpeg,jpg,ljpg,pam,pbm,pcx,pgm,pgmyuv,png,"
+    "image2",
+    NULL_IF_CONFIG_SMALL("image2 sequence"),
+    0, "bmp,dpx,jpeg,jpg,ljpg,pam,pbm,pcx,pgm,pgmyuv,png,"
                       "ppm,sgi,tga,tif,tiff,jp2,xwd,sun,ras,rs,im1,im8,im24,"
                       "sunras,xbm",
-    .priv_data_size = sizeof(VideoMuxData),
-    .video_codec    = CODEC_ID_MJPEG,
-    .write_header   = write_header,
-    .write_packet   = write_packet,
-    .flags          = AVFMT_NOTIMESTAMPS | AVFMT_NODIMENSIONS | AVFMT_NOFILE,
-    .priv_class     = &img2mux_class,
+    0, CODEC_ID_MJPEG,
+    0, AVFMT_NOTIMESTAMPS | AVFMT_NODIMENSIONS | AVFMT_NOFILE,
+    0, &img2mux_class,
+    0, sizeof(VideoMuxData),
+    write_header,
+    write_packet,
 };
 #endif
 #if CONFIG_IMAGE2PIPE_MUXER
 AVOutputFormat ff_image2pipe_muxer = {
-    .name           = "image2pipe",
-    .long_name      = NULL_IF_CONFIG_SMALL("piped image2 sequence"),
-    .priv_data_size = sizeof(VideoMuxData),
-    .video_codec    = CODEC_ID_MJPEG,
-    .write_header   = write_header,
-    .write_packet   = write_packet,
-    .flags          = AVFMT_NOTIMESTAMPS | AVFMT_NODIMENSIONS
-};
+    "image2pipe",
+    NULL_IF_CONFIG_SMALL("piped image2 sequence"),
+    0, 0, 0, CODEC_ID_MJPEG,
+    0, AVFMT_NOTIMESTAMPS | AVFMT_NODIMENSIONS
+,
+    0, 0, 0, sizeof(VideoMuxData),
+    write_header,
+    write_packet};
 #endif

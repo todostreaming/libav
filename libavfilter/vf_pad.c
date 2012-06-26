@@ -407,26 +407,28 @@ static void draw_slice(AVFilterLink *link, int y, int h, int slice_dir)
     draw_send_bar_slice(link, y, h, slice_dir, -1);
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, start_frame,
+                                    get_video_buffer,
+                                    0, end_frame,
+                                    draw_slice,
+                                    0, 0, 0, config_input, },
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, config_output, },
+                                  { NULL}};
 AVFilter avfilter_vf_pad = {
-    .name          = "pad",
-    .description   = NULL_IF_CONFIG_SMALL("Pad input image to width:height[:x:y[:color]] (default x and y: 0, default color: black)."),
+    "pad",
+    NULL_IF_CONFIG_SMALL("Pad input image to width:height[:x:y[:color]] (default x and y: 0, default color: black)."),
 
-    .priv_size     = sizeof(PadContext),
-    .init          = init,
-    .uninit        = uninit,
-    .query_formats = query_formats,
+    tmp__0,
+    tmp__1,
+    init,
+    uninit,
 
-    .inputs    = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .config_props     = config_input,
-                                    .get_video_buffer = get_video_buffer,
-                                    .start_frame      = start_frame,
-                                    .draw_slice       = draw_slice,
-                                    .end_frame        = end_frame, },
-                                  { .name = NULL}},
+    query_formats,
 
-    .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .config_props     = config_output, },
-                                  { .name = NULL}},
+    sizeof(PadContext),
 };

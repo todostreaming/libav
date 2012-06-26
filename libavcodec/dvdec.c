@@ -373,13 +373,13 @@ static int dvvideo_close(AVCodecContext *c)
 }
 
 AVCodec ff_dvvideo_decoder = {
-    .name           = "dvvideo",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_DVVIDEO,
-    .priv_data_size = sizeof(DVVideoContext),
-    .init           = ff_dvvideo_init,
-    .close          = dvvideo_close,
-    .decode         = dvvideo_decode_frame,
-    .capabilities   = CODEC_CAP_DR1 | CODEC_CAP_SLICE_THREADS,
-    .long_name      = NULL_IF_CONFIG_SMALL("DV (Digital Video)"),
+    "dvvideo",
+    NULL_IF_CONFIG_SMALL("DV (Digital Video)"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_DVVIDEO,
+    CODEC_CAP_DR1 | CODEC_CAP_SLICE_THREADS,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(DVVideoContext),
+    0, 0, 0, 0, 0, ff_dvvideo_init,
+    0, 0, dvvideo_decode_frame,
+    dvvideo_close,
 };

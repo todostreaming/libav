@@ -1234,15 +1234,16 @@ static int amrwb_decode_frame(AVCodecContext *avctx, void *data,
     return expected_fr_size;
 }
 
+static const enum AVSampleFormat tmp__0[] = { AV_SAMPLE_FMT_FLT,
+                                                     AV_SAMPLE_FMT_NONE };
 AVCodec ff_amrwb_decoder = {
-    .name           = "amrwb",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_AMR_WB,
-    .priv_data_size = sizeof(AMRWBContext),
-    .init           = amrwb_decode_init,
-    .decode         = amrwb_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("Adaptive Multi-Rate WideBand"),
-    .sample_fmts    = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_FLT,
-                                                     AV_SAMPLE_FMT_NONE },
+    "amrwb",
+    NULL_IF_CONFIG_SMALL("Adaptive Multi-Rate WideBand"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_AMR_WB,
+    CODEC_CAP_DR1,
+    0, 0, 0, tmp__0,
+    0, 0, 0, 0, sizeof(AMRWBContext),
+    0, 0, 0, 0, 0, amrwb_decode_init,
+    0, 0, amrwb_decode_frame,
 };

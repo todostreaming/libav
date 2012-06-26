@@ -323,15 +323,16 @@ static void h261_encode_block(H261Context * h, DCTELEM * block, int n){
 
 FF_MPV_GENERIC_CLASS(h261)
 
+static const enum PixelFormat tmp__0[] = { PIX_FMT_YUV420P, PIX_FMT_NONE };
 AVCodec ff_h261_encoder = {
-    .name           = "h261",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_H261,
-    .priv_data_size = sizeof(H261Context),
-    .init           = ff_MPV_encode_init,
-    .encode2        = ff_MPV_encode_picture,
-    .close          = ff_MPV_encode_end,
-    .pix_fmts       = (const enum PixelFormat[]){ PIX_FMT_YUV420P, PIX_FMT_NONE },
-    .long_name      = NULL_IF_CONFIG_SMALL("H.261"),
-    .priv_class     = &h261_class,
+    "h261",
+    NULL_IF_CONFIG_SMALL("H.261"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_H261,
+    0, 0, tmp__0,
+    0, 0, 0, 0, &h261_class,
+    0, sizeof(H261Context),
+    0, 0, 0, 0, 0, ff_MPV_encode_init,
+    0, ff_MPV_encode_picture,
+    0, ff_MPV_encode_end,
 };

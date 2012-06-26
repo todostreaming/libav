@@ -164,12 +164,13 @@ static int voc_read_packet(AVFormatContext *s, AVPacket *pkt)
     return ff_voc_get_packet(s, pkt, s->streams[0], 0);
 }
 
+static const AVCodecTag* const  tmp__0[] = { ff_voc_codec_tags, 0 };
 AVInputFormat ff_voc_demuxer = {
-    .name           = "voc",
-    .long_name      = NULL_IF_CONFIG_SMALL("Creative Voice file format"),
-    .priv_data_size = sizeof(VocDecContext),
-    .read_probe     = voc_probe,
-    .read_header    = voc_read_header,
-    .read_packet    = voc_read_packet,
-    .codec_tag      = (const AVCodecTag* const []){ ff_voc_codec_tags, 0 },
+    "voc",
+    NULL_IF_CONFIG_SMALL("Creative Voice file format"),
+    0, 0, tmp__0,
+    0, 0, 0, sizeof(VocDecContext),
+    voc_probe,
+    voc_read_header,
+    voc_read_packet,
 };

@@ -77,7 +77,7 @@ static int config_output_props(AVFilterLink *outlink)
     settb->var_values[VAR_E]    = M_E;
     settb->var_values[VAR_PHI]  = M_PHI;
     settb->var_values[VAR_PI]   = M_PI;
-    settb->var_values[VAR_AVTB] = av_q2d(AV_TIME_BASE_Q);
+    { AVRational tmp__0 = {1, AV_TIME_BASE}; settb->var_values[VAR_AVTB] = av_q2d(tmp__0); }
     settb->var_values[VAR_INTB] = av_q2d(inlink->time_base);
 
     outlink->w = inlink->w;
@@ -122,22 +122,24 @@ static void start_frame(AVFilterLink *inlink, AVFilterBufferRef *picref)
     ff_start_frame(outlink, picref2);
 }
 
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, start_frame,
+                                    ff_null_get_video_buffer,
+                                    0, ff_null_end_frame },
+                                  { NULL }};
+static AVFilterPad tmp__2[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, config_output_props, },
+                                  { NULL}};
 AVFilter avfilter_vf_settb = {
-    .name      = "settb",
-    .description = NULL_IF_CONFIG_SMALL("Set timebase for the output link."),
-    .init      = init,
+    "settb",
+    NULL_IF_CONFIG_SMALL("Set timebase for the output link."),
+    tmp__1,
 
-    .priv_size = sizeof(SetTBContext),
+    tmp__2,
 
-    .inputs    = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .get_video_buffer = ff_null_get_video_buffer,
-                                    .start_frame      = start_frame,
-                                    .end_frame        = ff_null_end_frame },
-                                  { .name = NULL }},
+    init,
 
-    .outputs   = (AVFilterPad[]) {{ .name            = "default",
-                                    .type            = AVMEDIA_TYPE_VIDEO,
-                                    .config_props    = config_output_props, },
-                                  { .name = NULL}},
+    0, 0, sizeof(SetTBContext),
 };

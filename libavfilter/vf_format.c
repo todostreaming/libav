@@ -95,26 +95,28 @@ static int query_formats_format(AVFilterContext *ctx)
     return 0;
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, ff_null_start_frame,
+                                    ff_null_get_video_buffer,
+                                    0, ff_null_end_frame,
+                                    ff_null_draw_slice, },
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO },
+                                  { NULL}};
 AVFilter avfilter_vf_format = {
-    .name      = "format",
-    .description = NULL_IF_CONFIG_SMALL("Convert the input video to one of the specified pixel formats."),
+    "format",
+    NULL_IF_CONFIG_SMALL("Convert the input video to one of the specified pixel formats."),
 
-    .init      = init,
+    tmp__0,
 
-    .query_formats = query_formats_format,
+    tmp__1,
 
-    .priv_size = sizeof(FormatContext),
+    init,
 
-    .inputs    = (AVFilterPad[]) {{ .name            = "default",
-                                    .type            = AVMEDIA_TYPE_VIDEO,
-                                    .get_video_buffer= ff_null_get_video_buffer,
-                                    .start_frame     = ff_null_start_frame,
-                                    .draw_slice      = ff_null_draw_slice,
-                                    .end_frame       = ff_null_end_frame, },
-                                  { .name = NULL}},
-    .outputs   = (AVFilterPad[]) {{ .name            = "default",
-                                    .type            = AVMEDIA_TYPE_VIDEO },
-                                  { .name = NULL}},
+    0, query_formats_format,
+    sizeof(FormatContext),
 };
 #endif /* CONFIG_FORMAT_FILTER */
 
@@ -125,25 +127,27 @@ static int query_formats_noformat(AVFilterContext *ctx)
     return 0;
 }
 
+static AVFilterPad tmp__2[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, ff_null_start_frame,
+                                    ff_null_get_video_buffer,
+                                    0, ff_null_end_frame,
+                                    ff_null_draw_slice, },
+                                  { NULL}};
+static AVFilterPad tmp__3[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO },
+                                  { NULL}};
 AVFilter avfilter_vf_noformat = {
-    .name      = "noformat",
-    .description = NULL_IF_CONFIG_SMALL("Force libavfilter not to use any of the specified pixel formats for the input to the next filter."),
+    "noformat",
+    NULL_IF_CONFIG_SMALL("Force libavfilter not to use any of the specified pixel formats for the input to the next filter."),
 
-    .init      = init,
+    tmp__2,
 
-    .query_formats = query_formats_noformat,
+    tmp__3,
 
-    .priv_size = sizeof(FormatContext),
+    init,
 
-    .inputs    = (AVFilterPad[]) {{ .name            = "default",
-                                    .type            = AVMEDIA_TYPE_VIDEO,
-                                    .get_video_buffer= ff_null_get_video_buffer,
-                                    .start_frame     = ff_null_start_frame,
-                                    .draw_slice      = ff_null_draw_slice,
-                                    .end_frame       = ff_null_end_frame, },
-                                  { .name = NULL}},
-    .outputs   = (AVFilterPad[]) {{ .name            = "default",
-                                    .type            = AVMEDIA_TYPE_VIDEO },
-                                  { .name = NULL}},
+    0, query_formats_noformat,
+    sizeof(FormatContext),
 };
 #endif /* CONFIG_NOFORMAT_FILTER */

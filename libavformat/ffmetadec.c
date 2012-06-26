@@ -154,9 +154,9 @@ static int read_header(AVFormatContext *s)
 
     s->start_time = 0;
     if (s->nb_chapters)
-        s->duration = av_rescale_q(s->chapters[s->nb_chapters - 1]->end,
+        { AVRational tmp__0 = {1, AV_TIME_BASE}; s->duration = av_rescale_q(s->chapters[s->nb_chapters - 1]->end,
                                    s->chapters[s->nb_chapters - 1]->time_base,
-                                   AV_TIME_BASE_Q);
+                                   tmp__0); }
 
     return 0;
 }
@@ -167,9 +167,9 @@ static int read_packet(AVFormatContext *s, AVPacket *pkt)
 }
 
 AVInputFormat ff_ffmetadata_demuxer = {
-    .name        = "ffmetadata",
-    .long_name   = NULL_IF_CONFIG_SMALL("FFmpeg metadata in text format"),
-    .read_probe  = probe,
-    .read_header = read_header,
-    .read_packet = read_packet,
+    "ffmetadata",
+    NULL_IF_CONFIG_SMALL("FFmpeg metadata in text format"),
+    0, 0, 0, 0, 0, 0, 0, probe,
+    read_header,
+    read_packet,
 };

@@ -47,17 +47,17 @@ typedef struct AFormatContext {
 #define OFFSET(x) offsetof(AFormatContext, x)
 #define A AV_OPT_FLAG_AUDIO_PARAM
 static const AVOption options[] = {
-    { "sample_fmts",     "A comma-separated list of sample formats.",  OFFSET(formats_str),         AV_OPT_TYPE_STRING, .flags = A },
-    { "sample_rates",    "A comma-separated list of sample rates.",    OFFSET(sample_rates_str),    AV_OPT_TYPE_STRING, .flags = A },
-    { "channel_layouts", "A comma-separated list of channel layouts.", OFFSET(channel_layouts_str), AV_OPT_TYPE_STRING, .flags = A },
+    { "sample_fmts",     "A comma-separated list of sample formats.",  OFFSET(formats_str),         AV_OPT_TYPE_STRING, { 0 }, 0, 0, A },
+    { "sample_rates",    "A comma-separated list of sample rates.",    OFFSET(sample_rates_str),    AV_OPT_TYPE_STRING, { 0 }, 0, 0, A },
+    { "channel_layouts", "A comma-separated list of channel layouts.", OFFSET(channel_layouts_str), AV_OPT_TYPE_STRING, { 0 }, 0, 0, A },
     { NULL },
 };
 
 static const AVClass aformat_class = {
-    .class_name = "aformat filter",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "aformat filter",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 #define PARSE_FORMATS(str, type, list, add_to_list, get_fmt, none, desc)    \
@@ -131,17 +131,19 @@ static int query_formats(AVFilterContext *ctx)
     return 0;
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                        AVMEDIA_TYPE_AUDIO, },
+                                      { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                        AVMEDIA_TYPE_AUDIO},
+                                      { NULL}};
 AVFilter avfilter_af_aformat = {
-    .name          = "aformat",
-    .description   = NULL_IF_CONFIG_SMALL("Convert the input audio to one of the specified formats."),
-    .init          = init,
-    .query_formats = query_formats,
-    .priv_size     = sizeof(AFormatContext),
+    "aformat",
+    NULL_IF_CONFIG_SMALL("Convert the input audio to one of the specified formats."),
+    tmp__0,
+    tmp__1,
+    init,
 
-    .inputs        = (AVFilterPad[]) {{ .name            = "default",
-                                        .type            = AVMEDIA_TYPE_AUDIO, },
-                                      { .name = NULL}},
-    .outputs       = (AVFilterPad[]) {{ .name            = "default",
-                                        .type            = AVMEDIA_TYPE_AUDIO},
-                                      { .name = NULL}},
+    0, query_formats,
+    sizeof(AFormatContext),
 };

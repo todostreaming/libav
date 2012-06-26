@@ -613,7 +613,7 @@ void avcodec_get_frame_defaults(AVFrame *pic){
 
     pic->pts= AV_NOPTS_VALUE;
     pic->key_frame= 1;
-    pic->sample_aspect_ratio = (AVRational){0, 1};
+    {pic->sample_aspect_ratio.num = 0;pic->sample_aspect_ratio.den = 1;}
     pic->format = -1;           /* unknown */
 }
 

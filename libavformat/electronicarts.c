@@ -264,7 +264,7 @@ static int process_video_header_mdec(AVFormatContext *s)
     avio_skip(pb, 4);
     ea->width  = avio_rl16(pb);
     ea->height = avio_rl16(pb);
-    ea->time_base = (AVRational){1,15};
+    {ea->time_base.num = 1;ea->time_base.den = 15;}
     ea->video_codec = CODEC_ID_MDEC;
     return 1;
 }
@@ -290,7 +290,7 @@ static int process_video_header_cmv(AVFormatContext *s)
     avio_skip(s->pb, 10);
     fps = avio_rl16(s->pb);
     if (fps)
-        ea->time_base = (AVRational){1, fps};
+        {ea->time_base.num = 1;ea->time_base.den = fps;}
     ea->video_codec = CODEC_ID_CMV;
 
     return 0;
@@ -348,7 +348,7 @@ static int process_ea_header(AVFormatContext *s) {
 
             case kVGT_TAG:
                 ea->video_codec = CODEC_ID_TGV;
-                ea->time_base = (AVRational){1, 15};
+                {ea->time_base.num = 1;ea->time_base.den = 15;}
                 break;
 
             case mTCD_TAG :
@@ -432,8 +432,8 @@ static int ea_read_header(AVFormatContext *s)
         st->codec->width = ea->width;
         st->codec->height = ea->height;
         avpriv_set_pts_info(st, 33, ea->time_base.num, ea->time_base.den);
-        st->r_frame_rate = st->avg_frame_rate = (AVRational){ea->time_base.den,
-                                                             ea->time_base.num};
+        {st->r_frame_rate .num =  st->avg_frame_rate.num = ea->time_base.den;st->r_frame_rate .den =  st->avg_frame_rate.den = 
+                                                             ea->time_base.num;}
     }
 
     if (ea->audio_codec) {
@@ -595,10 +595,10 @@ get_video_packet:
 }
 
 AVInputFormat ff_ea_demuxer = {
-    .name           = "ea",
-    .long_name      = NULL_IF_CONFIG_SMALL("Electronic Arts Multimedia Format"),
-    .priv_data_size = sizeof(EaDemuxContext),
-    .read_probe     = ea_probe,
-    .read_header    = ea_read_header,
-    .read_packet    = ea_read_packet,
+    "ea",
+    NULL_IF_CONFIG_SMALL("Electronic Arts Multimedia Format"),
+    0, 0, 0, 0, 0, 0, sizeof(EaDemuxContext),
+    ea_probe,
+    ea_read_header,
+    ea_read_packet,
 };

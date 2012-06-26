@@ -74,26 +74,26 @@ static int gsm_read_header(AVFormatContext *s)
 
 static const AVOption options[] = {
     { "sample_rate", "", offsetof(GSMDemuxerContext, sample_rate),
-       AV_OPT_TYPE_INT, {.dbl = GSM_SAMPLE_RATE}, 1, INT_MAX / GSM_BLOCK_SIZE,
+       AV_OPT_TYPE_INT, {GSM_SAMPLE_RATE}, 1, INT_MAX / GSM_BLOCK_SIZE,
        AV_OPT_FLAG_DECODING_PARAM },
     { NULL },
 };
 
 static const AVClass class = {
-    .class_name = "gsm demuxer",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "gsm demuxer",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 AVInputFormat ff_gsm_demuxer = {
-    .name           = "gsm",
-    .long_name      = NULL_IF_CONFIG_SMALL("raw GSM"),
-    .priv_data_size = sizeof(GSMDemuxerContext),
-    .read_header    = gsm_read_header,
-    .read_packet    = gsm_read_packet,
-    .flags          = AVFMT_GENERIC_INDEX,
-    .extensions     = "gsm",
-    .raw_codec_id   = CODEC_ID_GSM,
-    .priv_class     = &class,
+    "gsm",
+    NULL_IF_CONFIG_SMALL("raw GSM"),
+    AVFMT_GENERIC_INDEX,
+    "gsm",
+    0, &class,
+    0, CODEC_ID_GSM,
+    sizeof(GSMDemuxerContext),
+    0, gsm_read_header,
+    gsm_read_packet,
 };

@@ -256,13 +256,13 @@ static av_cold int targa_end(AVCodecContext *avctx){
 }
 
 AVCodec ff_targa_decoder = {
-    .name           = "targa",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_TARGA,
-    .priv_data_size = sizeof(TargaContext),
-    .init           = targa_init,
-    .close          = targa_end,
-    .decode         = decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("Truevision Targa image"),
+    "targa",
+    NULL_IF_CONFIG_SMALL("Truevision Targa image"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_TARGA,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(TargaContext),
+    0, 0, 0, 0, 0, targa_init,
+    0, 0, decode_frame,
+    targa_end,
 };

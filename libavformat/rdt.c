@@ -549,13 +549,13 @@ rdt_free_context (PayloadContext *rdt)
 
 #define RDT_HANDLER(n, s, t) \
 static RTPDynamicProtocolHandler ff_rdt_ ## n ## _handler = { \
-    .enc_name         = s, \
-    .codec_type       = t, \
-    .codec_id         = CODEC_ID_NONE, \
-    .parse_sdp_a_line = rdt_parse_sdp_line, \
-    .alloc            = rdt_new_context, \
-    .free             = rdt_free_context, \
-    .parse_packet     = rdt_parse_packet \
+    s, \
+    t, \
+    CODEC_ID_NONE, \
+    0, 0, rdt_parse_sdp_line, \
+    rdt_new_context, \
+    rdt_free_context, \
+    rdt_parse_packet \
 }
 
 RDT_HANDLER(live_video, "x-pn-multirate-realvideo-live", AVMEDIA_TYPE_VIDEO);

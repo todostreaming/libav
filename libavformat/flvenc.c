@@ -540,20 +540,21 @@ static int flv_write_packet(AVFormatContext *s, AVPacket *pkt)
     return pb->error;
 }
 
-AVOutputFormat ff_flv_muxer = {
-    .name           = "flv",
-    .long_name      = NULL_IF_CONFIG_SMALL("FLV format"),
-    .mime_type      = "video/x-flv",
-    .extensions     = "flv",
-    .priv_data_size = sizeof(FLVContext),
-    .audio_codec    = CONFIG_LIBMP3LAME ? CODEC_ID_MP3 : CODEC_ID_ADPCM_SWF,
-    .video_codec    = CODEC_ID_FLV1,
-    .write_header   = flv_write_header,
-    .write_packet   = flv_write_packet,
-    .write_trailer  = flv_write_trailer,
-    .codec_tag      = (const AVCodecTag* const []) {
+static const AVCodecTag* const  tmp__0[] = {
                           flv_video_codec_ids, flv_audio_codec_ids, 0
-                      },
-    .flags          = AVFMT_GLOBALHEADER | AVFMT_VARIABLE_FPS |
+                      };
+AVOutputFormat ff_flv_muxer = {
+    "flv",
+    NULL_IF_CONFIG_SMALL("FLV format"),
+    "video/x-flv",
+    "flv",
+    CONFIG_LIBMP3LAME ? CODEC_ID_MP3 : CODEC_ID_ADPCM_SWF,
+    CODEC_ID_FLV1,
+    0, AVFMT_GLOBALHEADER | AVFMT_VARIABLE_FPS |
                       AVFMT_TS_NONSTRICT,
+    tmp__0,
+    0, 0, sizeof(FLVContext),
+    flv_write_header,
+    flv_write_packet,
+    flv_write_trailer,
 };

@@ -1254,23 +1254,23 @@ static int mpeg_decode_postinit(AVCodecContext *avctx)
             avctx->ticks_per_frame = 2;
             //MPEG-2 aspect
             if (s->aspect_ratio_info > 1) {
-                AVRational dar =
+                AVRational dar;{ AVRational tmp__0 = {s1->pan_scan.width, s1->pan_scan.height};  { AVRational tmp__1 = {s->width, s->height}; dar =
                     av_mul_q(av_div_q(ff_mpeg2_aspect[s->aspect_ratio_info],
-                                      (AVRational) {s1->pan_scan.width, s1->pan_scan.height}),
-                             (AVRational) {s->width, s->height});
+                                      tmp__0),
+                             tmp__1); }}
 
                 // we ignore the spec here and guess a bit as reality does not match the spec, see for example
                 // res_change_ffmpeg_aspect.ts and sequence-display-aspect.mpg
                 // issue1613, 621, 562
-                if ((s1->pan_scan.width == 0) || (s1->pan_scan.height == 0) ||
-                   (av_cmp_q(dar, (AVRational) {4, 3}) && av_cmp_q(dar, (AVRational) {16, 9}))) {
-                    s->avctx->sample_aspect_ratio =
+                { { AVRational tmp__3 = {16, 9}; AVRational tmp__2 = {4, 3}; if ((s1->pan_scan.width == 0) || (s1->pan_scan.height == 0) ||
+                   (av_cmp_q(dar, tmp__2) && av_cmp_q(dar, tmp__3))) {
+                    { AVRational tmp__4 = {s->width, s->height}; s->avctx->sample_aspect_ratio =
                         av_div_q(ff_mpeg2_aspect[s->aspect_ratio_info],
-                                 (AVRational) {s->width, s->height});
+                                 tmp__4); }
                 } else {
-                    s->avctx->sample_aspect_ratio =
+                    { AVRational tmp__5 = {s1->pan_scan.width, s1->pan_scan.height}; s->avctx->sample_aspect_ratio =
                         av_div_q(ff_mpeg2_aspect[s->aspect_ratio_info],
-                                 (AVRational) {s1->pan_scan.width, s1->pan_scan.height});
+                                 tmp__5); } }}
 //issue1613 4/3 16/9 -> 16/9
 //res_change_ffmpeg_aspect.ts 4/3 225/44 ->4/3
 //widescreen-issue562.mpg 4/3 16/9 -> 16/9
@@ -2497,35 +2497,35 @@ static const AVProfile mpeg2_video_profiles[] = {
 
 
 AVCodec ff_mpeg1video_decoder = {
-    .name                  = "mpeg1video",
-    .type                  = AVMEDIA_TYPE_VIDEO,
-    .id                    = CODEC_ID_MPEG1VIDEO,
-    .priv_data_size        = sizeof(Mpeg1Context),
-    .init                  = mpeg_decode_init,
-    .close                 = mpeg_decode_end,
-    .decode                = mpeg_decode_frame,
-    .capabilities          = CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1 |
+    "mpeg1video",
+    NULL_IF_CONFIG_SMALL("MPEG-1 video"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_MPEG1VIDEO,
+    CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1 |
                              CODEC_CAP_TRUNCATED | CODEC_CAP_DELAY |
                              CODEC_CAP_SLICE_THREADS,
-    .flush                 = flush,
-    .long_name             = NULL_IF_CONFIG_SMALL("MPEG-1 video"),
-    .update_thread_context = ONLY_IF_THREADS_ENABLED(mpeg_decode_update_thread_context)
-};
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(Mpeg1Context),
+    0, 0, ONLY_IF_THREADS_ENABLED(mpeg_decode_update_thread_context)
+,
+    0, 0, mpeg_decode_init,
+    0, 0, mpeg_decode_frame,
+    mpeg_decode_end,
+    flush};
 
 AVCodec ff_mpeg2video_decoder = {
-    .name           = "mpeg2video",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_MPEG2VIDEO,
-    .priv_data_size = sizeof(Mpeg1Context),
-    .init           = mpeg_decode_init,
-    .close          = mpeg_decode_end,
-    .decode         = mpeg_decode_frame,
-    .capabilities   = CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1 |
+    "mpeg2video",
+    NULL_IF_CONFIG_SMALL("MPEG-2 video"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_MPEG2VIDEO,
+    CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1 |
                       CODEC_CAP_TRUNCATED | CODEC_CAP_DELAY |
                       CODEC_CAP_SLICE_THREADS,
-    .flush          = flush,
-    .long_name      = NULL_IF_CONFIG_SMALL("MPEG-2 video"),
-    .profiles       = NULL_IF_CONFIG_SMALL(mpeg2_video_profiles),
+    0, 0, 0, 0, 0, 0, 0, NULL_IF_CONFIG_SMALL(mpeg2_video_profiles),
+    sizeof(Mpeg1Context),
+    0, 0, 0, 0, 0, mpeg_decode_init,
+    0, 0, mpeg_decode_frame,
+    mpeg_decode_end,
+    flush,
 };
 
 #if CONFIG_MPEG_XVMC_DECODER
@@ -2547,49 +2547,49 @@ static av_cold int mpeg_mc_decode_init(AVCodecContext *avctx)
 }
 
 AVCodec ff_mpeg_xvmc_decoder = {
-    .name           = "mpegvideo_xvmc",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_MPEG2VIDEO_XVMC,
-    .priv_data_size = sizeof(Mpeg1Context),
-    .init           = mpeg_mc_decode_init,
-    .close          = mpeg_decode_end,
-    .decode         = mpeg_decode_frame,
-    .capabilities   = CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1 |
+    "mpegvideo_xvmc",
+    NULL_IF_CONFIG_SMALL("MPEG-1/2 video XvMC (X-Video Motion Compensation)"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_MPEG2VIDEO_XVMC,
+    CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1 |
                       CODEC_CAP_TRUNCATED| CODEC_CAP_HWACCEL | CODEC_CAP_DELAY,
-    .flush          = flush,
-    .long_name      = NULL_IF_CONFIG_SMALL("MPEG-1/2 video XvMC (X-Video Motion Compensation)"),
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(Mpeg1Context),
+    0, 0, 0, 0, 0, mpeg_mc_decode_init,
+    0, 0, mpeg_decode_frame,
+    mpeg_decode_end,
+    flush,
 };
 
 #endif
 
 #if CONFIG_MPEG_VDPAU_DECODER
 AVCodec ff_mpeg_vdpau_decoder = {
-    .name           = "mpegvideo_vdpau",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_MPEG2VIDEO,
-    .priv_data_size = sizeof(Mpeg1Context),
-    .init           = mpeg_decode_init,
-    .close          = mpeg_decode_end,
-    .decode         = mpeg_decode_frame,
-    .capabilities   = CODEC_CAP_DR1 | CODEC_CAP_TRUNCATED |
+    "mpegvideo_vdpau",
+    NULL_IF_CONFIG_SMALL("MPEG-1/2 video (VDPAU acceleration)"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_MPEG2VIDEO,
+    CODEC_CAP_DR1 | CODEC_CAP_TRUNCATED |
                       CODEC_CAP_HWACCEL_VDPAU | CODEC_CAP_DELAY,
-    .flush          = flush,
-    .long_name      = NULL_IF_CONFIG_SMALL("MPEG-1/2 video (VDPAU acceleration)"),
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(Mpeg1Context),
+    0, 0, 0, 0, 0, mpeg_decode_init,
+    0, 0, mpeg_decode_frame,
+    mpeg_decode_end,
+    flush,
 };
 #endif
 
 #if CONFIG_MPEG1_VDPAU_DECODER
 AVCodec ff_mpeg1_vdpau_decoder = {
-    .name           = "mpeg1video_vdpau",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_MPEG1VIDEO,
-    .priv_data_size = sizeof(Mpeg1Context),
-    .init           = mpeg_decode_init,
-    .close          = mpeg_decode_end,
-    .decode         = mpeg_decode_frame,
-    .capabilities   = CODEC_CAP_DR1 | CODEC_CAP_TRUNCATED |
+    "mpeg1video_vdpau",
+    NULL_IF_CONFIG_SMALL("MPEG-1 video (VDPAU acceleration)"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_MPEG1VIDEO,
+    CODEC_CAP_DR1 | CODEC_CAP_TRUNCATED |
                       CODEC_CAP_HWACCEL_VDPAU | CODEC_CAP_DELAY,
-    .flush          = flush,
-    .long_name      = NULL_IF_CONFIG_SMALL("MPEG-1 video (VDPAU acceleration)"),
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(Mpeg1Context),
+    0, 0, 0, 0, 0, mpeg_decode_init,
+    0, 0, mpeg_decode_frame,
+    mpeg_decode_end,
+    flush,
 };
 #endif

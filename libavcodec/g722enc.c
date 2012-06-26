@@ -390,16 +390,17 @@ static int g722_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
     return 0;
 }
 
+static const enum AVSampleFormat tmp__0[] = { AV_SAMPLE_FMT_S16,
+                                                     AV_SAMPLE_FMT_NONE };
 AVCodec ff_adpcm_g722_encoder = {
-    .name           = "g722",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_ADPCM_G722,
-    .priv_data_size = sizeof(G722Context),
-    .init           = g722_encode_init,
-    .close          = g722_encode_close,
-    .encode2        = g722_encode_frame,
-    .capabilities   = CODEC_CAP_SMALL_LAST_FRAME,
-    .long_name      = NULL_IF_CONFIG_SMALL("G.722 ADPCM"),
-    .sample_fmts    = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_S16,
-                                                     AV_SAMPLE_FMT_NONE },
+    "g722",
+    NULL_IF_CONFIG_SMALL("G.722 ADPCM"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_ADPCM_G722,
+    CODEC_CAP_SMALL_LAST_FRAME,
+    0, 0, 0, tmp__0,
+    0, 0, 0, 0, sizeof(G722Context),
+    0, 0, 0, 0, 0, g722_encode_init,
+    0, g722_encode_frame,
+    0, g722_encode_close,
 };

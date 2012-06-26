@@ -199,26 +199,27 @@ static const AVOption options[] = {
 };
 
 static const AVClass wav_muxer_class = {
-    .class_name = "WAV muxer",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "WAV muxer",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
+static const AVCodecTag* const  tmp__0[] = { ff_codec_wav_tags, 0 };
 AVOutputFormat ff_wav_muxer = {
-    .name              = "wav",
-    .long_name         = NULL_IF_CONFIG_SMALL("WAV format"),
-    .mime_type         = "audio/x-wav",
-    .extensions        = "wav",
-    .priv_data_size    = sizeof(WAVContext),
-    .audio_codec       = CODEC_ID_PCM_S16LE,
-    .video_codec       = CODEC_ID_NONE,
-    .write_header      = wav_write_header,
-    .write_packet      = wav_write_packet,
-    .write_trailer     = wav_write_trailer,
-    .flags             = AVFMT_TS_NONSTRICT,
-    .codec_tag         = (const AVCodecTag* const []){ ff_codec_wav_tags, 0 },
-    .priv_class        = &wav_muxer_class,
+    "wav",
+    NULL_IF_CONFIG_SMALL("WAV format"),
+    "audio/x-wav",
+    "wav",
+    CODEC_ID_PCM_S16LE,
+    CODEC_ID_NONE,
+    0, AVFMT_TS_NONSTRICT,
+    tmp__0,
+    &wav_muxer_class,
+    0, sizeof(WAVContext),
+    wav_write_header,
+    wav_write_packet,
+    wav_write_trailer,
 };
 #endif /* CONFIG_WAV_MUXER */
 
@@ -586,16 +587,17 @@ static int wav_read_seek(AVFormatContext *s,
     return ff_pcm_read_seek(s, stream_index, timestamp, flags);
 }
 
+static const AVCodecTag* const  tmp__1[] = { ff_codec_wav_tags, 0 };
 AVInputFormat ff_wav_demuxer = {
-    .name           = "wav",
-    .long_name      = NULL_IF_CONFIG_SMALL("WAV format"),
-    .priv_data_size = sizeof(WAVContext),
-    .read_probe     = wav_probe,
-    .read_header    = wav_read_header,
-    .read_packet    = wav_read_packet,
-    .read_seek      = wav_read_seek,
-    .flags          = AVFMT_GENERIC_INDEX,
-    .codec_tag      = (const AVCodecTag* const []){ ff_codec_wav_tags, 0 },
+    "wav",
+    NULL_IF_CONFIG_SMALL("WAV format"),
+    AVFMT_GENERIC_INDEX,
+    0, tmp__1,
+    0, 0, 0, sizeof(WAVContext),
+    wav_probe,
+    wav_read_header,
+    wav_read_packet,
+    0, wav_read_seek,
 };
 #endif /* CONFIG_WAV_DEMUXER */
 
@@ -674,15 +676,16 @@ static int w64_read_header(AVFormatContext *s)
     return 0;
 }
 
+static const AVCodecTag* const  tmp__2[] = { ff_codec_wav_tags, 0 };
 AVInputFormat ff_w64_demuxer = {
-    .name           = "w64",
-    .long_name      = NULL_IF_CONFIG_SMALL("Sony Wave64 format"),
-    .priv_data_size = sizeof(WAVContext),
-    .read_probe     = w64_probe,
-    .read_header    = w64_read_header,
-    .read_packet    = wav_read_packet,
-    .read_seek      = wav_read_seek,
-    .flags          = AVFMT_GENERIC_INDEX,
-    .codec_tag      = (const AVCodecTag* const []){ ff_codec_wav_tags, 0 },
+    "w64",
+    NULL_IF_CONFIG_SMALL("Sony Wave64 format"),
+    AVFMT_GENERIC_INDEX,
+    0, tmp__2,
+    0, 0, 0, sizeof(WAVContext),
+    w64_probe,
+    w64_read_header,
+    wav_read_packet,
+    0, wav_read_seek,
 };
 #endif /* CONFIG_W64_DEMUXER */

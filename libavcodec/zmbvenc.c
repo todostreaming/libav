@@ -336,14 +336,15 @@ static av_cold int encode_end(AVCodecContext *avctx)
     return 0;
 }
 
+static const enum PixelFormat tmp__0[] = { PIX_FMT_PAL8, PIX_FMT_NONE };
 AVCodec ff_zmbv_encoder = {
-    .name           = "zmbv",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_ZMBV,
-    .priv_data_size = sizeof(ZmbvEncContext),
-    .init           = encode_init,
-    .encode2        = encode_frame,
-    .close          = encode_end,
-    .pix_fmts       = (const enum PixelFormat[]){ PIX_FMT_PAL8, PIX_FMT_NONE },
-    .long_name      = NULL_IF_CONFIG_SMALL("Zip Motion Blocks Video"),
+    "zmbv",
+    NULL_IF_CONFIG_SMALL("Zip Motion Blocks Video"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_ZMBV,
+    0, 0, tmp__0,
+    0, 0, 0, 0, 0, 0, sizeof(ZmbvEncContext),
+    0, 0, 0, 0, 0, encode_init,
+    0, encode_frame,
+    0, encode_end,
 };

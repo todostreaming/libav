@@ -153,9 +153,9 @@ static const char *delogo_get_name(void *ctx)
 }
 
 static const AVClass delogo_class = {
-    .class_name = "DelogoContext",
-    .item_name  = delogo_get_name,
-    .option     = delogo_options,
+    "DelogoContext",
+    delogo_get_name,
+    delogo_options,
 };
 
 static int query_formats(AVFilterContext *ctx)
@@ -265,23 +265,25 @@ static void end_frame(AVFilterLink *inlink)
         avfilter_unref_buffer(outpicref);
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    AV_PERM_WRITE | AV_PERM_READ,
+                                    AV_PERM_PRESERVE ,
+                                    start_frame,
+                                    ff_null_get_video_buffer,
+                                    0, end_frame,
+                                    null_draw_slice},
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO, },
+                                  { NULL}};
 AVFilter avfilter_vf_delogo = {
-    .name          = "delogo",
-    .description   = NULL_IF_CONFIG_SMALL("Remove logo from input video."),
-    .priv_size     = sizeof(DelogoContext),
-    .init          = init,
-    .query_formats = query_formats,
+    "delogo",
+    NULL_IF_CONFIG_SMALL("Remove logo from input video."),
+    tmp__0,
+    tmp__1,
+    init,
 
-    .inputs    = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .get_video_buffer = ff_null_get_video_buffer,
-                                    .start_frame      = start_frame,
-                                    .draw_slice       = null_draw_slice,
-                                    .end_frame        = end_frame,
-                                    .min_perms        = AV_PERM_WRITE | AV_PERM_READ,
-                                    .rej_perms        = AV_PERM_PRESERVE },
-                                  { .name = NULL}},
-    .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO, },
-                                  { .name = NULL}},
+    0, query_formats,
+    sizeof(DelogoContext),
 };

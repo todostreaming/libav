@@ -230,23 +230,25 @@ static void end_frame(AVFilterLink *inlink)
         avfilter_unref_buffer(outpic);
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    AV_PERM_READ,
+                                    0, start_frame,
+                                    0, 0, end_frame,
+                                    null_draw_slice,
+                                    0, 0, 0, config_input, },
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO, },
+                                  { NULL}};
 AVFilter avfilter_vf_gradfun = {
-    .name          = "gradfun",
-    .description   = NULL_IF_CONFIG_SMALL("Debands video quickly using gradients."),
-    .priv_size     = sizeof(GradFunContext),
-    .init          = init,
-    .uninit        = uninit,
-    .query_formats = query_formats,
+    "gradfun",
+    NULL_IF_CONFIG_SMALL("Debands video quickly using gradients."),
+    tmp__0,
+    tmp__1,
+    init,
+    uninit,
 
-    .inputs    = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .config_props     = config_input,
-                                    .start_frame      = start_frame,
-                                    .draw_slice       = null_draw_slice,
-                                    .end_frame        = end_frame,
-                                    .min_perms        = AV_PERM_READ, },
-                                  { .name = NULL}},
-    .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO, },
-                                  { .name = NULL}},
+    query_formats,
+    sizeof(GradFunContext),
 };

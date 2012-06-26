@@ -463,7 +463,7 @@ static int h261_decode_picture_header(H261Context *h){
         i += 32;
     s->picture_number = (s->picture_number&~31) + i;
 
-    s->avctx->time_base= (AVRational){1001, 30000};
+    {s->avctx->time_base.num = 1001;s->avctx->time_base.den = 30000;}
     s->current_picture.f.pts = s->picture_number;
 
 
@@ -643,13 +643,13 @@ static av_cold int h261_decode_end(AVCodecContext *avctx)
 }
 
 AVCodec ff_h261_decoder = {
-    .name           = "h261",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_H261,
-    .priv_data_size = sizeof(H261Context),
-    .init           = h261_decode_init,
-    .close          = h261_decode_end,
-    .decode         = h261_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("H.261"),
+    "h261",
+    NULL_IF_CONFIG_SMALL("H.261"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_H261,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(H261Context),
+    0, 0, 0, 0, 0, h261_decode_init,
+    0, 0, h261_decode_frame,
+    h261_decode_end,
 };

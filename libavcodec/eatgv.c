@@ -53,7 +53,7 @@ typedef struct TgvContext {
 static av_cold int tgv_decode_init(AVCodecContext *avctx){
     TgvContext *s = avctx->priv_data;
     s->avctx = avctx;
-    avctx->time_base = (AVRational){1, 15};
+    {avctx->time_base.num = 1;avctx->time_base.den = 15;}
     avctx->pix_fmt = PIX_FMT_PAL8;
     return 0;
 }
@@ -343,12 +343,12 @@ static av_cold int tgv_decode_end(AVCodecContext *avctx)
 }
 
 AVCodec ff_eatgv_decoder = {
-    .name           = "eatgv",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_TGV,
-    .priv_data_size = sizeof(TgvContext),
-    .init           = tgv_decode_init,
-    .close          = tgv_decode_end,
-    .decode         = tgv_decode_frame,
-    .long_name      = NULL_IF_CONFIG_SMALL("Electronic Arts TGV video"),
+    "eatgv",
+    NULL_IF_CONFIG_SMALL("Electronic Arts TGV video"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_TGV,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, sizeof(TgvContext),
+    0, 0, 0, 0, 0, tgv_decode_init,
+    0, 0, tgv_decode_frame,
+    tgv_decode_end,
 };

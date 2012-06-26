@@ -123,24 +123,26 @@ static void draw_slice(AVFilterLink *inlink, int y0, int h, int slice_dir)
     ff_draw_slice(inlink->dst->outputs[0], y0, h, 1);
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    AV_PERM_WRITE | AV_PERM_READ,
+                                    AV_PERM_PRESERVE ,
+                                    ff_null_start_frame,
+                                    ff_null_get_video_buffer,
+                                    0, ff_null_end_frame,
+                                    draw_slice,
+                                    0, 0, 0, config_input},
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO, },
+                                  { NULL}};
 AVFilter avfilter_vf_drawbox = {
-    .name      = "drawbox",
-    .description = NULL_IF_CONFIG_SMALL("Draw a colored box on the input video."),
-    .priv_size = sizeof(DrawBoxContext),
-    .init      = init,
+    "drawbox",
+    NULL_IF_CONFIG_SMALL("Draw a colored box on the input video."),
+    tmp__0,
+    tmp__1,
 
-    .query_formats   = query_formats,
-    .inputs    = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .config_props     = config_input,
-                                    .get_video_buffer = ff_null_get_video_buffer,
-                                    .start_frame      = ff_null_start_frame,
-                                    .draw_slice       = draw_slice,
-                                    .end_frame        = ff_null_end_frame,
-                                    .min_perms        = AV_PERM_WRITE | AV_PERM_READ,
-                                    .rej_perms        = AV_PERM_PRESERVE },
-                                  { .name = NULL}},
-    .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO, },
-                                  { .name = NULL}},
+    init,
+    0, query_formats,
+    sizeof(DrawBoxContext),
 };

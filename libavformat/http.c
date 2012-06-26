@@ -61,18 +61,18 @@ typedef struct {
 #define D AV_OPT_FLAG_DECODING_PARAM
 #define E AV_OPT_FLAG_ENCODING_PARAM
 static const AVOption options[] = {
-{"chunked_post", "use chunked transfer-encoding for posts", OFFSET(chunked_post), AV_OPT_TYPE_INT, {.dbl = 1}, 0, 1, E },
+{"chunked_post", "use chunked transfer-encoding for posts", OFFSET(chunked_post), AV_OPT_TYPE_INT, {1}, 0, 1, E },
 {"headers", "custom HTTP headers, can override built in default headers", OFFSET(headers), AV_OPT_TYPE_STRING, { 0 }, 0, 0, D|E },
-{"multiple_requests", "use persistent connections", OFFSET(multiple_requests), AV_OPT_TYPE_INT, {.dbl = 0}, 0, 1, D|E },
-{"post_data", "custom HTTP post data", OFFSET(post_data), AV_OPT_TYPE_BINARY, .flags = D|E },
+{"multiple_requests", "use persistent connections", OFFSET(multiple_requests), AV_OPT_TYPE_INT, {0}, 0, 1, D|E },
+{"post_data", "custom HTTP post data", OFFSET(post_data), AV_OPT_TYPE_BINARY, { 0 }, 0, 0, D|E },
 {NULL}
 };
 #define HTTP_CLASS(flavor)\
 static const AVClass flavor ## _context_class = {\
-    .class_name     = #flavor,\
-    .item_name      = av_default_item_name,\
-    .option         = options,\
-    .version        = LIBAVUTIL_VERSION_INT,\
+    #flavor,\
+    av_default_item_name,\
+    options,\
+    LIBAVUTIL_VERSION_INT,\
 }
 
 HTTP_CLASS(http);
@@ -646,32 +646,32 @@ http_get_file_handle(URLContext *h)
 
 #if CONFIG_HTTP_PROTOCOL
 URLProtocol ff_http_protocol = {
-    .name                = "http",
-    .url_open            = http_open,
-    .url_read            = http_read,
-    .url_write           = http_write,
-    .url_seek            = http_seek,
-    .url_close           = http_close,
-    .url_get_file_handle = http_get_file_handle,
-    .url_shutdown        = http_shutdown,
-    .priv_data_size      = sizeof(HTTPContext),
-    .priv_data_class     = &http_context_class,
-    .flags               = URL_PROTOCOL_FLAG_NETWORK,
+    "http",
+    http_open,
+    0, http_read,
+    http_write,
+    http_seek,
+    http_close,
+    0, 0, 0, http_get_file_handle,
+    http_shutdown,
+    sizeof(HTTPContext),
+    &http_context_class,
+    URL_PROTOCOL_FLAG_NETWORK,
 };
 #endif
 #if CONFIG_HTTPS_PROTOCOL
 URLProtocol ff_https_protocol = {
-    .name                = "https",
-    .url_open            = http_open,
-    .url_read            = http_read,
-    .url_write           = http_write,
-    .url_seek            = http_seek,
-    .url_close           = http_close,
-    .url_get_file_handle = http_get_file_handle,
-    .url_shutdown        = http_shutdown,
-    .priv_data_size      = sizeof(HTTPContext),
-    .priv_data_class     = &https_context_class,
-    .flags               = URL_PROTOCOL_FLAG_NETWORK,
+    "https",
+    http_open,
+    0, http_read,
+    http_write,
+    http_seek,
+    http_close,
+    0, 0, 0, http_get_file_handle,
+    http_shutdown,
+    sizeof(HTTPContext),
+    &https_context_class,
+    URL_PROTOCOL_FLAG_NETWORK,
 };
 #endif
 
@@ -772,13 +772,13 @@ static int http_proxy_write(URLContext *h, const uint8_t *buf, int size)
 }
 
 URLProtocol ff_httpproxy_protocol = {
-    .name                = "httpproxy",
-    .url_open            = http_proxy_open,
-    .url_read            = http_buf_read,
-    .url_write           = http_proxy_write,
-    .url_close           = http_proxy_close,
-    .url_get_file_handle = http_get_file_handle,
-    .priv_data_size      = sizeof(HTTPContext),
-    .flags               = URL_PROTOCOL_FLAG_NETWORK,
+    "httpproxy",
+    http_proxy_open,
+    0, http_buf_read,
+    http_proxy_write,
+    0, http_proxy_close,
+    0, 0, 0, http_get_file_handle,
+    0, sizeof(HTTPContext),
+    0, URL_PROTOCOL_FLAG_NETWORK,
 };
 #endif

@@ -110,10 +110,10 @@ static int vc1t_read_packet(AVFormatContext *s,
 }
 
 AVInputFormat ff_vc1t_demuxer = {
-    .name           = "vc1test",
-    .long_name      = NULL_IF_CONFIG_SMALL("VC-1 test bitstream format"),
-    .read_probe     = vc1t_probe,
-    .read_header    = vc1t_read_header,
-    .read_packet    = vc1t_read_packet,
-    .flags          = AVFMT_GENERIC_INDEX,
+    "vc1test",
+    NULL_IF_CONFIG_SMALL("VC-1 test bitstream format"),
+    AVFMT_GENERIC_INDEX,
+    0, 0, 0, 0, 0, 0, vc1t_probe,
+    vc1t_read_header,
+    vc1t_read_packet,
 };

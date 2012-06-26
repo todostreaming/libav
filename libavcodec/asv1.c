@@ -618,51 +618,53 @@ static av_cold int decode_end(AVCodecContext *avctx){
 }
 
 AVCodec ff_asv1_decoder = {
-    .name           = "asv1",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_ASV1,
-    .priv_data_size = sizeof(ASV1Context),
-    .init           = decode_init,
-    .close          = decode_end,
-    .decode         = decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("ASUS V1"),
+    "asv1",
+    NULL_IF_CONFIG_SMALL("ASUS V1"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_ASV1,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(ASV1Context),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame,
+    decode_end,
 };
 
 AVCodec ff_asv2_decoder = {
-    .name           = "asv2",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_ASV2,
-    .priv_data_size = sizeof(ASV1Context),
-    .init           = decode_init,
-    .close          = decode_end,
-    .decode         = decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("ASUS V2"),
+    "asv2",
+    NULL_IF_CONFIG_SMALL("ASUS V2"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_ASV2,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(ASV1Context),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame,
+    decode_end,
 };
 
 #if CONFIG_ASV1_ENCODER
+static const enum PixelFormat tmp__0[] = { PIX_FMT_YUV420P, PIX_FMT_NONE };
 AVCodec ff_asv1_encoder = {
-    .name           = "asv1",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_ASV1,
-    .priv_data_size = sizeof(ASV1Context),
-    .init           = encode_init,
-    .encode2        = encode_frame,
-    .pix_fmts       = (const enum PixelFormat[]){ PIX_FMT_YUV420P, PIX_FMT_NONE },
-    .long_name      = NULL_IF_CONFIG_SMALL("ASUS V1"),
+    "asv1",
+    NULL_IF_CONFIG_SMALL("ASUS V1"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_ASV1,
+    0, 0, tmp__0,
+    0, 0, 0, 0, 0, 0, sizeof(ASV1Context),
+    0, 0, 0, 0, 0, encode_init,
+    0, encode_frame,
 };
 #endif
 
 #if CONFIG_ASV2_ENCODER
+static const enum PixelFormat tmp__1[] = { PIX_FMT_YUV420P, PIX_FMT_NONE };
 AVCodec ff_asv2_encoder = {
-    .name           = "asv2",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_ASV2,
-    .priv_data_size = sizeof(ASV1Context),
-    .init           = encode_init,
-    .encode2        = encode_frame,
-    .pix_fmts       = (const enum PixelFormat[]){ PIX_FMT_YUV420P, PIX_FMT_NONE },
-    .long_name      = NULL_IF_CONFIG_SMALL("ASUS V2"),
+    "asv2",
+    NULL_IF_CONFIG_SMALL("ASUS V2"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_ASV2,
+    0, 0, tmp__1,
+    0, 0, 0, 0, 0, 0, sizeof(ASV1Context),
+    0, 0, 0, 0, 0, encode_init,
+    0, encode_frame,
 };
 #endif

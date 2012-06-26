@@ -453,16 +453,17 @@ static av_cold int png_enc_init(AVCodecContext *avctx){
     return 0;
 }
 
-AVCodec ff_png_encoder = {
-    .name           = "png",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_PNG,
-    .priv_data_size = sizeof(PNGEncContext),
-    .init           = png_enc_init,
-    .encode2        = encode_frame,
-    .pix_fmts       = (const enum PixelFormat[]){
+static const enum PixelFormat tmp__0[] = {
         PIX_FMT_RGB24, PIX_FMT_RGB32, PIX_FMT_PAL8, PIX_FMT_GRAY8,
         PIX_FMT_MONOBLACK, PIX_FMT_NONE
-    },
-    .long_name      = NULL_IF_CONFIG_SMALL("PNG (Portable Network Graphics) image"),
+    };
+AVCodec ff_png_encoder = {
+    "png",
+    NULL_IF_CONFIG_SMALL("PNG (Portable Network Graphics) image"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_PNG,
+    0, 0, tmp__0,
+    0, 0, 0, 0, 0, 0, sizeof(PNGEncContext),
+    0, 0, 0, 0, 0, png_enc_init,
+    0, encode_frame,
 };

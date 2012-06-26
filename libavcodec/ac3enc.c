@@ -2164,7 +2164,7 @@ static av_cold int validate_options(AC3EncodeContext *s)
                  found use either 6 blocks or 1 block, even though 2 or 3 blocks
                  would work as far as the bit rate is concerned. */
         for (num_blks_code = 3; num_blks_code >= 0; num_blks_code--) {
-            num_blocks = ((int[]){ 1, 2, 3, 6 })[num_blks_code];
+            { int tmp__0[] = { 1, 2, 3, 6 }; num_blocks = (tmp__0)[num_blks_code]; }
             frame_samples  = AC3_BLOCK_SIZE * num_blocks;
             max_br = 2048 * s->sample_rate / frame_samples * 16;
             min_br = ((s->sample_rate + (frame_samples-1)) / frame_samples) * 16;

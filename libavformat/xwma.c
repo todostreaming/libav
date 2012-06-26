@@ -264,10 +264,10 @@ static int xwma_read_packet(AVFormatContext *s, AVPacket *pkt)
 }
 
 AVInputFormat ff_xwma_demuxer = {
-    .name           = "xwma",
-    .long_name      = NULL_IF_CONFIG_SMALL("Microsoft xWMA"),
-    .priv_data_size = sizeof(XWMAContext),
-    .read_probe     = xwma_probe,
-    .read_header    = xwma_read_header,
-    .read_packet    = xwma_read_packet,
+    "xwma",
+    NULL_IF_CONFIG_SMALL("Microsoft xWMA"),
+    0, 0, 0, 0, 0, 0, sizeof(XWMAContext),
+    xwma_probe,
+    xwma_read_header,
+    xwma_read_packet,
 };

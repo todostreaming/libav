@@ -370,28 +370,30 @@ static int a64multi_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     return 0;
 }
 
+static const enum PixelFormat tmp__0[] = {PIX_FMT_GRAY8, PIX_FMT_NONE};
 AVCodec ff_a64multi_encoder = {
-    .name           = "a64multi",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_A64_MULTI,
-    .priv_data_size = sizeof(A64Context),
-    .init           = a64multi_init_encoder,
-    .encode2        = a64multi_encode_frame,
-    .close          = a64multi_close_encoder,
-    .pix_fmts       = (const enum PixelFormat[]) {PIX_FMT_GRAY8, PIX_FMT_NONE},
-    .long_name      = NULL_IF_CONFIG_SMALL("Multicolor charset for Commodore 64"),
-    .capabilities   = CODEC_CAP_DELAY,
+    "a64multi",
+    NULL_IF_CONFIG_SMALL("Multicolor charset for Commodore 64"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_A64_MULTI,
+    CODEC_CAP_DELAY,
+    0, tmp__0,
+    0, 0, 0, 0, 0, 0, sizeof(A64Context),
+    0, 0, 0, 0, 0, a64multi_init_encoder,
+    0, a64multi_encode_frame,
+    0, a64multi_close_encoder,
 };
 
+static const enum PixelFormat tmp__1[] = {PIX_FMT_GRAY8, PIX_FMT_NONE};
 AVCodec ff_a64multi5_encoder = {
-    .name           = "a64multi5",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_A64_MULTI5,
-    .priv_data_size = sizeof(A64Context),
-    .init           = a64multi_init_encoder,
-    .encode2        = a64multi_encode_frame,
-    .close          = a64multi_close_encoder,
-    .pix_fmts       = (const enum PixelFormat[]) {PIX_FMT_GRAY8, PIX_FMT_NONE},
-    .long_name      = NULL_IF_CONFIG_SMALL("Multicolor charset for Commodore 64, extended with 5th color (colram)"),
-    .capabilities   = CODEC_CAP_DELAY,
+    "a64multi5",
+    NULL_IF_CONFIG_SMALL("Multicolor charset for Commodore 64, extended with 5th color (colram)"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_A64_MULTI5,
+    CODEC_CAP_DELAY,
+    0, tmp__1,
+    0, 0, 0, 0, 0, 0, sizeof(A64Context),
+    0, 0, 0, 0, 0, a64multi_init_encoder,
+    0, a64multi_encode_frame,
+    0, a64multi_close_encoder,
 };

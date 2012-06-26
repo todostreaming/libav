@@ -81,7 +81,7 @@ static int config_props(AVFilterLink *outlink)
     priv->var_values[VAR_E]    = M_E;
     priv->var_values[VAR_PHI]  = M_PHI;
     priv->var_values[VAR_PI]   = M_PI;
-    priv->var_values[VAR_AVTB] = av_q2d(AV_TIME_BASE_Q);
+    { AVRational tmp__0 = {1, AV_TIME_BASE}; priv->var_values[VAR_AVTB] = av_q2d(tmp__0); }
 
     if ((ret = av_expr_parse_and_eval(&res, priv->tb_expr, var_names, priv->var_values,
                                       NULL, NULL, NULL, NULL, NULL, 0, NULL)) < 0) {
@@ -111,22 +111,24 @@ static int request_frame(AVFilterLink *link)
     return -1;
 }
 
-AVFilter avfilter_vsrc_nullsrc = {
-    .name        = "nullsrc",
-    .description = NULL_IF_CONFIG_SMALL("Null video source, never return images."),
-
-    .init       = init,
-    .priv_size = sizeof(NullContext),
-
-    .inputs    = (AVFilterPad[]) {{ .name = NULL}},
-
-    .outputs   = (AVFilterPad[]) {
+static AVFilterPad tmp__1[] = {{ NULL}};
+static AVFilterPad tmp__2[] = {
         {
-            .name            = "default",
-            .type            = AVMEDIA_TYPE_VIDEO,
-            .config_props    = config_props,
-            .request_frame   = request_frame,
+            "default",
+            AVMEDIA_TYPE_VIDEO,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, request_frame,
+            config_props,
         },
-        { .name = NULL}
-    },
+        { NULL}
+    };
+AVFilter avfilter_vsrc_nullsrc = {
+    "nullsrc",
+    NULL_IF_CONFIG_SMALL("Null video source, never return images."),
+
+    tmp__1,
+    tmp__2,
+
+    init,
+
+    0, 0, sizeof(NullContext),
 };

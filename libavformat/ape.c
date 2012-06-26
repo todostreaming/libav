@@ -430,13 +430,13 @@ static int ape_read_seek(AVFormatContext *s, int stream_index, int64_t timestamp
 }
 
 AVInputFormat ff_ape_demuxer = {
-    .name           = "ape",
-    .long_name      = NULL_IF_CONFIG_SMALL("Monkey's Audio"),
-    .priv_data_size = sizeof(APEContext),
-    .read_probe     = ape_probe,
-    .read_header    = ape_read_header,
-    .read_packet    = ape_read_packet,
-    .read_close     = ape_read_close,
-    .read_seek      = ape_read_seek,
-    .extensions     = "ape,apl,mac",
+    "ape",
+    NULL_IF_CONFIG_SMALL("Monkey's Audio"),
+    0, "ape,apl,mac",
+    0, 0, 0, 0, sizeof(APEContext),
+    ape_probe,
+    ape_read_header,
+    ape_read_packet,
+    ape_read_close,
+    ape_read_seek,
 };

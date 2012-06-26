@@ -773,7 +773,7 @@ static int read_gab2_sub(AVStream *st, AVPacket *pkt) {
         avio_rl16(pb);   /* flags? */
         avio_rl32(pb);   /* data size */
 
-        pd = (AVProbeData) { .buf = pb->buf_ptr, .buf_size = pb->buf_end - pb->buf_ptr };
+        {pd.buf = pb->buf_ptr;pd.buf_size = pb->buf_end - pb->buf_ptr ;}
         if (!(sub_demuxer = av_probe_input_format2(&pd, 1, &score)))
             goto error;
 
@@ -805,14 +805,14 @@ static AVStream *get_subtitle_pkt(AVFormatContext *s, AVStream *next_st,
     AVStream *st, *sub_st = NULL;
     int i;
 
-    next_ts = av_rescale_q(next_ast->frame_offset, next_st->time_base,
-                           AV_TIME_BASE_Q);
+    { AVRational tmp__0 = {1, AV_TIME_BASE}; next_ts = av_rescale_q(next_ast->frame_offset, next_st->time_base,
+                           tmp__0); }
 
     for (i=0; i<s->nb_streams; i++) {
         st  = s->streams[i];
         ast = st->priv_data;
         if (st->discard < AVDISCARD_ALL && ast && ast->sub_pkt.data) {
-            ts = av_rescale_q(ast->sub_pkt.dts, st->time_base, AV_TIME_BASE_Q);
+            { AVRational tmp__1 = {1, AV_TIME_BASE}; ts = av_rescale_q(ast->sub_pkt.dts, st->time_base, tmp__1); }
             if (ts <= next_ts && ts < ts_min) {
                 ts_min = ts;
                 sub_st = st;
@@ -1003,7 +1003,7 @@ static int avi_read_packet(AVFormatContext *s, AVPacket *pkt)
             if(!ast->remaining && ts > last_ts)
                 continue;
 
-            ts = av_rescale_q(ts, st->time_base, (AVRational){FFMAX(1, ast->sample_size), AV_TIME_BASE});
+            { AVRational tmp__2 = {FFMAX(1, ast->sample_size), AV_TIME_BASE}; ts = av_rescale_q(ts, st->time_base, tmp__2); }
 
 //            av_log(s, AV_LOG_DEBUG, "%"PRId64" %d/%d %"PRId64"\n", ts, st->time_base.num, st->time_base.den, ast->frame_offset);
             if(ts < best_ts){
@@ -1016,7 +1016,7 @@ static int avi_read_packet(AVFormatContext *s, AVPacket *pkt)
             return -1;
 
         best_ast = best_st->priv_data;
-        best_ts = av_rescale_q(best_ts, (AVRational){FFMAX(1, best_ast->sample_size), AV_TIME_BASE}, best_st->time_base);
+        { AVRational tmp__3 = {FFMAX(1, best_ast->sample_size), AV_TIME_BASE}; best_ts = av_rescale_q(best_ts, tmp__3, best_st->time_base); }
         if(best_ast->remaining)
             i= av_index_search_timestamp(best_st, best_ts, AVSEEK_FLAG_ANY | AVSEEK_FLAG_BACKWARD);
         else{
@@ -1392,12 +1392,12 @@ static int avi_probe(AVProbeData *p)
 }
 
 AVInputFormat ff_avi_demuxer = {
-    .name           = "avi",
-    .long_name      = NULL_IF_CONFIG_SMALL("AVI format"),
-    .priv_data_size = sizeof(AVIContext),
-    .read_probe     = avi_probe,
-    .read_header    = avi_read_header,
-    .read_packet    = avi_read_packet,
-    .read_close     = avi_read_close,
-    .read_seek      = avi_read_seek,
+    "avi",
+    NULL_IF_CONFIG_SMALL("AVI format"),
+    0, 0, 0, 0, 0, 0, sizeof(AVIContext),
+    avi_probe,
+    avi_read_header,
+    avi_read_packet,
+    avi_read_close,
+    avi_read_seek,
 };

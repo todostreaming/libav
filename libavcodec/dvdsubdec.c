@@ -485,9 +485,9 @@ static int dvdsub_decode(AVCodecContext *avctx,
 }
 
 AVCodec ff_dvdsub_decoder = {
-    .name           = "dvdsub",
-    .type           = AVMEDIA_TYPE_SUBTITLE,
-    .id             = CODEC_ID_DVD_SUBTITLE,
-    .decode         = dvdsub_decode,
-    .long_name      = NULL_IF_CONFIG_SMALL("DVD subtitles"),
+    "dvdsub",
+    NULL_IF_CONFIG_SMALL("DVD subtitles"),
+    AVMEDIA_TYPE_SUBTITLE,
+    CODEC_ID_DVD_SUBTITLE,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, dvdsub_decode,
 };

@@ -242,12 +242,12 @@ static void qt_rtp_free(PayloadContext *qt)
 
 #define RTP_QT_HANDLER(m, n, s, t) \
 RTPDynamicProtocolHandler ff_ ## m ## _rtp_ ## n ## _handler = { \
-    .enc_name         = s, \
-    .codec_type       = t, \
-    .codec_id         = CODEC_ID_NONE, \
-    .alloc            = qt_rtp_new,    \
-    .free             = qt_rtp_free,   \
-    .parse_packet     = qt_rtp_parse_packet, \
+    s, \
+    t, \
+    CODEC_ID_NONE, \
+    0, 0, 0, qt_rtp_new,    \
+    qt_rtp_free,   \
+    qt_rtp_parse_packet, \
 }
 
 RTP_QT_HANDLER(qt,        vid, "X-QT",        AVMEDIA_TYPE_VIDEO);

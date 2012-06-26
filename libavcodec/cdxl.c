@@ -298,13 +298,13 @@ static av_cold int cdxl_decode_end(AVCodecContext *avctx)
 }
 
 AVCodec ff_cdxl_decoder = {
-    .name           = "cdxl",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_CDXL,
-    .priv_data_size = sizeof(CDXLVideoContext),
-    .init           = cdxl_decode_init,
-    .close          = cdxl_decode_end,
-    .decode         = cdxl_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("Commodore CDXL video"),
+    "cdxl",
+    NULL_IF_CONFIG_SMALL("Commodore CDXL video"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_CDXL,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(CDXLVideoContext),
+    0, 0, 0, 0, 0, cdxl_decode_init,
+    0, 0, cdxl_decode_frame,
+    cdxl_decode_end,
 };

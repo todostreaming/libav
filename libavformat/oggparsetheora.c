@@ -147,8 +147,8 @@ theora_gptopts(AVFormatContext *ctx, int idx, uint64_t gp, int64_t *dts)
 }
 
 const struct ogg_codec ff_theora_codec = {
-    .magic = "\200theora",
-    .magicsize = 7,
-    .header = theora_header,
-    .gptopts = theora_gptopts
+    "\200theora",
+    7,
+    0, theora_header,
+    0, theora_gptopts
 };

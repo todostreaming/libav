@@ -41,15 +41,15 @@ typedef struct ChannelSplitContext {
 #define OFFSET(x) offsetof(ChannelSplitContext, x)
 #define A AV_OPT_FLAG_AUDIO_PARAM
 static const AVOption options[] = {
-    { "channel_layout", "Input channel layout.", OFFSET(channel_layout_str), AV_OPT_TYPE_STRING, { .str = "stereo" }, .flags = A },
+    { "channel_layout", "Input channel layout.", OFFSET(channel_layout_str), AV_OPT_TYPE_STRING, { 0, "stereo" }, 0, 0, A },
     { NULL },
 };
 
 static const AVClass channelsplit_class = {
-    .class_name = "channelsplit filter",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "channelsplit filter",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 static int init(AVFilterContext *ctx, const char *arg)
@@ -135,17 +135,19 @@ static int filter_samples(AVFilterLink *inlink, AVFilterBufferRef *buf)
     return ret;
 }
 
+static const AVFilterPad tmp__0[] = {{ "default",
+                                       AVMEDIA_TYPE_AUDIO,
+                                       0, 0, 0, 0, 0, 0, 0, filter_samples, },
+                                     { NULL }};
+static const AVFilterPad tmp__1[] = {{ NULL }};
 AVFilter avfilter_af_channelsplit = {
-    .name           = "channelsplit",
-    .description    = NULL_IF_CONFIG_SMALL("Split audio into per-channel streams"),
-    .priv_size      = sizeof(ChannelSplitContext),
+    "channelsplit",
+    NULL_IF_CONFIG_SMALL("Split audio into per-channel streams"),
+    tmp__0,
 
-    .init           = init,
-    .query_formats  = query_formats,
+    tmp__1,
+    init,
 
-    .inputs  = (const AVFilterPad[]){{ .name           = "default",
-                                       .type           = AVMEDIA_TYPE_AUDIO,
-                                       .filter_samples = filter_samples, },
-                                     { NULL }},
-    .outputs = (const AVFilterPad[]){{ NULL }},
+    0, query_formats,
+    sizeof(ChannelSplitContext),
 };

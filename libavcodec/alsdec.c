@@ -1738,14 +1738,14 @@ static av_cold void flush(AVCodecContext *avctx)
 
 
 AVCodec ff_als_decoder = {
-    .name           = "als",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_MP4ALS,
-    .priv_data_size = sizeof(ALSDecContext),
-    .init           = decode_init,
-    .close          = decode_end,
-    .decode         = decode_frame,
-    .flush          = flush,
-    .capabilities   = CODEC_CAP_SUBFRAMES | CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("MPEG-4 Audio Lossless Coding (ALS)"),
+    "als",
+    NULL_IF_CONFIG_SMALL("MPEG-4 Audio Lossless Coding (ALS)"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_MP4ALS,
+    CODEC_CAP_SUBFRAMES | CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(ALSDecContext),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame,
+    decode_end,
+    flush,
 };

@@ -883,34 +883,34 @@ static const AVCodecTag* const asf_tags[] = {
 
 #if CONFIG_ASF_MUXER
 AVOutputFormat ff_asf_muxer = {
-    .name           = "asf",
-    .long_name      = NULL_IF_CONFIG_SMALL("ASF format"),
-    .mime_type      = "video/x-ms-asf",
-    .extensions     = "asf,wmv,wma",
-    .priv_data_size = sizeof(ASFContext),
-    .audio_codec    = CONFIG_LIBMP3LAME ? CODEC_ID_MP3 : CODEC_ID_MP2,
-    .video_codec    = CODEC_ID_MSMPEG4V3,
-    .write_header   = asf_write_header,
-    .write_packet   = asf_write_packet,
-    .write_trailer  = asf_write_trailer,
-    .flags          = AVFMT_GLOBALHEADER,
-    .codec_tag      = asf_tags,
+    "asf",
+    NULL_IF_CONFIG_SMALL("ASF format"),
+    "video/x-ms-asf",
+    "asf,wmv,wma",
+    CONFIG_LIBMP3LAME ? CODEC_ID_MP3 : CODEC_ID_MP2,
+    CODEC_ID_MSMPEG4V3,
+    0, AVFMT_GLOBALHEADER,
+    asf_tags,
+    0, 0, sizeof(ASFContext),
+    asf_write_header,
+    asf_write_packet,
+    asf_write_trailer,
 };
 #endif
 
 #if CONFIG_ASF_STREAM_MUXER
 AVOutputFormat ff_asf_stream_muxer = {
-    .name           = "asf_stream",
-    .long_name      = NULL_IF_CONFIG_SMALL("ASF format"),
-    .mime_type      = "video/x-ms-asf",
-    .extensions     = "asf,wmv,wma",
-    .priv_data_size = sizeof(ASFContext),
-    .audio_codec    = CONFIG_LIBMP3LAME ? CODEC_ID_MP3 : CODEC_ID_MP2,
-    .video_codec    = CODEC_ID_MSMPEG4V3,
-    .write_header   = asf_write_stream_header,
-    .write_packet   = asf_write_packet,
-    .write_trailer  = asf_write_trailer,
-    .flags          = AVFMT_GLOBALHEADER,
-    .codec_tag      = asf_tags,
+    "asf_stream",
+    NULL_IF_CONFIG_SMALL("ASF format"),
+    "video/x-ms-asf",
+    "asf,wmv,wma",
+    CONFIG_LIBMP3LAME ? CODEC_ID_MP3 : CODEC_ID_MP2,
+    CODEC_ID_MSMPEG4V3,
+    0, AVFMT_GLOBALHEADER,
+    asf_tags,
+    0, 0, sizeof(ASFContext),
+    asf_write_stream_header,
+    asf_write_packet,
+    asf_write_trailer,
 };
 #endif //CONFIG_ASF_STREAM_MUXER

@@ -993,25 +993,25 @@ static av_cold int imc_decode_close(AVCodecContext * avctx)
 
 
 AVCodec ff_imc_decoder = {
-    .name           = "imc",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_IMC,
-    .priv_data_size = sizeof(IMCContext),
-    .init           = imc_decode_init,
-    .close          = imc_decode_close,
-    .decode         = imc_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("IMC (Intel Music Coder)"),
+    "imc",
+    NULL_IF_CONFIG_SMALL("IMC (Intel Music Coder)"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_IMC,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(IMCContext),
+    0, 0, 0, 0, 0, imc_decode_init,
+    0, 0, imc_decode_frame,
+    imc_decode_close,
 };
 
 AVCodec ff_iac_decoder = {
-    .name           = "iac",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_IAC,
-    .priv_data_size = sizeof(IMCContext),
-    .init           = imc_decode_init,
-    .close          = imc_decode_close,
-    .decode         = imc_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("IAC (Indeo Audio Coder)"),
+    "iac",
+    NULL_IF_CONFIG_SMALL("IAC (Indeo Audio Coder)"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_IAC,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(IMCContext),
+    0, 0, 0, 0, 0, imc_decode_init,
+    0, 0, imc_decode_frame,
+    imc_decode_close,
 };

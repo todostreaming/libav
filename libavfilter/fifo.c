@@ -129,8 +129,8 @@ static void buffer_offset(AVFilterLink *link, AVFilterBufferRef *buf,
     buf->audio->nb_samples -= offset;
 
     if (buf->pts != AV_NOPTS_VALUE) {
-        buf->pts += av_rescale_q(offset, (AVRational){1, link->sample_rate},
-                                 link->time_base);
+        { AVRational tmp__0 = {1, link->sample_rate}; buf->pts += av_rescale_q(offset, tmp__0,
+                                 link->time_base); }
     }
 }
 
@@ -259,46 +259,50 @@ static int request_frame(AVFilterLink *outlink)
     return ret;
 }
 
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, AV_PERM_REUSE2,
+                                    start_frame,
+                                    ff_null_get_video_buffer,
+                                    0, end_frame,
+                                    draw_slice, },
+                                  { NULL}};
+static AVFilterPad tmp__2[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, request_frame, },
+                                  { NULL}};
 AVFilter avfilter_vf_fifo = {
-    .name      = "fifo",
-    .description = NULL_IF_CONFIG_SMALL("Buffer input images and send them when they are requested."),
+    "fifo",
+    NULL_IF_CONFIG_SMALL("Buffer input images and send them when they are requested."),
 
-    .init      = init,
-    .uninit    = uninit,
+    tmp__1,
+    tmp__2,
 
-    .priv_size = sizeof(FifoContext),
+    init,
 
-    .inputs    = (AVFilterPad[]) {{ .name            = "default",
-                                    .type            = AVMEDIA_TYPE_VIDEO,
-                                    .get_video_buffer= ff_null_get_video_buffer,
-                                    .start_frame     = start_frame,
-                                    .draw_slice      = draw_slice,
-                                    .end_frame       = end_frame,
-                                    .rej_perms       = AV_PERM_REUSE2, },
-                                  { .name = NULL}},
-    .outputs   = (AVFilterPad[]) {{ .name            = "default",
-                                    .type            = AVMEDIA_TYPE_VIDEO,
-                                    .request_frame   = request_frame, },
-                                  { .name = NULL}},
+    uninit,
+    0, sizeof(FifoContext),
 };
 
+static AVFilterPad tmp__3[] = {{ "default",
+                                    AVMEDIA_TYPE_AUDIO,
+                                    0, AV_PERM_REUSE2,
+                                    0, 0, ff_null_get_audio_buffer,
+                                    0, 0, add_to_queue, },
+                                  { NULL}};
+static AVFilterPad tmp__4[] = {{ "default",
+                                    AVMEDIA_TYPE_AUDIO,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, request_frame, },
+                                  { NULL}};
 AVFilter avfilter_af_afifo = {
-    .name        = "afifo",
-    .description = NULL_IF_CONFIG_SMALL("Buffer input frames and send them when they are requested."),
+    "afifo",
+    NULL_IF_CONFIG_SMALL("Buffer input frames and send them when they are requested."),
 
-    .init      = init,
-    .uninit    = uninit,
+    tmp__3,
+    tmp__4,
 
-    .priv_size = sizeof(FifoContext),
+    init,
 
-    .inputs    = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_AUDIO,
-                                    .get_audio_buffer = ff_null_get_audio_buffer,
-                                    .filter_samples   = add_to_queue,
-                                    .rej_perms        = AV_PERM_REUSE2, },
-                                  { .name = NULL}},
-    .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_AUDIO,
-                                    .request_frame    = request_frame, },
-                                  { .name = NULL}},
+    uninit,
+    0, sizeof(FifoContext),
 };

@@ -224,7 +224,7 @@ static int dv_extract_audio_info(DVDemuxContext* c, uint8_t* frame)
     }
 
     /* note: ach counts PAIRS of channels (i.e. stereo channels) */
-    ach = ((int[4]){  1,  0,  2,  4})[stype];
+    { int tmp__0[4] = {  1,  0,  2,  4}; ach = (tmp__0)[stype]; }
     if (ach == 1 && quant && freq == 2)
         ach = 2;
 
@@ -279,8 +279,8 @@ static int dv_extract_video_info(DVDemuxContext *c, uint8_t* frame)
         is16_9   = (vsc_pack && ((vsc_pack[2] & 0x07) == 0x02 ||
                                 (!apt && (vsc_pack[2] & 0x07) == 0x07)));
         c->vst->sample_aspect_ratio = c->sys->sar[is16_9];
-        avctx->bit_rate = av_rescale_q(c->sys->frame_size, (AVRational){8,1},
-                                       c->sys->time_base);
+        { AVRational tmp__1 = {8,1}; avctx->bit_rate = av_rescale_q(c->sys->frame_size, tmp__1,
+                                       c->sys->time_base); }
         size = c->sys->frame_size;
     }
     return size;
@@ -401,8 +401,8 @@ void ff_dv_offset_reset(DVDemuxContext *c, int64_t frame_offset)
 {
     c->frames= frame_offset;
     if (c->ach)
-        c->abytes= av_rescale_q(c->frames, c->sys->time_base,
-                                (AVRational){8, c->ast[0]->codec->bit_rate});
+        { AVRational tmp__2 = {8, c->ast[0]->codec->bit_rate}; c->abytes= av_rescale_q(c->frames, c->sys->time_base,
+                                tmp__2); }
     c->audio_pkt[0].size = c->audio_pkt[1].size = 0;
     c->audio_pkt[2].size = c->audio_pkt[3].size = 0;
 }
@@ -452,8 +452,8 @@ static int dv_read_header(AVFormatContext *s)
         return -1;
     }
 
-    s->bit_rate = av_rescale_q(c->dv_demux->sys->frame_size, (AVRational){8,1},
-                               c->dv_demux->sys->time_base);
+    { AVRational tmp__3 = {8,1}; s->bit_rate = av_rescale_q(c->dv_demux->sys->frame_size, tmp__3,
+                               c->dv_demux->sys->time_base); }
 
     return 0;
 }
@@ -535,14 +535,14 @@ static int dv_probe(AVProbeData *p)
 
 #if CONFIG_DV_DEMUXER
 AVInputFormat ff_dv_demuxer = {
-    .name           = "dv",
-    .long_name      = NULL_IF_CONFIG_SMALL("DV video format"),
-    .priv_data_size = sizeof(RawDVContext),
-    .read_probe     = dv_probe,
-    .read_header    = dv_read_header,
-    .read_packet    = dv_read_packet,
-    .read_close     = dv_read_close,
-    .read_seek      = dv_read_seek,
-    .extensions     = "dv,dif",
+    "dv",
+    NULL_IF_CONFIG_SMALL("DV video format"),
+    0, "dv,dif",
+    0, 0, 0, 0, sizeof(RawDVContext),
+    dv_probe,
+    dv_read_header,
+    dv_read_packet,
+    dv_read_close,
+    dv_read_seek,
 };
 #endif

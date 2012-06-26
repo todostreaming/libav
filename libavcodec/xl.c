@@ -145,13 +145,13 @@ static av_cold int decode_end(AVCodecContext *avctx){
 }
 
 AVCodec ff_xl_decoder = {
-    .name           = "xl",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_VIXL,
-    .priv_data_size = sizeof(VideoXLContext),
-    .init           = decode_init,
-    .close          = decode_end,
-    .decode         = decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("Miro VideoXL"),
+    "xl",
+    NULL_IF_CONFIG_SMALL("Miro VideoXL"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_VIXL,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(VideoXLContext),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame,
+    decode_end,
 };

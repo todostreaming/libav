@@ -69,17 +69,17 @@ typedef struct ChannelMapContext {
 #define A AV_OPT_FLAG_AUDIO_PARAM
 static const AVOption options[] = {
     { "map", "A comma-separated list of input channel numbers in output order.",
-          OFFSET(mapping_str),        AV_OPT_TYPE_STRING, .flags = A },
+          OFFSET(mapping_str),        AV_OPT_TYPE_STRING, { 0 }, 0, 0, A },
     { "channel_layout", "Output channel layout.",
-          OFFSET(channel_layout_str), AV_OPT_TYPE_STRING, .flags = A },
+          OFFSET(channel_layout_str), AV_OPT_TYPE_STRING, { 0 }, 0, 0, A },
     { NULL },
 };
 
 static const AVClass channelmap_class = {
-    .class_name = "channel map filter",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "channel map filter",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 static char* split(char *message, char delim) {
@@ -385,19 +385,21 @@ static int channelmap_config_input(AVFilterLink *inlink)
     return err;
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                        AVMEDIA_TYPE_AUDIO,
+                                        0, 0, 0, 0, 0, 0, 0, channelmap_filter_samples,
+                                        0, 0, channelmap_config_input },
+                                      { NULL }};
+static AVFilterPad tmp__1[] = {{ "default",
+                                        AVMEDIA_TYPE_AUDIO },
+                                      { NULL }};
 AVFilter avfilter_af_channelmap = {
-    .name          = "channelmap",
-    .description   = NULL_IF_CONFIG_SMALL("Remap audio channels."),
-    .init          = channelmap_init,
-    .query_formats = channelmap_query_formats,
-    .priv_size     = sizeof(ChannelMapContext),
+    "channelmap",
+    NULL_IF_CONFIG_SMALL("Remap audio channels."),
+    tmp__0,
+    tmp__1,
+    channelmap_init,
 
-    .inputs        = (AVFilterPad[]) {{ .name            = "default",
-                                        .type            = AVMEDIA_TYPE_AUDIO,
-                                        .filter_samples  = channelmap_filter_samples,
-                                        .config_props    = channelmap_config_input },
-                                      { .name = NULL }},
-    .outputs       = (AVFilterPad[]) {{ .name            = "default",
-                                        .type            = AVMEDIA_TYPE_AUDIO },
-                                      { .name = NULL }},
+    0, channelmap_query_formats,
+    sizeof(ChannelMapContext),
 };

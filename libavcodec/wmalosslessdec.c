@@ -1281,13 +1281,13 @@ static void flush(AVCodecContext *avctx)
 }
 
 AVCodec ff_wmalossless_decoder = {
-    .name           = "wmalossless",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_WMALOSSLESS,
-    .priv_data_size = sizeof(WmallDecodeCtx),
-    .init           = decode_init,
-    .decode         = decode_packet,
-    .flush          = flush,
-    .capabilities   = CODEC_CAP_SUBFRAMES | CODEC_CAP_DR1 | CODEC_CAP_DELAY,
-    .long_name      = NULL_IF_CONFIG_SMALL("Windows Media Audio Lossless"),
+    "wmalossless",
+    NULL_IF_CONFIG_SMALL("Windows Media Audio Lossless"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_WMALOSSLESS,
+    CODEC_CAP_SUBFRAMES | CODEC_CAP_DR1 | CODEC_CAP_DELAY,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(WmallDecodeCtx),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_packet,
+    0, flush,
 };

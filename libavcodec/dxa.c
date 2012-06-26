@@ -316,13 +316,13 @@ static av_cold int decode_end(AVCodecContext *avctx)
 }
 
 AVCodec ff_dxa_decoder = {
-    .name           = "dxa",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_DXA,
-    .priv_data_size = sizeof(DxaDecContext),
-    .init           = decode_init,
-    .close          = decode_end,
-    .decode         = decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("Feeble Files/ScummVM DXA"),
+    "dxa",
+    NULL_IF_CONFIG_SMALL("Feeble Files/ScummVM DXA"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_DXA,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(DxaDecContext),
+    0, 0, 0, 0, 0, decode_init,
+    0, 0, decode_frame,
+    decode_end,
 };

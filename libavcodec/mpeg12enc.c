@@ -941,44 +941,46 @@ static const AVOption mpeg2_options[] = {
 
 #define mpeg12_class(x)\
 static const AVClass mpeg## x ##_class = {\
-    .class_name   = "mpeg" #x "video encoder",\
-    .item_name    = av_default_item_name,\
-    .option       = mpeg## x ##_options,\
-    .version      = LIBAVUTIL_VERSION_INT,\
+    "mpeg" #x "video encoder",\
+    av_default_item_name,\
+    mpeg## x ##_options,\
+    LIBAVUTIL_VERSION_INT,\
 };
 
 mpeg12_class(1)
 mpeg12_class(2)
 
+static const enum PixelFormat tmp__0[] = { PIX_FMT_YUV420P,
+                                                        PIX_FMT_NONE };
 AVCodec ff_mpeg1video_encoder = {
-    .name                 = "mpeg1video",
-    .type                 = AVMEDIA_TYPE_VIDEO,
-    .id                   = CODEC_ID_MPEG1VIDEO,
-    .priv_data_size       = sizeof(MpegEncContext),
-    .init                 = encode_init,
-    .encode2              = ff_MPV_encode_picture,
-    .close                = ff_MPV_encode_end,
-    .supported_framerates = avpriv_frame_rate_tab+1,
-    .pix_fmts             = (const enum PixelFormat[]){ PIX_FMT_YUV420P,
-                                                        PIX_FMT_NONE },
-    .capabilities         = CODEC_CAP_DELAY | CODEC_CAP_SLICE_THREADS,
-    .long_name            = NULL_IF_CONFIG_SMALL("MPEG-1 video"),
-    .priv_class           = &mpeg1_class,
+    "mpeg1video",
+    NULL_IF_CONFIG_SMALL("MPEG-1 video"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_MPEG1VIDEO,
+    CODEC_CAP_DELAY | CODEC_CAP_SLICE_THREADS,
+    avpriv_frame_rate_tab+1,
+    tmp__0,
+    0, 0, 0, 0, &mpeg1_class,
+    0, sizeof(MpegEncContext),
+    0, 0, 0, 0, 0, encode_init,
+    0, ff_MPV_encode_picture,
+    0, ff_MPV_encode_end,
 };
 
-AVCodec ff_mpeg2video_encoder = {
-    .name                 = "mpeg2video",
-    .type                 = AVMEDIA_TYPE_VIDEO,
-    .id                   = CODEC_ID_MPEG2VIDEO,
-    .priv_data_size       = sizeof(MpegEncContext),
-    .init                 = encode_init,
-    .encode2              = ff_MPV_encode_picture,
-    .close                = ff_MPV_encode_end,
-    .supported_framerates = avpriv_frame_rate_tab + 1,
-    .pix_fmts             = (const enum PixelFormat[]){
+static const enum PixelFormat tmp__1[] = {
         PIX_FMT_YUV420P, PIX_FMT_YUV422P, PIX_FMT_NONE
-    },
-    .capabilities         = CODEC_CAP_DELAY | CODEC_CAP_SLICE_THREADS,
-    .long_name            = NULL_IF_CONFIG_SMALL("MPEG-2 video"),
-    .priv_class           = &mpeg2_class,
+    };
+AVCodec ff_mpeg2video_encoder = {
+    "mpeg2video",
+    NULL_IF_CONFIG_SMALL("MPEG-2 video"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_MPEG2VIDEO,
+    CODEC_CAP_DELAY | CODEC_CAP_SLICE_THREADS,
+    avpriv_frame_rate_tab + 1,
+    tmp__1,
+    0, 0, 0, 0, &mpeg2_class,
+    0, sizeof(MpegEncContext),
+    0, 0, 0, 0, 0, encode_init,
+    0, ff_MPV_encode_picture,
+    0, ff_MPV_encode_end,
 };

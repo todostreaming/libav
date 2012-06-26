@@ -108,7 +108,7 @@ static int config_output(AVFilterLink *outlink)
     if ((ret = avresample_open(s->avr)) < 0)
         return ret;
 
-    outlink->time_base = (AVRational){ 1, outlink->sample_rate };
+    {outlink->time_base.num = 1;outlink->time_base.den = outlink->sample_rate ;}
     s->next_pts        = AV_NOPTS_VALUE;
 
     av_get_channel_layout_string(buf1, sizeof(buf1),
@@ -232,22 +232,24 @@ fail:
     return ret;
 }
 
+static const AVFilterPad tmp__0[] = {{ "default",
+                                          AVMEDIA_TYPE_AUDIO,
+                                          AV_PERM_READ ,
+                                          0, 0, 0, 0, 0, 0, filter_samples},
+                                        { NULL}};
+static const AVFilterPad tmp__1[] = {{ "default",
+                                          AVMEDIA_TYPE_AUDIO,
+                                          0, 0, 0, 0, 0, 0, 0, 0, 0, request_frame ,
+                                          config_output},
+                                        { NULL}};
 AVFilter avfilter_af_resample = {
-    .name          = "resample",
-    .description   = NULL_IF_CONFIG_SMALL("Audio resampling and conversion."),
-    .priv_size     = sizeof(ResampleContext),
+    "resample",
+    NULL_IF_CONFIG_SMALL("Audio resampling and conversion."),
+    tmp__0,
 
-    .uninit         = uninit,
-    .query_formats  = query_formats,
+    tmp__1,
+    0, uninit,
 
-    .inputs    = (const AVFilterPad[]) {{ .name            = "default",
-                                          .type            = AVMEDIA_TYPE_AUDIO,
-                                          .filter_samples  = filter_samples,
-                                          .min_perms       = AV_PERM_READ },
-                                        { .name = NULL}},
-    .outputs   = (const AVFilterPad[]) {{ .name          = "default",
-                                          .type          = AVMEDIA_TYPE_AUDIO,
-                                          .config_props  = config_output,
-                                          .request_frame = request_frame },
-                                        { .name = NULL}},
+    query_formats,
+    sizeof(ResampleContext),
 };

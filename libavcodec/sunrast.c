@@ -194,13 +194,13 @@ static av_cold int sunrast_end(AVCodecContext *avctx) {
 }
 
 AVCodec ff_sunrast_decoder = {
-    .name           = "sunrast",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_SUNRAST,
-    .priv_data_size = sizeof(SUNRASTContext),
-    .init           = sunrast_init,
-    .close          = sunrast_end,
-    .decode         = sunrast_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("Sun Rasterfile image"),
+    "sunrast",
+    NULL_IF_CONFIG_SMALL("Sun Rasterfile image"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_SUNRAST,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(SUNRASTContext),
+    0, 0, 0, 0, 0, sunrast_init,
+    0, 0, sunrast_decode_frame,
+    sunrast_end,
 };

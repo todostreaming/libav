@@ -405,35 +405,35 @@ static int planarRgbToRgbWrapper(SwsContext *c, const uint8_t *src[],
 
     switch (c->dstFormat) {
     case PIX_FMT_BGR24:
-        gbr24ptopacked24((const uint8_t *[]) { src[1], src[0], src[2] },
-                         (int []) { srcStride[1], srcStride[0], srcStride[2] },
+        { { int  tmp__1[] = { srcStride[1], srcStride[0], srcStride[2] }; const uint8_t * tmp__0[] = { src[1], src[0], src[2] }; gbr24ptopacked24(tmp__0,
+                         tmp__1,
                          dst[0] + srcSliceY * dstStride[0], dstStride[0],
-                         srcSliceH, c->srcW);
+                         srcSliceH, c->srcW); }}
         break;
 
     case PIX_FMT_RGB24:
-        gbr24ptopacked24((const uint8_t *[]) { src[2], src[0], src[1] },
-                         (int []) { srcStride[2], srcStride[0], srcStride[1] },
+        { { int  tmp__3[] = { srcStride[2], srcStride[0], srcStride[1] }; const uint8_t * tmp__2[] = { src[2], src[0], src[1] }; gbr24ptopacked24(tmp__2,
+                         tmp__3,
                          dst[0] + srcSliceY * dstStride[0], dstStride[0],
-                         srcSliceH, c->srcW);
+                         srcSliceH, c->srcW); }}
         break;
 
     case PIX_FMT_ARGB:
         alpha_first = 1;
     case PIX_FMT_RGBA:
-        gbr24ptopacked32((const uint8_t *[]) { src[2], src[0], src[1] },
-                         (int []) { srcStride[2], srcStride[0], srcStride[1] },
+        { { int  tmp__5[] = { srcStride[2], srcStride[0], srcStride[1] }; const uint8_t * tmp__4[] = { src[2], src[0], src[1] }; gbr24ptopacked32(tmp__4,
+                         tmp__5,
                          dst[0] + srcSliceY * dstStride[0], dstStride[0],
-                         srcSliceH, alpha_first, c->srcW);
+                         srcSliceH, alpha_first, c->srcW); }}
         break;
 
     case PIX_FMT_ABGR:
         alpha_first = 1;
     case PIX_FMT_BGRA:
-        gbr24ptopacked32((const uint8_t *[]) { src[1], src[0], src[2] },
-                         (int []) { srcStride[1], srcStride[0], srcStride[2] },
+        { { int  tmp__7[] = { srcStride[1], srcStride[0], srcStride[2] }; const uint8_t * tmp__6[] = { src[1], src[0], src[2] }; gbr24ptopacked32(tmp__6,
+                         tmp__7,
                          dst[0] + srcSliceY * dstStride[0], dstStride[0],
-                         srcSliceH, alpha_first, c->srcW);
+                         srcSliceH, alpha_first, c->srcW); }}
         break;
 
     default:

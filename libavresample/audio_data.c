@@ -24,9 +24,9 @@
 #include "audio_data.h"
 
 static const AVClass audio_data_class = {
-    .class_name = "AudioData",
-    .item_name  = av_default_item_name,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "AudioData",
+    av_default_item_name,
+    0, LIBAVUTIL_VERSION_INT,
 };
 
 /*

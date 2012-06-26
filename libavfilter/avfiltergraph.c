@@ -33,9 +33,9 @@
 #include "libavutil/log.h"
 
 static const AVClass filtergraph_class = {
-    .class_name = "AVFilterGraph",
-    .item_name  = av_default_item_name,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "AVFilterGraph",
+    av_default_item_name,
+    0, LIBAVUTIL_VERSION_INT,
 };
 
 AVFilterGraph *avfilter_graph_alloc(void)

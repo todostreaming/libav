@@ -868,21 +868,21 @@ static const AVOption options[] = {
 };
 
 static const AVClass class = {
-    .class_name = "flvdec",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "flvdec",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 AVInputFormat ff_flv_demuxer = {
-    .name           = "flv",
-    .long_name      = NULL_IF_CONFIG_SMALL("FLV format"),
-    .priv_data_size = sizeof(FLVContext),
-    .read_probe     = flv_probe,
-    .read_header    = flv_read_header,
-    .read_packet    = flv_read_packet,
-    .read_seek      = flv_read_seek,
-    .read_close     = flv_read_close,
-    .extensions     = "flv",
-    .priv_class     = &class,
+    "flv",
+    NULL_IF_CONFIG_SMALL("FLV format"),
+    0, "flv",
+    0, &class,
+    0, 0, sizeof(FLVContext),
+    flv_probe,
+    flv_read_header,
+    flv_read_packet,
+    flv_read_close,
+    flv_read_seek,
 };

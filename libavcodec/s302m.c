@@ -154,12 +154,12 @@ static int s302m_decode_init(AVCodecContext *avctx)
 
 
 AVCodec ff_s302m_decoder = {
-    .name           = "s302m",
-    .type           = AVMEDIA_TYPE_AUDIO,
-    .id             = CODEC_ID_S302M,
-    .priv_data_size = sizeof(S302MDecodeContext),
-    .init           = s302m_decode_init,
-    .decode         = s302m_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("SMPTE 302M"),
+    "s302m",
+    NULL_IF_CONFIG_SMALL("SMPTE 302M"),
+    AVMEDIA_TYPE_AUDIO,
+    CODEC_ID_S302M,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, sizeof(S302MDecodeContext),
+    0, 0, 0, 0, 0, s302m_decode_init,
+    0, 0, s302m_decode_frame,
 };

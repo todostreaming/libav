@@ -109,24 +109,26 @@ static void end_frame(AVFilterLink *inlink)
     ff_end_frame(inlink->dst->outputs[0]);
 }
 
+static AVFilterPad tmp__0[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, ff_null_start_frame,
+                                    ff_null_get_video_buffer,
+                                    0, end_frame,
+                                    draw_slice, },
+                                  { NULL}};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO },
+                                  { NULL}};
 AVFilter avfilter_vf_blackframe = {
-    .name        = "blackframe",
-    .description = NULL_IF_CONFIG_SMALL("Detect frames that are (almost) black."),
+    "blackframe",
+    NULL_IF_CONFIG_SMALL("Detect frames that are (almost) black."),
 
-    .priv_size = sizeof(BlackFrameContext),
-    .init      = init,
+    tmp__0,
+    tmp__1,
 
-    .query_formats = query_formats,
+    init,
 
-    .inputs    = (AVFilterPad[]) {{ .name = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO,
-                                    .draw_slice       = draw_slice,
-                                    .get_video_buffer = ff_null_get_video_buffer,
-                                    .start_frame      = ff_null_start_frame,
-                                    .end_frame        = end_frame, },
-                                  { .name = NULL}},
+    0, query_formats,
 
-    .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = AVMEDIA_TYPE_VIDEO },
-                                  { .name = NULL}},
+    sizeof(BlackFrameContext),
 };

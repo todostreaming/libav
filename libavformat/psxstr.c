@@ -261,12 +261,12 @@ static int str_read_close(AVFormatContext *s)
 }
 
 AVInputFormat ff_str_demuxer = {
-    .name           = "psxstr",
-    .long_name      = NULL_IF_CONFIG_SMALL("Sony Playstation STR format"),
-    .priv_data_size = sizeof(StrDemuxContext),
-    .read_probe     = str_probe,
-    .read_header    = str_read_header,
-    .read_packet    = str_read_packet,
-    .read_close     = str_read_close,
-    .flags          = AVFMT_NO_BYTE_SEEK,
+    "psxstr",
+    NULL_IF_CONFIG_SMALL("Sony Playstation STR format"),
+    AVFMT_NO_BYTE_SEEK,
+    0, 0, 0, 0, 0, sizeof(StrDemuxContext),
+    str_probe,
+    str_read_header,
+    str_read_packet,
+    str_read_close,
 };

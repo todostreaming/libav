@@ -107,12 +107,12 @@ static av_cold int v410_decode_close(AVCodecContext *avctx)
 }
 
 AVCodec ff_v410_decoder = {
-    .name         = "v410",
-    .type         = AVMEDIA_TYPE_VIDEO,
-    .id           = CODEC_ID_V410,
-    .init         = v410_decode_init,
-    .decode       = v410_decode_frame,
-    .close        = v410_decode_close,
-    .capabilities = CODEC_CAP_DR1,
-    .long_name    = NULL_IF_CONFIG_SMALL("Uncompressed 4:4:4 10-bit"),
+    "v410",
+    NULL_IF_CONFIG_SMALL("Uncompressed 4:4:4 10-bit"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_V410,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, v410_decode_init,
+    0, 0, v410_decode_frame,
+    v410_decode_close,
 };

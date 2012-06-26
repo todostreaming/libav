@@ -145,10 +145,10 @@ static void vp8_free_context(PayloadContext *vp8)
 }
 
 RTPDynamicProtocolHandler ff_vp8_dynamic_handler = {
-    .enc_name       = "VP8",
-    .codec_type     = AVMEDIA_TYPE_VIDEO,
-    .codec_id       = CODEC_ID_VP8,
-    .alloc          = vp8_new_context,
-    .free           = vp8_free_context,
-    .parse_packet   = vp8_handle_packet,
+    "VP8",
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_VP8,
+    0, 0, 0, vp8_new_context,
+    vp8_free_context,
+    vp8_handle_packet,
 };

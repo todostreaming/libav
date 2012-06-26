@@ -230,7 +230,7 @@ static ebml_master start_ebml_master(AVIOContext *pb, unsigned int elementid, ui
     int bytes = expectedsize ? ebml_num_size(expectedsize) : 8;
     put_ebml_id(pb, elementid);
     put_ebml_size_unknown(pb, bytes);
-    return (ebml_master){ avio_tell(pb), bytes };
+    { ebml_master tmp__0 = { avio_tell(pb), bytes }; return tmp__0; }
 }
 
 static void end_ebml_master(AVIOContext *pb, ebml_master master)
@@ -1286,57 +1286,59 @@ static int mkv_query_codec(enum CodecID codec_id, int std_compliance)
 }
 
 #if CONFIG_MATROSKA_MUXER
-AVOutputFormat ff_matroska_muxer = {
-    .name              = "matroska",
-    .long_name         = NULL_IF_CONFIG_SMALL("Matroska file format"),
-    .mime_type         = "video/x-matroska",
-    .extensions        = "mkv",
-    .priv_data_size    = sizeof(MatroskaMuxContext),
-    .audio_codec       = CONFIG_LIBVORBIS_ENCODER ? CODEC_ID_VORBIS : CODEC_ID_AC3,
-    .video_codec       = CONFIG_LIBX264_ENCODER ? CODEC_ID_H264 : CODEC_ID_MPEG4,
-    .write_header      = mkv_write_header,
-    .write_packet      = mkv_write_packet,
-    .write_trailer     = mkv_write_trailer,
-    .flags             = AVFMT_GLOBALHEADER | AVFMT_VARIABLE_FPS |
-                         AVFMT_TS_NONSTRICT,
-    .codec_tag         = (const AVCodecTag* const []){
+static const AVCodecTag* const  tmp__1[] = {
          ff_codec_bmp_tags, ff_codec_wav_tags, 0
-    },
-    .subtitle_codec    = CODEC_ID_SSA,
-    .query_codec       = mkv_query_codec,
+    };
+AVOutputFormat ff_matroska_muxer = {
+    "matroska",
+    NULL_IF_CONFIG_SMALL("Matroska file format"),
+    "video/x-matroska",
+    "mkv",
+    CONFIG_LIBVORBIS_ENCODER ? CODEC_ID_VORBIS : CODEC_ID_AC3,
+    CONFIG_LIBX264_ENCODER ? CODEC_ID_H264 : CODEC_ID_MPEG4,
+    CODEC_ID_SSA,
+    AVFMT_GLOBALHEADER | AVFMT_VARIABLE_FPS |
+                         AVFMT_TS_NONSTRICT,
+    tmp__1,
+    0, 0, sizeof(MatroskaMuxContext),
+    mkv_write_header,
+    mkv_write_packet,
+    mkv_write_trailer,
+    0, mkv_query_codec,
 };
 #endif
 
 #if CONFIG_WEBM_MUXER
 AVOutputFormat ff_webm_muxer = {
-    .name              = "webm",
-    .long_name         = NULL_IF_CONFIG_SMALL("WebM file format"),
-    .mime_type         = "video/webm",
-    .extensions        = "webm",
-    .priv_data_size    = sizeof(MatroskaMuxContext),
-    .audio_codec       = CODEC_ID_VORBIS,
-    .video_codec       = CODEC_ID_VP8,
-    .write_header      = mkv_write_header,
-    .write_packet      = mkv_write_packet,
-    .write_trailer     = mkv_write_trailer,
-    .flags             = AVFMT_GLOBALHEADER | AVFMT_VARIABLE_FPS |
+    "webm",
+    NULL_IF_CONFIG_SMALL("WebM file format"),
+    "video/webm",
+    "webm",
+    CODEC_ID_VORBIS,
+    CODEC_ID_VP8,
+    0, AVFMT_GLOBALHEADER | AVFMT_VARIABLE_FPS |
                          AVFMT_TS_NONSTRICT,
+    0, 0, 0, sizeof(MatroskaMuxContext),
+    mkv_write_header,
+    mkv_write_packet,
+    mkv_write_trailer,
 };
 #endif
 
 #if CONFIG_MATROSKA_AUDIO_MUXER
+static const AVCodecTag* const  tmp__2[] = { ff_codec_wav_tags, 0 };
 AVOutputFormat ff_matroska_audio_muxer = {
-    .name              = "matroska",
-    .long_name         = NULL_IF_CONFIG_SMALL("Matroska file format"),
-    .mime_type         = "audio/x-matroska",
-    .extensions        = "mka",
-    .priv_data_size    = sizeof(MatroskaMuxContext),
-    .audio_codec       = CONFIG_LIBVORBIS_ENCODER ? CODEC_ID_VORBIS : CODEC_ID_AC3,
-    .video_codec       = CODEC_ID_NONE,
-    .write_header      = mkv_write_header,
-    .write_packet      = mkv_write_packet,
-    .write_trailer     = mkv_write_trailer,
-    .flags             = AVFMT_GLOBALHEADER | AVFMT_TS_NONSTRICT,
-    .codec_tag         = (const AVCodecTag* const []){ ff_codec_wav_tags, 0 },
+    "matroska",
+    NULL_IF_CONFIG_SMALL("Matroska file format"),
+    "audio/x-matroska",
+    "mka",
+    CONFIG_LIBVORBIS_ENCODER ? CODEC_ID_VORBIS : CODEC_ID_AC3,
+    CODEC_ID_NONE,
+    0, AVFMT_GLOBALHEADER | AVFMT_TS_NONSTRICT,
+    tmp__2,
+    0, 0, sizeof(MatroskaMuxContext),
+    mkv_write_header,
+    mkv_write_packet,
+    mkv_write_trailer,
 };
 #endif

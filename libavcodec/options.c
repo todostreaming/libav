@@ -66,13 +66,13 @@ static const AVClass *codec_child_class_next(const AVClass *prev)
 }
 
 static const AVClass av_codec_context_class = {
-    .class_name              = "AVCodecContext",
-    .item_name               = context_to_name,
-    .option                  = options,
-    .version                 = LIBAVUTIL_VERSION_INT,
-    .log_level_offset_offset = offsetof(AVCodecContext, log_level_offset),
-    .child_next              = codec_child_next,
-    .child_class_next        = codec_child_class_next,
+    "AVCodecContext",
+    context_to_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
+    offsetof(AVCodecContext, log_level_offset),
+    0, codec_child_next,
+    codec_child_class_next,
 };
 
 int avcodec_get_context_defaults3(AVCodecContext *s, AVCodec *codec){
@@ -84,13 +84,13 @@ int avcodec_get_context_defaults3(AVCodecContext *s, AVCodec *codec){
     s->codec      = codec;
     av_opt_set_defaults(s);
 
-    s->time_base           = (AVRational){0,1};
+    {s->time_base.num = 0;s->time_base.den = 1;}
     s->get_buffer          = avcodec_default_get_buffer;
     s->release_buffer      = avcodec_default_release_buffer;
     s->get_format          = avcodec_default_get_format;
     s->execute             = avcodec_default_execute;
     s->execute2            = avcodec_default_execute2;
-    s->sample_aspect_ratio = (AVRational){0,1};
+    {s->sample_aspect_ratio.num = 0;s->sample_aspect_ratio.den = 1;}
     s->pix_fmt             = PIX_FMT_NONE;
     s->sample_fmt          = AV_SAMPLE_FMT_NONE;
 

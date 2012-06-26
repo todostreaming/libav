@@ -1325,22 +1325,23 @@ static const AVOption options[] = {
 };
 
 static const AVClass mpeg4enc_class = {
-    .class_name = "MPEG4 encoder",
-    .item_name  = av_default_item_name,
-    .option     = options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "MPEG4 encoder",
+    av_default_item_name,
+    options,
+    LIBAVUTIL_VERSION_INT,
 };
 
+static const enum PixelFormat tmp__0[] = { PIX_FMT_YUV420P, PIX_FMT_NONE };
 AVCodec ff_mpeg4_encoder = {
-    .name           = "mpeg4",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_MPEG4,
-    .priv_data_size = sizeof(MpegEncContext),
-    .init           = encode_init,
-    .encode2        = ff_MPV_encode_picture,
-    .close          = ff_MPV_encode_end,
-    .pix_fmts       = (const enum PixelFormat[]){ PIX_FMT_YUV420P, PIX_FMT_NONE },
-    .capabilities   = CODEC_CAP_DELAY | CODEC_CAP_SLICE_THREADS,
-    .long_name      = NULL_IF_CONFIG_SMALL("MPEG-4 part 2"),
-    .priv_class     = &mpeg4enc_class,
+    "mpeg4",
+    NULL_IF_CONFIG_SMALL("MPEG-4 part 2"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_MPEG4,
+    CODEC_CAP_DELAY | CODEC_CAP_SLICE_THREADS,
+    0, tmp__0,
+    0, 0, 0, 0, &mpeg4enc_class,
+    0, sizeof(MpegEncContext),
+    0, 0, 0, 0, 0, encode_init,
+    0, ff_MPV_encode_picture,
+    0, ff_MPV_encode_end,
 };

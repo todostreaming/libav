@@ -187,16 +187,16 @@ static av_cold int init_video(AVFilterContext *ctx, const char *args)
 static const AVOption audio_options[] = {
     { "time_base",      NULL, OFFSET(time_base),           AV_OPT_TYPE_RATIONAL, { 0 }, 0, INT_MAX, A },
     { "sample_rate",    NULL, OFFSET(sample_rate),         AV_OPT_TYPE_INT,      { 0 }, 0, INT_MAX, A },
-    { "sample_fmt",     NULL, OFFSET(sample_fmt_str),      AV_OPT_TYPE_STRING,             .flags = A },
-    { "channel_layout", NULL, OFFSET(channel_layout_str),  AV_OPT_TYPE_STRING,             .flags = A },
+    { "sample_fmt",     NULL, OFFSET(sample_fmt_str),      AV_OPT_TYPE_STRING,             { 0 }, 0, 0, A },
+    { "channel_layout", NULL, OFFSET(channel_layout_str),  AV_OPT_TYPE_STRING,             { 0 }, 0, 0, A },
     { NULL },
 };
 
 static const AVClass abuffer_class = {
-    .class_name = "abuffer source",
-    .item_name  = av_default_item_name,
-    .option     = audio_options,
-    .version    = LIBAVUTIL_VERSION_INT,
+    "abuffer source",
+    av_default_item_name,
+    audio_options,
+    LIBAVUTIL_VERSION_INT,
 };
 
 static av_cold int init_audio(AVFilterContext *ctx, const char *args)
@@ -234,7 +234,7 @@ static av_cold int init_audio(AVFilterContext *ctx, const char *args)
     }
 
     if (!s->time_base.num)
-        s->time_base = (AVRational){1, s->sample_rate};
+        {s->time_base.num = 1;s->time_base.den = s->sample_rate;}
 
     av_log(ctx, AV_LOG_VERBOSE, "tb:%d/%d samplefmt:%s samplerate: %d "
            "ch layout:%s\n", s->time_base.num, s->time_base.den, s->sample_fmt_str,
@@ -348,38 +348,42 @@ static int poll_frame(AVFilterLink *link)
     return size/sizeof(AVFilterBufferRef*);
 }
 
+static AVFilterPad tmp__0[] = {{ NULL }};
+static AVFilterPad tmp__1[] = {{ "default",
+                                    AVMEDIA_TYPE_VIDEO,
+                                    0, 0, 0, 0, 0, 0, 0, 0, poll_frame,
+                                    request_frame,
+                                    config_props, },
+                                  { NULL}};
 AVFilter avfilter_vsrc_buffer = {
-    .name      = "buffer",
-    .description = NULL_IF_CONFIG_SMALL("Buffer video frames, and make them accessible to the filterchain."),
-    .priv_size = sizeof(BufferSourceContext),
-    .query_formats = query_formats,
+    "buffer",
+    NULL_IF_CONFIG_SMALL("Buffer video frames, and make them accessible to the filterchain."),
+    tmp__0,
+    tmp__1,
 
-    .init      = init_video,
-    .uninit    = uninit,
+    init_video,
+    uninit,
 
-    .inputs    = (AVFilterPad[]) {{ .name = NULL }},
-    .outputs   = (AVFilterPad[]) {{ .name            = "default",
-                                    .type            = AVMEDIA_TYPE_VIDEO,
-                                    .request_frame   = request_frame,
-                                    .poll_frame      = poll_frame,
-                                    .config_props    = config_props, },
-                                  { .name = NULL}},
+    query_formats,
+    sizeof(BufferSourceContext),
 };
 
+static AVFilterPad tmp__2[] = {{ NULL }};
+static AVFilterPad tmp__3[] = {{ "default",
+                                    AVMEDIA_TYPE_AUDIO,
+                                    0, 0, 0, 0, 0, 0, 0, 0, poll_frame,
+                                    request_frame,
+                                    config_props, },
+                                  { NULL}};
 AVFilter avfilter_asrc_abuffer = {
-    .name          = "abuffer",
-    .description   = NULL_IF_CONFIG_SMALL("Buffer audio frames, and make them accessible to the filterchain."),
-    .priv_size     = sizeof(BufferSourceContext),
-    .query_formats = query_formats,
+    "abuffer",
+    NULL_IF_CONFIG_SMALL("Buffer audio frames, and make them accessible to the filterchain."),
+    tmp__2,
+    tmp__3,
 
-    .init      = init_audio,
-    .uninit    = uninit,
+    init_audio,
+    uninit,
 
-    .inputs    = (AVFilterPad[]) {{ .name = NULL }},
-    .outputs   = (AVFilterPad[]) {{ .name            = "default",
-                                    .type            = AVMEDIA_TYPE_AUDIO,
-                                    .request_frame   = request_frame,
-                                    .poll_frame      = poll_frame,
-                                    .config_props    = config_props, },
-                                  { .name = NULL}},
+    query_formats,
+    sizeof(BufferSourceContext),
 };

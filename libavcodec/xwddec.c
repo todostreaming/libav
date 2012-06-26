@@ -258,12 +258,12 @@ static av_cold int xwd_decode_close(AVCodecContext *avctx)
 }
 
 AVCodec ff_xwd_decoder = {
-    .name           = "xwd",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_XWD,
-    .init           = xwd_decode_init,
-    .close          = xwd_decode_close,
-    .decode         = xwd_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .long_name      = NULL_IF_CONFIG_SMALL("XWD (X Window Dump) image"),
+    "xwd",
+    NULL_IF_CONFIG_SMALL("XWD (X Window Dump) image"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_XWD,
+    CODEC_CAP_DR1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, xwd_decode_init,
+    0, 0, xwd_decode_frame,
+    xwd_decode_close,
 };

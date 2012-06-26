@@ -24,19 +24,21 @@ static int null_filter_samples(AVFilterLink *link, AVFilterBufferRef *samplesref
     return 0;
 }
 
-AVFilter avfilter_asink_anullsink = {
-    .name        = "anullsink",
-    .description = NULL_IF_CONFIG_SMALL("Do absolutely nothing with the input audio."),
-
-    .priv_size = 0,
-
-    .inputs    = (AVFilterPad[]) {
+static AVFilterPad tmp__0[] = {
         {
-            .name            = "default",
-            .type            = AVMEDIA_TYPE_AUDIO,
-            .filter_samples  = null_filter_samples,
+            "default",
+            AVMEDIA_TYPE_AUDIO,
+            0, 0, 0, 0, 0, 0, 0, null_filter_samples,
         },
-        { .name = NULL},
-    },
-    .outputs   = (AVFilterPad[]) {{ .name = NULL }},
+        { NULL},
+    };
+static AVFilterPad tmp__1[] = {{ NULL }};
+AVFilter avfilter_asink_anullsink = {
+    "anullsink",
+    NULL_IF_CONFIG_SMALL("Do absolutely nothing with the input audio."),
+
+    tmp__0,
+
+    tmp__1,
+    0, 0, 0, 0,
 };

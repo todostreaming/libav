@@ -93,10 +93,10 @@ static int srt_read_packet(AVFormatContext *s, AVPacket *pkt)
 }
 
 AVInputFormat ff_srt_demuxer = {
-    .name        = "srt",
-    .long_name   = NULL_IF_CONFIG_SMALL("SubRip subtitle format"),
-    .read_probe  = srt_probe,
-    .read_header = srt_read_header,
-    .read_packet = srt_read_packet,
-    .flags       = AVFMT_GENERIC_INDEX,
+    "srt",
+    NULL_IF_CONFIG_SMALL("SubRip subtitle format"),
+    AVFMT_GENERIC_INDEX,
+    0, 0, 0, 0, 0, 0, srt_probe,
+    srt_read_header,
+    srt_read_packet,
 };

@@ -452,17 +452,18 @@ static av_cold int flashsv_decode_end(AVCodecContext *avctx)
 
 
 #if CONFIG_FLASHSV_DECODER
+static const enum PixelFormat tmp__0[] = { PIX_FMT_BGR24, PIX_FMT_NONE };
 AVCodec ff_flashsv_decoder = {
-    .name           = "flashsv",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_FLASHSV,
-    .priv_data_size = sizeof(FlashSVContext),
-    .init           = flashsv_decode_init,
-    .close          = flashsv_decode_end,
-    .decode         = flashsv_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .pix_fmts       = (const enum PixelFormat[]){ PIX_FMT_BGR24, PIX_FMT_NONE },
-    .long_name      = NULL_IF_CONFIG_SMALL("Flash Screen Video v1"),
+    "flashsv",
+    NULL_IF_CONFIG_SMALL("Flash Screen Video v1"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_FLASHSV,
+    CODEC_CAP_DR1,
+    0, tmp__0,
+    0, 0, 0, 0, 0, 0, sizeof(FlashSVContext),
+    0, 0, 0, 0, 0, flashsv_decode_init,
+    0, 0, flashsv_decode_frame,
+    flashsv_decode_end,
 };
 #endif /* CONFIG_FLASHSV_DECODER */
 
@@ -515,16 +516,17 @@ static av_cold int flashsv2_decode_end(AVCodecContext *avctx)
     return 0;
 }
 
+static const enum PixelFormat tmp__1[] = { PIX_FMT_BGR24, PIX_FMT_NONE };
 AVCodec ff_flashsv2_decoder = {
-    .name           = "flashsv2",
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = CODEC_ID_FLASHSV2,
-    .priv_data_size = sizeof(FlashSVContext),
-    .init           = flashsv2_decode_init,
-    .close          = flashsv2_decode_end,
-    .decode         = flashsv_decode_frame,
-    .capabilities   = CODEC_CAP_DR1,
-    .pix_fmts       = (const enum PixelFormat[]){ PIX_FMT_BGR24, PIX_FMT_NONE },
-    .long_name      = NULL_IF_CONFIG_SMALL("Flash Screen Video v2"),
+    "flashsv2",
+    NULL_IF_CONFIG_SMALL("Flash Screen Video v2"),
+    AVMEDIA_TYPE_VIDEO,
+    CODEC_ID_FLASHSV2,
+    CODEC_CAP_DR1,
+    0, tmp__1,
+    0, 0, 0, 0, 0, 0, sizeof(FlashSVContext),
+    0, 0, 0, 0, 0, flashsv2_decode_init,
+    0, 0, flashsv_decode_frame,
+    flashsv2_decode_end,
 };
 #endif /* CONFIG_FLASHSV2_DECODER */
