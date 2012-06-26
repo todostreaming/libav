@@ -2182,6 +2182,7 @@ elif $cc 2>&1 | grep -q Microsoft; then
     add_cflags -nologo
     add_cppflags -D_USE_MATH_DEFINES
     add_cppflags -Dinline=__inline
+    add_cppflags -FIstdlib.h
     # There's no use looking for strtoll and doing a normal fallback,
     # since the fallback would need to check for _strtoi64 too
     add_cppflags -Dstrtoll=_strtoi64
