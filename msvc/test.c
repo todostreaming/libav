@@ -283,13 +283,7 @@ static const struct s_layout known_structs[N_STRUCTS] = {
             {
                 .tag = "name",
             }, {
-                .tag = "priv_size",
-            }, {
-                .tag = "init",
-            }, {
-                .tag = "uninit",
-            }, {
-                .tag = "query_formats",
+                .tag = "description",
             }, {
                 .tag = "inputs",
                 .struct_type_name = "AVFilterPad",
@@ -297,7 +291,13 @@ static const struct s_layout known_structs[N_STRUCTS] = {
                 .tag = "outputs",
                 .struct_type_name = "AVFilterPad",
             }, {
-                .tag = "description",
+                .tag = "init",
+            }, {
+                .tag = "uninit",
+            }, {
+                .tag = "query_formats",
+            }, {
+                .tag = "priv_size",
             },
         },
     }, [STRUCT_AVFILTERPAD] = {
