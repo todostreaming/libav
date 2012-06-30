@@ -21,6 +21,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#endif
+
 #define SCALEBITS 8
 #define ONE_HALF  (1 << (SCALEBITS - 1))
 #define FIX(x)    ((int) ((x) * (1L << SCALEBITS) + 0.5))
