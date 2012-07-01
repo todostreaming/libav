@@ -2175,6 +2175,7 @@ elif $cc 2>&1 | grep -q Microsoft; then
     # since the fallback would need to check for _strtoi64 too
     add_cppflags -Dstrtoll=_strtoi64
     add_ldflags -nologo
+    disable aligned_stack
 fi
 
 test -n "$cc_type" && enable $cc_type ||
