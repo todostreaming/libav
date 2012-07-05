@@ -215,10 +215,12 @@ void ff_hscale ## from_bpc ## to ## to_bpc ## _ ## filter_n ## _ ## opt( \
     SCALE_FUNC(filter_n,  8, 15, opt); \
     SCALE_FUNC(filter_n,  9, 15, opt); \
     SCALE_FUNC(filter_n, 10, 15, opt); \
+    SCALE_FUNC(filter_n, 12, 15, opt); \
     SCALE_FUNC(filter_n, 16, 15, opt); \
     SCALE_FUNC(filter_n,  8, 19, opt); \
     SCALE_FUNC(filter_n,  9, 19, opt); \
     SCALE_FUNC(filter_n, 10, 19, opt); \
+    SCALE_FUNC(filter_n, 12, 19, opt); \
     SCALE_FUNC(filter_n, 16, 19, opt)
 
 #define SCALE_FUNCS_MMX(opt) \
