@@ -1,0 +1,35 @@
+Microsoft Visual Studio C conversion support
+--------------------------------------------
+
+Since Microsoft does not provide a C99 compliant compiler and does not show any interest in providing one
+and apparently Microsoft Visual Studio users had silently complained about it for long, this section
+provides a way to preprocess the Libav sources and enable people to compile natively the result.
+
+
+Status
+------
+
+- The source converter is partially complete and some shortcomings are being worked around by hacking
+  the codebase. Ideally help in supporting more C99 constructs is welcome
+
+- The C99 headers provided from third parties are bundled for convenience
+
+- The process requires unix tools, look at cygwin or msys for them.
+
+- The project file generation is missing, contributions on this is more than welcome
+
+- a Makefile target for the conversion is still missing
+
+Usage
+-----
+
+Currently you have to manually build the c99-to-msvc processor, manually run the conversion script and
+run the standard configure.
+
+Donations
+---------
+
+Bounties and money offer to speedup the process are more than welcome, the core Libav team has no particular
+interest in supporting a broken compiler, given than ICC, mingw64, LLVM/Clang are available on windows and
+produce acceptable results for the target platform and seem to get a decent degree of integration on the
+Microsoft Visual Studio IDE.
