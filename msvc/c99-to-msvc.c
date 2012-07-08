@@ -1297,13 +1297,13 @@ enum AVSampleFormat {
     AV_SAMPLE_FMT_S32,         ///< signed 32 bits
     AV_SAMPLE_FMT_FLT,         ///< float
     AV_SAMPLE_FMT_DBL,         ///< double
-    
+
     AV_SAMPLE_FMT_U8P,         ///< unsigned 8 bits, planar
     AV_SAMPLE_FMT_S16P,        ///< signed 16 bits, planar
     AV_SAMPLE_FMT_S32P,        ///< signed 32 bits, planar
     AV_SAMPLE_FMT_FLTP,        ///< float, planar
     AV_SAMPLE_FMT_DBLP,        ///< double, planar
-    
+
     AV_SAMPLE_FMT_NB           ///< Number of sample formats. DO NOT USE if linking dynamically
 };
 
@@ -1345,12 +1345,12 @@ enum PixelFormat {
     PIX_FMT_RGB4_BYTE, ///< packed RGB 1:2:1,  8bpp, (msb)1R 2G 1B(lsb)
     PIX_FMT_NV12,      ///< planar YUV 4:2:0, 12bpp, 1 plane for Y and 1 plane for the UV components, which are interleaved (first byte U and the following byte V)
     PIX_FMT_NV21,      ///< as above, but U and V bytes are swapped
-    
+
     PIX_FMT_ARGB,      ///< packed ARGB 8:8:8:8, 32bpp, ARGBARGB...
     PIX_FMT_RGBA,      ///< packed RGBA 8:8:8:8, 32bpp, RGBARGBA...
     PIX_FMT_ABGR,      ///< packed ABGR 8:8:8:8, 32bpp, ABGRABGR...
     PIX_FMT_BGRA,      ///< packed BGRA 8:8:8:8, 32bpp, BGRABGRA...
-    
+
     PIX_FMT_GRAY16BE,  ///<        Y        , 16bpp, big-endian
     PIX_FMT_GRAY16LE,  ///<        Y        , 16bpp, little-endian
     PIX_FMT_YUV440P,   ///< planar YUV 4:4:0 (1 Cr & Cb sample per 1x2 Y samples)
@@ -1363,21 +1363,21 @@ enum PixelFormat {
     PIX_FMT_VDPAU_VC1, ///< VC-1 HW decoding with VDPAU, data[0] contains a vdpau_render_state struct which contains the bitstream of the slices as well as various fields extracted from headers
     PIX_FMT_RGB48BE,   ///< packed RGB 16:16:16, 48bpp, 16R, 16G, 16B, the 2-byte value for each R/G/B component is stored as big-endian
     PIX_FMT_RGB48LE,   ///< packed RGB 16:16:16, 48bpp, 16R, 16G, 16B, the 2-byte value for each R/G/B component is stored as little-endian
-    
+
     PIX_FMT_RGB565BE,  ///< packed RGB 5:6:5, 16bpp, (msb)   5R 6G 5B(lsb), big-endian
     PIX_FMT_RGB565LE,  ///< packed RGB 5:6:5, 16bpp, (msb)   5R 6G 5B(lsb), little-endian
     PIX_FMT_RGB555BE,  ///< packed RGB 5:5:5, 16bpp, (msb)1A 5R 5G 5B(lsb), big-endian, most significant bit to 0
     PIX_FMT_RGB555LE,  ///< packed RGB 5:5:5, 16bpp, (msb)1A 5R 5G 5B(lsb), little-endian, most significant bit to 0
-    
+
     PIX_FMT_BGR565BE,  ///< packed BGR 5:6:5, 16bpp, (msb)   5B 6G 5R(lsb), big-endian
     PIX_FMT_BGR565LE,  ///< packed BGR 5:6:5, 16bpp, (msb)   5B 6G 5R(lsb), little-endian
     PIX_FMT_BGR555BE,  ///< packed BGR 5:5:5, 16bpp, (msb)1A 5B 5G 5R(lsb), big-endian, most significant bit to 1
     PIX_FMT_BGR555LE,  ///< packed BGR 5:5:5, 16bpp, (msb)1A 5B 5G 5R(lsb), little-endian, most significant bit to 1
-    
+
     PIX_FMT_VAAPI_MOCO, ///< HW acceleration through VA API at motion compensation entry-point, Picture.data[3] contains a vaapi_render_state struct which contains macroblocks as well as various fields extracted from headers
     PIX_FMT_VAAPI_IDCT, ///< HW acceleration through VA API at IDCT entry-point, Picture.data[3] contains a vaapi_render_state struct which contains fields extracted from headers
     PIX_FMT_VAAPI_VLD,  ///< HW decoding through VA API, Picture.data[3] contains a vaapi_render_state struct which contains the bitstream of the slices as well as various fields extracted from headers
-    
+
     PIX_FMT_YUV420P16LE,  ///< planar YUV 4:2:0, 24bpp, (1 Cr & Cb sample per 2x2 Y samples), little-endian
     PIX_FMT_YUV420P16BE,  ///< planar YUV 4:2:0, 24bpp, (1 Cr & Cb sample per 2x2 Y samples), big-endian
     PIX_FMT_YUV422P16LE,  ///< planar YUV 4:2:2, 32bpp, (1 Cr & Cb sample per 2x1 Y samples), little-endian
@@ -1386,7 +1386,7 @@ enum PixelFormat {
     PIX_FMT_YUV444P16BE,  ///< planar YUV 4:4:4, 48bpp, (1 Cr & Cb sample per 1x1 Y samples), big-endian
     PIX_FMT_VDPAU_MPEG4,  ///< MPEG4 HW decoding with VDPAU, data[0] contains a vdpau_render_state struct which contains the bitstream of the slices as well as various fields extracted from headers
     PIX_FMT_DXVA2_VLD,    ///< HW decoding through DXVA2, Picture.data[3] contains a LPDIRECT3DSURFACE9 pointer
-    
+
     PIX_FMT_RGB444LE,  ///< packed RGB 4:4:4, 16bpp, (msb)4A 4R 4G 4B(lsb), little-endian, most significant bits to 0
     PIX_FMT_RGB444BE,  ///< packed RGB 4:4:4, 16bpp, (msb)4A 4R 4G 4B(lsb), big-endian, most significant bits to 0
     PIX_FMT_BGR444LE,  ///< packed BGR 4:4:4, 16bpp, (msb)4A 4B 4G 4R(lsb), little-endian, most significant bits to 1
@@ -1722,7 +1722,7 @@ static void add_compound_literal_value(struct state *s)
 {
     int idx = s->named_initializer_cache.n_contents;
     struct lnum_pos_pair start;
-    
+
     if (idx >= S_ENTRIES) {
         fprintf(stderr, "Ran out of space adding a struct entry - increase S_ENTRIES\n");
         exit(1);
@@ -1766,7 +1766,7 @@ static void backup_line_intermezzos(struct state *s,
 {
     int is_line_end, lnum, pos = lpp->pos, len, off = 0;
     int last_lnum = (n < n_cnt - 1) ? lpn->lnum : lpp->lnum;
-    
+
     buf[n][0] = 0;
     for (lnum = lpp->lnum; lnum <= last_lnum; lnum++) {
         if (n < n_cnt - 1 && lnum < lpn->lnum) {
@@ -1776,7 +1776,7 @@ static void backup_line_intermezzos(struct state *s,
         } else {
             is_line_end = 0;
         }
-        
+
         if (is_line_end) {
             len = strlen(s->line[lnum] + pos);
         } else {
@@ -1915,7 +1915,7 @@ static void replace_named_initializer_array(struct state *s)
                     result, orig, S_ENTRIES);
             exit(1);
         }
-        
+
         idx[result] = n;
         max = max > result ? max : result;
     }
@@ -2094,10 +2094,10 @@ static const struct s_layout *find_struct(const char *name)
             return p;
         }
     }
-    
+
     DEBUG fprintf(stderr, "Could not find definition for struct '%s'\n",
                   name);
-    
+
     return NULL;
 }
 
@@ -2293,6 +2293,7 @@ static void backup_multi_line(struct state *s, char *val, int size,
 }
 
 static int cntr = 0;
+static char *filename = NULL;
 static void replace_compound_initializer(struct state *s)
 {
     char *cast_name = s->parent->parent->named_initializer_cache.cast_name;
@@ -2310,7 +2311,7 @@ static void replace_compound_initializer(struct state *s)
         int n, padding = strlen(s->line[s->lnum]) - (int) (s->cur - s->line[s->lnum]);
 
         // temporary variable name
-        sprintf(tmpname, "tmp__%d", cntr++);
+        sprintf(tmpname, "tmp__%s_%d", filename, cntr++);
         ob = &s->named_initializer_cache.obracket;
         cb =  s->named_initializer_cache.cbracket;
         cb.pos++;
@@ -2515,7 +2516,7 @@ static void replace_compound_initializer(struct state *s)
         struct lnum_pos_pair cb, *ob, cp, ls;
         int len;
 
-        sprintf(tmpname, "tmp__%d", cntr++);
+        sprintf(tmpname, "tmp__%s_%d", filename, cntr++);
         ob = &s->named_initializer_cache.obracket;
         cb =  s->named_initializer_cache.cbracket;
 
@@ -2557,8 +2558,8 @@ static void replace_compound_initializer(struct state *s)
             char bak[LINELEN];
             struct lnum_pos_pair cb, *ob, cp, ls;
             int len, padding = strlen(s->line[s->lnum]);
-            
-            sprintf(tmpname, "tmp__%d", cntr++);
+
+            sprintf(tmpname, "tmp__%s_%d", filename, cntr++);
             ob = &s->named_initializer_cache.obracket;
             cb = s->named_initializer_cache.cbracket;
 
@@ -2604,7 +2605,7 @@ static void replace_compound_initializer(struct state *s)
             char *array_start;
 
             DEBUG fprintf(stderr, "Assign-function-based compound literal replacement\n");
-            sprintf(tmpname, "tmp__%d", cntr++);
+            sprintf(tmpname, "tmp__%s_%d", filename, cntr++);
             ob = &s->named_initializer_cache.obracket;
             cb =  s->named_initializer_cache.cbracket;
             cb.pos++;
@@ -2743,7 +2744,7 @@ static void replace_compound_initializer(struct state *s)
             int len, pos, padding;
 
             DEBUG fprintf(stderr, "Default function-bound compound replacement\n");
-            sprintf(tmpname, "tmp__%d", cntr++);
+            sprintf(tmpname, "tmp__%s_%d", filename, cntr++);
             ob = &s->named_initializer_cache.obracket;
             cb =  s->named_initializer_cache.cbracket;
             cb.pos++;
@@ -3116,7 +3117,7 @@ static int handle_open_in(struct state *s)
         s3->lnum    = s->lnum;
         s3->depth   = s->depth;
         s3->named_initializer_cache.obracket.lnum = bnum;
-        s3->named_initializer_cache.obracket.pos  = (int) (s->cur - 1 - s->line[bnum]);        
+        s3->named_initializer_cache.obracket.pos  = (int) (s->cur - 1 - s->line[bnum]);
         s3->named_initializer_cache.bracket_type = bracket;
 
         for (;;) {
@@ -3607,7 +3608,7 @@ static void scan_input(char *s)
 
 int main(int argc, char *argv[])
 {
-    FILE *input = stdin;
+    FILE *input = NULL;
     char *linebuf = malloc(N_LINES * LINELEN), *line[N_LINES * 2];
     int inputline, outputline = 0;
 
@@ -3615,13 +3616,22 @@ int main(int argc, char *argv[])
         fprintf(stderr, "No memory\n");
         return -1;
     }
+
+    if (argc < 1) {
+        fprintf(stderr, "usage: %s input-source\n", argv[0]);
+        exit(1);
+    }
+
     if (argc > 1) {
+        int i = 0;
         input = fopen(argv[1], "r");
         if (!input) {
             fprintf(stderr, "Cannot open file %s for input: %s\n",
                     argv[1], strerror(errno));
             exit(1);
         }
+        filename = strrchr(argv[1], '/') + 1;
+        *strrchr(filename, '.')='_';
     }
     if (argc > 2) cntr = atoi(argv[2]);
 
