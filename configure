@@ -2829,8 +2829,8 @@ EOF
     check_asm xmm_clobbers '"":::"%xmm0"'
 
     # check whether binutils is new enough to compile SSSE3/MMX2
-    enabled ssse3 && check_asm ssse3 '"pabsw %xmm0, %xmm0"'
-    enabled mmx2  && check_asm mmx2  '"pmaxub %mm0, %mm1"'
+#    enabled ssse3 && check_asm ssse3 '"pabsw %xmm0, %xmm0"'
+#    enabled mmx2  && check_asm mmx2  '"pmaxub %mm0, %mm1"'
 
     if ! disabled_any asm mmx yasm; then
         if check_cmd $yasmexe --version; then
