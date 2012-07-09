@@ -602,7 +602,7 @@ add_ldflags(){
 }
 
 add_extralibs(){
-    prepend extralibs "$@"
+    prepend extralibs $($filter_ldflags "$@")
 }
 
 check_cmd(){
@@ -658,7 +658,7 @@ check_ld(){
         test "${f}" = "${f#-l}" && flags="$flags $f" || libs="$libs $f"
     done
     check_cc $($filter_cflags $flags) || return
-    check_cmd $ld $LDFLAGS $flags -o $TMPE $TMPO $libs $extralibs
+    check_cmd $ld $LDFLAGS $($filter_ldflags $flags) -o $TMPE $TMPO $($filter_ldflags $libs) $extralibs
 }
 
 check_code(){
@@ -1946,6 +1946,7 @@ fi
 filter_asflags=echo
 filter_cflags=echo
 filter_cppflags=echo
+filter_ldflags=echo
 
 if   $cc -v 2>&1 | grep -q '^gcc.*LLVM'; then
     cc_type=llvm_gcc
