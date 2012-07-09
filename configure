@@ -2169,6 +2169,16 @@ elif $cc 2>&1 | grep -q Microsoft; then
             esac
         done
     }
+    filter_ldflags=msvc_ldflags
+    msvc_ldflags(){
+        for flag; do
+            case $flag in
+                -lz)                  echo zlib.lib ;;
+                -l*)                  echo ${flag:2}.lib ;;
+                *)                    echo $flag ;;
+            esac
+        done
+    }
     add_cflags -nologo
     add_cppflags -D_USE_MATH_DEFINES
     add_cppflags -Dinline=__inline
