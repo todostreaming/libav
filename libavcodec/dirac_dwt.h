@@ -13,6 +13,28 @@ enum dwt_type {
     DWT_NUM_TYPES
 };
 
+typedef struct DiracDWTContext {
+    DWTContext dwtctx;
+    IDWTELEM *buffer;
+    IDWTELEM *temp;
+    int width;
+    int height;
+    int stride;
+    int decomposition_count;
+    int support;
+
+    void (*spatial_compose)(struct DiracDWTContext *cs, int level, int width,
+                            int height, int stride);
+    void (*vertical_compose_l0)(void);
+    void (*vertical_compose_h0)(void);
+    void (*vertical_compose_l1)(void);
+    void (*vertical_compose_h1)(void);
+    void (*vertical_compose)(void);
+     ///< vertical_compose -> one set of lowpass and highpass combined
+    void (*horizontal_compose)(IDWTELEM *b, IDWTELEM *tmp, int width);
+    DWTCompose cs[MAX_DECOMPOSITIONS];
+} DiracDWTContext;
+
 
 // Possible prototypes for vertical_compose functions
 typedef void (*vertical_compose_2tap)(IDWTELEM *b0, IDWTELEM *b1, int width);
@@ -24,7 +46,7 @@ typedef void (*vertical_compose_9tap)(IDWTELEM *dst, IDWTELEM *b[8],
                                       int width);
 
 // -1 if an error occurred, e.g. the dwt_type isn't recognized
-int ff_spatial_idwt_init2(DWTContext *d, IDWTELEM *buffer, int width,
+int ff_spatial_idwt_init2(DiracDWTContext *d, IDWTELEM *buffer, int width,
                           int height, int stride, enum dwt_type type,
                           int decomposition_count, IDWTELEM *temp);
 
@@ -32,7 +54,7 @@ int ff_spatial_idwt2(IDWTELEM *buffer, int width, int height, int stride,
                      enum dwt_type type, int decomposition_count,
                      IDWTELEM *temp);
 
-void ff_spatial_idwt_slice2(DWTContext *d, int y);
+void ff_spatial_idwt_slice2(DiracDWTContext *d, int y);
 
 // shared stuff for simd optimiztions
 #define COMPOSE_53iL0(b0, b1, b2)                                       \

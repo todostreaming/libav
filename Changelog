@@ -51,6 +51,7 @@ version <next>:
 - RTP packetization of JPEG
 - Opus decoder and encoder using libopus
 - remove -same_quant, it hasn't worked for years
+- Native dirac decoder
 
 
 version 0.8:

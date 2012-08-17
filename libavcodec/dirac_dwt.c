@@ -1,4 +1,17 @@
+#include "libavutil/attributes.h"
+#include "libavutil/common.h"
+#include "avcodec.h"
 #include "dirac_dwt.h"
+
+static inline int mirror(int v, int m)
+{
+    while ((unsigned)v > (unsigned)m) {
+        v = -v;
+        if (v < 0)
+            v += 2 * m;
+    }
+    return v;
+}
 
 static av_always_inline void interleave(IDWTELEM *dst, IDWTELEM *src0,
                                         IDWTELEM *src1, int w2, int add,
@@ -238,7 +251,7 @@ static void vertical_compose_daub97iL1(IDWTELEM *b0, IDWTELEM *b1, IDWTELEM *b2,
         b1[i] = COMPOSE_DAUB97iL1(b0[i], b1[i], b2[i]);
 }
 
-static void spatial_compose_dd97i_dy(DWTContext *d, int level, int width,
+static void spatial_compose_dd97i_dy(DiracDWTContext *d, int level, int width,
                                      int height, int stride)
 {
     vertical_compose_3tap vertical_compose_l0 = d->vertical_compose_l0;
@@ -266,7 +279,7 @@ static void spatial_compose_dd97i_dy(DWTContext *d, int level, int width,
     cs->y += 2;
 }
 
-static void spatial_compose_dirac53i_dy(DWTContext *d, int level, int width,
+static void spatial_compose_dirac53i_dy(DiracDWTContext *d, int level, int width,
                                         int height, int stride)
 {
     vertical_compose_3tap vertical_compose_l0 = d->vertical_compose_l0;
@@ -292,7 +305,7 @@ static void spatial_compose_dirac53i_dy(DWTContext *d, int level, int width,
     cs->y   += 2;
 }
 
-static void spatial_compose_dd137i_dy(DWTContext *d, int level, int width,
+static void spatial_compose_dd137i_dy(DiracDWTContext *d, int level, int width,
                                       int height, int stride)
 {
     vertical_compose_5tap vertical_compose_l0 = d->vertical_compose_l0;
@@ -321,7 +334,7 @@ static void spatial_compose_dd137i_dy(DWTContext *d, int level, int width,
 }
 
 // haar makes the assumption that height is even (always true for dirac)
-static void spatial_compose_haari_dy(DWTContext *d, int level, int width,
+static void spatial_compose_haari_dy(DiracDWTContext *d, int level, int width,
                                      int height, int stride)
 {
     vertical_compose_2tap vertical_compose = d->vertical_compose;
@@ -338,7 +351,7 @@ static void spatial_compose_haari_dy(DWTContext *d, int level, int width,
 
 // Don't do sliced idwt for fidelity; the 9 tap filter makes it a bit annoying
 // Fortunately, this filter isn't used in practice.
-static void spatial_compose_fidelity(DWTContext *d, int level, int width,
+static void spatial_compose_fidelity(DiracDWTContext *d, int level, int width,
                                      int height, int stride)
 {
     vertical_compose_9tap vertical_compose_l0 = d->vertical_compose_l0;
@@ -364,7 +377,7 @@ static void spatial_compose_fidelity(DWTContext *d, int level, int width,
     d->cs[level].y = height + 1;
 }
 
-static void spatial_compose_daub97i_dy(DWTContext *d, int level, int width,
+static void spatial_compose_daub97i_dy(DiracDWTContext *d, int level, int width,
                                        int height, int stride)
 {
     vertical_compose_3tap vertical_compose_l0 = d->vertical_compose_l0;
@@ -443,7 +456,7 @@ static void spatial_compose_dd137i_init(DWTCompose *cs, IDWTELEM *buffer,
     cs->y    = -5;
 }
 
-int ff_spatial_idwt_init2(DWTContext *d, IDWTELEM *buffer, int width,
+int ff_spatial_idwt_init2(DiracDWTContext *d, IDWTELEM *buffer, int width,
                           int height, int stride, enum dwt_type type,
                           int decomposition_count, IDWTELEM *temp)
 {
@@ -486,14 +499,14 @@ int ff_spatial_idwt_init2(DWTContext *d, IDWTELEM *buffer, int width,
     switch (type) {
     case DWT_DIRAC_DD9_7:
         d->spatial_compose     = spatial_compose_dd97i_dy;
-        d->vertical_compose_l0 = vertical_compose53iL0;
+        d->vertical_compose_l0 = ff_vertical_compose53iL0;
         d->vertical_compose_h0 = vertical_compose_dd97iH0;
         d->horizontal_compose  = horizontal_compose_dd97i;
         d->support             = 7;
         break;
     case DWT_DIRAC_LEGALL5_3:
         d->spatial_compose     = spatial_compose_dirac53i_dy;
-        d->vertical_compose_l0 = vertical_compose53iL0;
+        d->vertical_compose_l0 = ff_vertical_compose53iL0;
         d->vertical_compose_h0 = vertical_compose_dirac53iH0;
         d->horizontal_compose  = horizontal_compose_dirac53i;
         d->support             = 3;
@@ -538,7 +551,7 @@ int ff_spatial_idwt_init2(DWTContext *d, IDWTELEM *buffer, int width,
     return 0;
 }
 
-void ff_spatial_idwt_slice2(DWTContext *d, int y)
+void ff_spatial_idwt_slice2(DiracDWTContext *d, int y)
 {
     int level, support = d->support;
 
@@ -556,7 +569,7 @@ int ff_spatial_idwt2(IDWTELEM *buffer, int width, int height, int stride,
                      enum dwt_type type, int decomposition_count,
                      IDWTELEM *temp)
 {
-    DWTContext d;
+    DiracDWTContext d;
     int y;
     int ret;
 
