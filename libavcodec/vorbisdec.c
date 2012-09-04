@@ -50,6 +50,7 @@ typedef struct {
     uint8_t      maxdepth;
     VLC          vlc;
     float       *codevectors;
+    int          entries;
     unsigned int nb_bits;
 } vorbis_codebook;
 
@@ -374,6 +375,7 @@ static int vorbis_parse_setup_hdr_codebooks(vorbis_context *vc)
                                                                     codebook_setup->dimensions *
                                                                     sizeof(*codebook_setup->codevectors))
                                                        : NULL;
+            codebook_setup->entries = used_entries;
             for (j = 0, i = 0; i < entries; ++i) {
                 unsigned dim = codebook_setup->dimensions;
 
@@ -1414,6 +1416,11 @@ static av_always_inline int vorbis_residue_decode_internal(vorbis_context *vc,
 
                                 for (k = 0; k < step; ++k) {
                                     coffs = get_vlc2(gb, codebook.vlc.table, codebook.nb_bits, 3) * dim;
+                                    av_log(NULL, AV_LOG_ERROR, "Entries %d coffs %d\n", codebook.entries, coffs);
+                                    if (coffs >= codebook.entries) {
+                                        av_log(NULL, AV_LOG_ERROR, "AAAARGH\n");
+                                        return AVERROR_INVALIDDATA;
+                                    }
                                     for (l = 0; l < dim; ++l) {
                                         vec[voffs_div + voffs_mod * vlen] +=
                                             codebook.codevectors[coffs + l];
