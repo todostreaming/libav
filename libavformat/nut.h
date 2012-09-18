@@ -105,6 +105,7 @@ typedef struct {
 
 extern const AVCodecTag ff_nut_subtitle_tags[];
 extern const AVCodecTag ff_nut_video_tags[];
+extern const AVCodecTag ff_nut_data_tags[];
 
 typedef struct {
     char str[9];

@@ -374,6 +374,7 @@ static int decode_stream_header(NUTContext *nut)
         break;
     case 3:
         st->codec->codec_type = AVMEDIA_TYPE_DATA;
+        st->codec->codec_id   = ff_codec_get_id(ff_nut_subtitle_tags, tmp);
         break;
     default:
         av_log(s, AV_LOG_ERROR, "unknown stream class (%d)\n", class);
@@ -1001,6 +1002,6 @@ AVInputFormat ff_nut_demuxer = {
     .extensions     = "nut",
     .codec_tag      = (const AVCodecTag * const []) {
         ff_codec_bmp_tags, ff_nut_video_tags, ff_codec_wav_tags,
-        ff_nut_subtitle_tags, 0
+        ff_nut_subtitle_tags, ff_nut_data_tags, 0
     },
 };
