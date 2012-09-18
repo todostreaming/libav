@@ -46,6 +46,7 @@ void avdevice_register_all(void)
     REGISTER_INDEV    (JACK, jack);
     REGISTER_INOUTDEV (OSS, oss);
     REGISTER_INDEV    (PULSE, pulse);
+    REGISTER_INDEV    (RAWDATA, rawdata);
     REGISTER_INOUTDEV (SNDIO, sndio);
     REGISTER_INDEV    (V4L2, v4l2);
     REGISTER_INDEV    (VFWCAP, vfwcap);
