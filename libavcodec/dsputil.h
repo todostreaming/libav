@@ -531,6 +531,42 @@ typedef struct DSPContext {
     op_fill_func fill_block_tab[2];
 } DSPContext;
 
+#if CONFIG_DIRAC_DECODER
+void ff_put_pixels8_8_c(uint8_t *dst, const uint8_t *src, int stride, int h);
+void ff_put_pixels16_8_c(uint8_t *dst, const uint8_t *src, int stride, int h);
+void ff_put_pixels8_l2_8(uint8_t *dst, const uint8_t *src0,
+                         const uint8_t *src1, int stride0, int stride1,
+                         int stride2, int h);
+void ff_put_pixels16_l2_8(uint8_t *dst, const uint8_t *src0,
+                          const uint8_t *src1, int stride0, int stride1,
+                          int stride2, int h);
+void ff_put_pixels8_l4_8(uint8_t *dst, const uint8_t *src0,
+                         const uint8_t *src1, const uint8_t *src2,
+                         const uint8_t *src3, int stride0, int stride1,
+                         int stride2, int stride3, int stride4, int h);
+void ff_put_pixels16_l4_8(uint8_t *dst, const uint8_t *src0,
+                          const uint8_t *src1, const uint8_t *src2,
+                          const uint8_t *src3, int stride0, int stride1,
+                          int stride2, int stride3, int stride4, int h);
+
+void ff_avg_pixels8_8_c(uint8_t *dst, const uint8_t *src, int stride, int h);
+void ff_avg_pixels16_8_c(uint8_t *dst, const uint8_t *src, int stride, int h);
+void ff_avg_pixels8_l2_8(uint8_t *dst, const uint8_t *src0,
+                         const uint8_t *src1, int stride0, int stride1,
+                         int stride2, int h);
+void ff_avg_pixels16_l2_8(uint8_t *dst, const uint8_t *src0,
+                          const uint8_t *src1, int stride0, int stride1,
+                          int stride2, int h);
+void ff_avg_pixels8_l4_8(uint8_t *dst, const uint8_t *src0,
+                         const uint8_t *src1, const uint8_t *src2,
+                         const uint8_t *src3, int stride0, int stride1,
+                         int stride2, int stride3, int stride4, int h);
+void ff_avg_pixels16_l4_8(uint8_t *dst, const uint8_t *src0,
+                          const uint8_t *src1, const uint8_t *src2,
+                          const uint8_t *src3, int stride0, int stride1,
+                          int stride2, int stride3, int stride4, int h);
+#endif
+
 void ff_dsputil_static_init(void);
 void ff_dsputil_init(DSPContext* p, AVCodecContext *avctx);
 

@@ -2998,3 +2998,88 @@ av_cold void ff_dsputil_init(DSPContext* c, AVCodecContext *avctx)
     ff_init_scantable_permutation(c->idct_permutation,
                                   c->idct_permutation_type);
 }
+
+#if CONFIG_DIRAC_DECODER
+void ff_put_pixels8_8_c(uint8_t *dst, const uint8_t *src, int stride, int h)
+{
+    put_pixels8_8_c(dst, src, stride, h);
+}
+
+void ff_put_pixels16_8_c(uint8_t *dst, const uint8_t *src, int stride, int h)
+{
+    put_pixels16_8_c(dst, src, stride, h);
+}
+void ff_put_pixels8_l2_8(uint8_t *dst, const uint8_t *src0,
+                         const uint8_t *src1, int stride0, int stride1,
+                         int stride2, int h)
+{
+    put_pixels8_l2_8(dst, src0, src1, stride0, stride1, stride2, h);
+}
+
+void ff_put_pixels16_l2_8(uint8_t *dst, const uint8_t *src0,
+                          const uint8_t *src1, int stride0, int stride1,
+                          int stride2, int h)
+{
+    put_pixels16_l2_8(dst, src0, src1, stride0, stride1, stride2, h);
+}
+
+void ff_put_pixels8_l4_8(uint8_t *dst, const uint8_t *src0,
+                         const uint8_t *src1, const uint8_t *src2,
+                         const uint8_t *src3, int stride0, int stride1,
+                         int stride2, int stride3, int stride4, int h)
+{
+    put_pixels8_l4_8(dst, src0, src1, src2, src3, stride0, stride1, stride2,
+                     stride3, stride4, h);
+}
+
+void ff_put_pixels16_l4_8(uint8_t *dst, const uint8_t *src0,
+                          const uint8_t *src1, const uint8_t *src2,
+                          const uint8_t *src3, int stride0, int stride1,
+                          int stride2, int stride3, int stride4, int h)
+{
+    put_pixels16_l4_8(dst, src0, src1, src2, src3, stride0, stride1, stride2,
+                      stride3, stride4, h);
+}
+
+void ff_avg_pixels8_8_c(uint8_t *dst, const uint8_t *src, int stride, int h)
+{
+    avg_pixels8_8_c(dst, src, stride, h);
+}
+
+void ff_avg_pixels16_8_c(uint8_t *dst, const uint8_t *src, int stride, int h)
+{
+    avg_pixels16_8_c(dst, src, stride, h);
+}
+void ff_avg_pixels8_l2_8(uint8_t *dst, const uint8_t *src0,
+                         const uint8_t *src1, int stride0, int stride1,
+                         int stride2, int h)
+{
+    avg_pixels8_l2_8(dst, src0, src1, stride0, stride1, stride2, h);
+}
+
+void ff_avg_pixels16_l2_8(uint8_t *dst, const uint8_t *src0,
+                          const uint8_t *src1, int stride0, int stride1,
+                          int stride2, int h)
+{
+    avg_pixels16_l2_8(dst, src0, src1, stride0, stride1, stride2, h);
+}
+
+void ff_avg_pixels8_l4_8(uint8_t *dst, const uint8_t *src0,
+                         const uint8_t *src1, const uint8_t *src2,
+                         const uint8_t *src3, int stride0, int stride1,
+                         int stride2, int stride3, int stride4, int h)
+{
+    avg_pixels8_l4_8(dst, src0, src1, src2, src3, stride0, stride1, stride2,
+                     stride3, stride4, h);
+}
+
+void ff_avg_pixels16_l4_8(uint8_t *dst, const uint8_t *src0,
+                          const uint8_t *src1, const uint8_t *src2,
+                          const uint8_t *src3, int stride0, int stride1,
+                          int stride2, int stride3, int stride4, int h)
+{
+    avg_pixels16_l4_8(dst, src0, src1, src2, src3, stride0, stride1, stride2,
+                      stride3, stride4, h);
+}
+
+#endif
