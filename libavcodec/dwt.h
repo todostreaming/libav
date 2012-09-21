@@ -26,7 +26,11 @@
 typedef int DWTELEM;
 typedef short IDWTELEM;
 
+#define MAX_DWT_SUPPORT 8
+#define MAX_DECOMPOSITIONS 8
+
 typedef struct DWTCompose {
+    IDWTELEM *b[MAX_DWT_SUPPORT];
     IDWTELEM *b0;
     IDWTELEM *b1;
     IDWTELEM *b2;
@@ -56,8 +60,6 @@ typedef struct DWTContext {
                              int src_y, int src_stride, slice_buffer *sb,
                              int add, uint8_t *dst8);
 } DWTContext;
-
-#define MAX_DECOMPOSITIONS 8
 
 #define DWT_97 0
 #define DWT_53 1
