@@ -1,4 +1,39 @@
-#include "dwt.h"
+/*
+ * Copyright (C) 2009 David Conrad
+ * Copyright (C) 2012 Jordi Ortiz
+ *
+ * This file is part of Libav.
+ *
+ * Libav is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * Libav is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with Libav; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
+#ifndef AVCODEC_DIRAC_DWT_H
+#define AVCODEC_DIRAC_DWT_H
+
+#include <stdint.h>
+
+typedef int DWTELEM;
+typedef short IDWTELEM;
+
+#define MAX_DWT_SUPPORT    8
+#define MAX_DECOMPOSITIONS 8
+
+typedef struct {
+    IDWTELEM *b[MAX_DWT_SUPPORT];
+    int y;
+} DiracDWTCompose;
 
 enum dwt_type {
     DWT_SNOW_DAUB9_7,
@@ -14,7 +49,6 @@ enum dwt_type {
 };
 
 typedef struct DiracDWTContext {
-    DWTContext dwtctx;
     IDWTELEM *buffer;
     IDWTELEM *temp;
     int width;
@@ -32,7 +66,7 @@ typedef struct DiracDWTContext {
     void (*vertical_compose)(void);
      ///< vertical_compose -> one set of lowpass and highpass combined
     void (*horizontal_compose)(IDWTELEM *b, IDWTELEM *tmp, int width);
-    DWTCompose cs[MAX_DECOMPOSITIONS];
+    DiracDWTCompose cs[MAX_DECOMPOSITIONS];
 } DiracDWTContext;
 
 
@@ -94,3 +128,5 @@ void ff_spatial_idwt_slice2(DiracDWTContext *d, int y);
 
 #define COMPOSE_DAUB97iH0(b0, b1, b2)                                   \
     (b1 + ((6497 * (b0 + b2) + 2048) >> 12))
+
+#endif /* AVCODEC_DIRAC_DWT_H */

@@ -26,7 +26,7 @@
 typedef int DWTELEM;
 typedef short IDWTELEM;
 
-#define MAX_DWT_SUPPORT 8
+#define MAX_DWT_SUPPORT    8
 #define MAX_DECOMPOSITIONS 8
 
 typedef struct DWTCompose {
