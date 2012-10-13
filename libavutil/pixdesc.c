@@ -532,7 +532,7 @@ const AVPixFmtDescriptor av_pix_fmt_descriptors[AV_PIX_FMT_NB] = {
         },
         .flags = PIX_FMT_PLANAR,
     },
-        [AV_PIX_FMT_YUVA422P] = {
+    [AV_PIX_FMT_YUVA422P] = {
         .name = "yuva422p",
         .nb_components = 4,
         .log2_chroma_w = 1,
