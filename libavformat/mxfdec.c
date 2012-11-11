@@ -2033,6 +2033,55 @@ end:
     avio_seek(s->pb, mxf->run_in, SEEK_SET);
 }
 
+static int mxf_read_close(AVFormatContext *s)
+{
+    MXFContext *mxf = s->priv_data;
+    MXFIndexTableSegment *seg;
+    int i;
+
+    av_freep(&mxf->packages_refs);
+
+    for (i = 0; i < s->nb_streams; i++)
+        s->streams[i]->priv_data = NULL;
+
+    for (i = 0; i < mxf->metadata_sets_count; i++) {
+        switch (mxf->metadata_sets[i]->type) {
+        case MultipleDescriptor:
+            av_freep(&((MXFDescriptor *)mxf->metadata_sets[i])->sub_descriptors_refs);
+            break;
+        case Sequence:
+            av_freep(&((MXFSequence *)mxf->metadata_sets[i])->structural_components_refs);
+            break;
+        case SourcePackage:
+        case MaterialPackage:
+            av_freep(&((MXFPackage *)mxf->metadata_sets[i])->tracks_refs);
+            break;
+        case IndexTableSegment:
+            seg = (MXFIndexTableSegment *)mxf->metadata_sets[i];
+            av_freep(&seg->temporal_offset_entries);
+            av_freep(&seg->flag_entries);
+            av_freep(&seg->stream_offset_entries);
+            break;
+        default:
+            break;
+        }
+        av_freep(&mxf->metadata_sets[i]);
+    }
+    av_freep(&mxf->partitions);
+    av_freep(&mxf->metadata_sets);
+    av_freep(&mxf->aesc);
+    av_freep(&mxf->local_tags);
+
+    for (i = 0; i < mxf->nb_index_tables; i++) {
+        av_freep(&mxf->index_tables[i].segments);
+        av_freep(&mxf->index_tables[i].ptses);
+        av_freep(&mxf->index_tables[i].fake_index);
+    }
+    av_freep(&mxf->index_tables);
+
+    return 0;
+}
+
 static int mxf_read_header(AVFormatContext *s)
 {
     MXFContext *mxf = s->priv_data;
@@ -2139,10 +2188,10 @@ static int mxf_read_header(AVFormatContext *s)
     /* we need to do this before computing the index tables
      * to be able to fill in zero IndexDurations with st->duration */
     if ((ret = mxf_parse_structural_metadata(mxf)) < 0)
-        return ret;
+        goto fail;
 
     if ((ret = mxf_compute_index_tables(mxf)) < 0)
-        return ret;
+        goto fail;
 
     if (mxf->nb_index_tables > 1) {
         /* TODO: look up which IndexSID to use via EssenceContainerData */
@@ -2150,12 +2199,17 @@ static int mxf_read_header(AVFormatContext *s)
                mxf->nb_index_tables, mxf->index_tables[0].index_sid);
     } else if (mxf->nb_index_tables == 0 && mxf->op == OPAtom) {
         av_log(mxf->fc, AV_LOG_ERROR, "cannot demux OPAtom without an index\n");
-        return AVERROR_INVALIDDATA;
+        ret = AVERROR_INVALIDDATA;
+        goto fail;
     }
 
     mxf_handle_small_eubc(s);
 
     return 0;
+fail:
+    mxf_read_close(s);
+
+    return ret;
 }
 
 /**
@@ -2416,56 +2470,6 @@ static int mxf_read_packet(AVFormatContext *s, AVPacket *pkt)
     }
 
     mxf->current_edit_unit += edit_units;
-
-    return 0;
-}
-
-
-static int mxf_read_close(AVFormatContext *s)
-{
-    MXFContext *mxf = s->priv_data;
-    MXFIndexTableSegment *seg;
-    int i;
-
-    av_freep(&mxf->packages_refs);
-
-    for (i = 0; i < s->nb_streams; i++)
-        s->streams[i]->priv_data = NULL;
-
-    for (i = 0; i < mxf->metadata_sets_count; i++) {
-        switch (mxf->metadata_sets[i]->type) {
-        case MultipleDescriptor:
-            av_freep(&((MXFDescriptor *)mxf->metadata_sets[i])->sub_descriptors_refs);
-            break;
-        case Sequence:
-            av_freep(&((MXFSequence *)mxf->metadata_sets[i])->structural_components_refs);
-            break;
-        case SourcePackage:
-        case MaterialPackage:
-            av_freep(&((MXFPackage *)mxf->metadata_sets[i])->tracks_refs);
-            break;
-        case IndexTableSegment:
-            seg = (MXFIndexTableSegment *)mxf->metadata_sets[i];
-            av_freep(&seg->temporal_offset_entries);
-            av_freep(&seg->flag_entries);
-            av_freep(&seg->stream_offset_entries);
-            break;
-        default:
-            break;
-        }
-        av_freep(&mxf->metadata_sets[i]);
-    }
-    av_freep(&mxf->partitions);
-    av_freep(&mxf->metadata_sets);
-    av_freep(&mxf->aesc);
-    av_freep(&mxf->local_tags);
-
-    for (i = 0; i < mxf->nb_index_tables; i++) {
-        av_freep(&mxf->index_tables[i].segments);
-        av_freep(&mxf->index_tables[i].ptses);
-        av_freep(&mxf->index_tables[i].fake_index);
-    }
-    av_freep(&mxf->index_tables);
 
     return 0;
 }
