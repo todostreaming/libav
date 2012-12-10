@@ -30,6 +30,7 @@
 
 #include "libavutil/common.h"
 #include "libavutil/dict.h"
+#include "libavutil/hash.h"
 #include "libavutil/log.h"
 
 #include "libavformat/version.h"
@@ -96,9 +97,11 @@ typedef struct AVIOContext {
     int eof_reached;        /**< true if eof reached */
     int write_flag;         /**< true if open for writing */
     int max_packet_size;
+#ifdef FF_API_CHECKSUM
     unsigned long checksum;
     unsigned char *checksum_ptr;
     unsigned long (*update_checksum)(unsigned long checksum, const uint8_t *buf, unsigned int size);
+#endif
     int error;              /**< contains the error code or 0 if no error happened */
     /**
      * Pause or resume playback for network streaming protocols - e.g. MMS.
@@ -115,6 +118,8 @@ typedef struct AVIOContext {
      * A combination of AVIO_SEEKABLE_ flags or 0 when the stream is not seekable.
      */
     int seekable;
+
+    AVHash *hash;
 } AVIOContext;
 
 /* unbuffered I/O */
