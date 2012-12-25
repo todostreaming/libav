@@ -31,7 +31,7 @@
 #include "internal.h"
 
 typedef struct ListEntry {
-    char  name[1024];
+    char  *name;
     int   duration;
     struct ListEntry *next;
 } ListEntry;
@@ -85,10 +85,12 @@ static int append_entry(HLSContext *hls, uint64_t duration)
     if (!en)
         return AVERROR(ENOMEM);
 
-    av_get_frame_filename(en->name, sizeof(en->name),
-                          av_basename(hls->basename),
-                          hls->number -1);
+    en->name = strdup(av_basename(hls->avf->filename));
 
+    if (!en->name) {
+        av_free(en);
+        return AVERROR(ENOMEM);
+    }
     en->duration = duration;
     en->next     = NULL;
 
@@ -102,6 +104,7 @@ static int append_entry(HLSContext *hls, uint64_t duration)
     if (hls->number >= hls->size) {
         en = hls->list;
         hls->list = en->next;
+        av_free(en->name);
         av_free(en);
     }
 
@@ -115,6 +118,7 @@ static void free_entries(HLSContext *hls)
     while(p) {
         en = p;
         p = p->next;
+        av_free(en->name);
         av_free(en);
     }
 }
