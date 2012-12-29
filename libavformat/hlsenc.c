@@ -39,6 +39,7 @@ typedef struct ListEntry {
 typedef struct HLSContext {
     const AVClass *class;  // Class for private options.
     int number;
+    int64_t sequence;
     AVOutputFormat *oformat;
     AVFormatContext *avf;
     float time;            // Set by a private option.
@@ -145,7 +146,7 @@ static int hls_window(AVFormatContext *s, int last)
     avio_printf(hls->pb, "#EXT-X-VERSION:3\n");
     avio_printf(hls->pb, "#EXT-X-TARGETDURATION:%d\n", target_duration);
     avio_printf(hls->pb, "#EXT-X-MEDIA-SEQUENCE:%d\n",
-                FFMAX(0, hls->number - hls->size));
+                FFMAX(0, hls->sequence++ - hls->size));
 
     for (en = hls->list; en; en = en->next) {
         avio_printf(hls->pb, "#EXTINF:%d,\n", en->duration);
