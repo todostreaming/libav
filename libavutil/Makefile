@@ -89,6 +89,7 @@ OBJS = adler32.o                                                        \
        sha.o                                                            \
        time.o                                                           \
        tree.o                                                           \
+       tlsf.o                                                           \
        utils.o                                                          \
        xtea.o                                                           \
 

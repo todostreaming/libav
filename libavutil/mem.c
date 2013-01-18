@@ -34,6 +34,9 @@
 #include <malloc.h>
 #endif
 
+
+#include "tlsf.h"
+
 #include "avutil.h"
 #include "intreadwrite.h"
 #include "mem.h"
@@ -76,13 +79,10 @@ void *av_malloc(size_t size)
     diff              = ((-(long)ptr - 1) & 31) + 1;
     ptr               = (char *)ptr + diff;
     ((char *)ptr)[-1] = diff;
-#elif HAVE_POSIX_MEMALIGN
-    if (posix_memalign(&ptr, 32, size))
-        ptr = NULL;
 #elif HAVE_ALIGNED_MALLOC
     ptr = _aligned_malloc(size, 32);
 #elif HAVE_MEMALIGN
-    ptr = memalign(32, size);
+    ptr =  tlsf_malloc(size);
     /* Why 64?
      * Indeed, we should align it:
      *   on  4 for 386
@@ -132,7 +132,7 @@ void *av_realloc(void *ptr, size_t size)
 #elif HAVE_ALIGNED_MALLOC
     return _aligned_realloc(ptr, size, 32);
 #else
-    return realloc(ptr, size);
+    return tlsf_realloc(ptr, size);
 #endif
 }
 
@@ -144,7 +144,7 @@ void av_free(void *ptr)
 #elif HAVE_ALIGNED_MALLOC
     _aligned_free(ptr);
 #else
-    free(ptr);
+    tlsf_free(ptr);
 #endif
 }
 
