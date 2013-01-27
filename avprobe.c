@@ -27,6 +27,7 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/dict.h"
 #include "libavutil/libm.h"
+#include "libavutil/channel_layout.h"
 #include "libavdevice/avdevice.h"
 #include "cmdutils.h"
 
@@ -37,6 +38,7 @@ static int do_show_format  = 0;
 static AVDictionary *fmt_entries_to_show = NULL;
 static int nb_fmt_entries_to_show;
 static int do_show_packets = 0;
+static int do_show_frames  = 0;
 static int do_show_streams = 0;
 
 static int show_value_unit              = 0;
@@ -539,6 +541,95 @@ static const char *media_type_string(enum AVMediaType media_type)
     }
 }
 
+static void probe_video_format(int format)
+{
+    const AVPixFmtDescriptor *fmt = av_pix_fmt_desc_get(format);
+    const char *name = fmt ? fmt->name : "unknown";
+
+    probe_str("format", name);
+}
+
+static void probe_audio_format(int format)
+{
+    const char *name = av_get_sample_fmt_name(format);
+
+    probe_str("format", name ? name : "unknown");
+}
+
+static void show_frame(AVFrame *frame, AVStream *st)
+{
+    char val_str[128];
+    probe_object_header("frame");
+    probe_str("pts", ts_value_string(val_str, sizeof(val_str), frame->pts));
+    probe_str("pts_time", time_value_string(val_str, sizeof(val_str),
+                                            frame->pts, &st->time_base));
+    probe_int("key_frame", frame->key_frame);
+    probe_int("reference", frame->reference);
+
+    switch (st->codec->codec_type) {
+    case AVMEDIA_TYPE_VIDEO:
+        probe_int("width", frame->width);
+        probe_int("height", frame->height);
+        probe_str("sample_aspect_ratio",
+                  rational_string(val_str, sizeof(val_str), ":",
+                                  &frame->sample_aspect_ratio));
+
+        probe_int("interlaced", frame->interlaced_frame);
+        if (frame->interlaced_frame)
+            probe_int("top_field_first", frame->top_field_first);
+        probe_video_format(frame->format);
+        break;
+
+    case AVMEDIA_TYPE_AUDIO:
+        probe_int("nb_samples", frame->nb_samples);
+        probe_int("sample_rate", frame->sample_rate);
+        av_get_channel_layout_string(val_str, sizeof(val_str),
+                                     -1, frame->channel_layout);
+        probe_str("channel_layout", val_str);
+        probe_audio_format(frame->format);
+        break;
+    }
+    probe_object_footer("frame");
+}
+
+static void show_frames(AVFormatContext *fmt_ctx, AVPacket *pkt)
+{
+    AVStream *st        = fmt_ctx->streams[pkt->stream_index];
+    AVCodecContext *ctx = st->codec;
+    AVPacket avpkt      = { 0 };
+    AVFrame frame       = { 0 };
+    int ret, got_frame  = 1;
+    int (*decode)(AVCodecContext *, AVFrame *, int *, AVPacket *);
+
+    if (!ctx->codec)
+        return;
+
+    avcodec_get_frame_defaults(&frame);
+
+    if (pkt)
+        avpkt = *pkt;
+
+    switch (ctx->codec_type) {
+    case AVMEDIA_TYPE_AUDIO:
+        decode = avcodec_decode_audio4;
+        break;
+    case AVMEDIA_TYPE_VIDEO:
+        decode = avcodec_decode_video2;
+        break;
+    default:
+        return;
+    }
+    probe_array_header("frames");
+    while (avpkt.size > 0 || !pkt && got_frame) {
+        if ((ret = decode(ctx, &frame, &got_frame, &avpkt)) < 0)
+            break;
+        avpkt.size -= ret;
+        avpkt.data += ret;
+        show_frame(&frame, st);
+    }
+    probe_array_footer("frames");
+}
+
 static void show_packet(AVFormatContext *fmt_ctx, AVPacket *pkt)
 {
     char val_str[128];
@@ -562,6 +653,8 @@ static void show_packet(AVFormatContext *fmt_ctx, AVPacket *pkt)
                                       pkt->size, unit_byte_str));
     probe_int("pos", pkt->pos);
     probe_str("flags", pkt->flags & AV_PKT_FLAG_KEY ? "K" : "_");
+    if (do_show_frames)
+        show_frames(fmt_ctx, pkt);
     probe_object_footer("packet");
 }
 
@@ -910,6 +1003,7 @@ static const OptionDef real_options[] = {
     { "show_format_entry", HAS_ARG, {.func_arg = opt_show_format_entry},
       "show a particular entry from the format/container info", "entry" },
     { "show_packets", OPT_BOOL, {&do_show_packets}, "show packets info" },
+    { "show_frames",  OPT_BOOL, {&do_show_frames},  "show frames info" },
     { "show_streams", OPT_BOOL, {&do_show_streams}, "show streams info" },
     { "default", HAS_ARG | OPT_AUDIO | OPT_VIDEO | OPT_EXPERT, {.func_arg = opt_default},
       "generic catch all option", "" },
