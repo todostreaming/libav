@@ -360,6 +360,7 @@ typedef struct AVProbeData {
 #define AVFMT_TS_NONSTRICT 0x20000 /**< Format does not require strictly
                                         increasing timestamps, but they must
                                         still be monotonic */
+#define AVFMT_TS_NEGATIVE  0x40000 /**< Format allows negative timestamps If not set the timestamp will be shifted so they start from 0. */
 
 /**
  * @addtogroup lavf_encoding
@@ -431,6 +432,17 @@ typedef struct AVOutputFormat {
      *         A negative number if unknown.
      */
     int (*query_codec)(enum AVCodecID id, int std_compliance);
+
+    /**
+     * Offset to remap timestamps to be non-negative.
+     * Expressed in timebase units.
+     */
+    int64_t offset;
+
+    /**
+     * Timebase for the timestamp offset.
+     */
+    AVRational *offset_timebase;
 } AVOutputFormat;
 /**
  * @}
