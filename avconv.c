@@ -123,13 +123,26 @@ sigterm_handler(int sig)
     term_exit();
 }
 
+static int64_t timer_start = 0;
+static void print_report(int is_last_report, int64_t timer_start);
+
+static void sigusr1_handler(int sig)
+{
+    print_report(1, timer_start);
+}
+
+
 static void term_init(void)
 {
+struct sigaction action;
+
     signal(SIGINT , sigterm_handler); /* Interrupt (ANSI).    */
     signal(SIGTERM, sigterm_handler); /* Termination (ANSI).  */
 #ifdef SIGXCPU
     signal(SIGXCPU, sigterm_handler);
 #endif
+    action.sa_handler = sigusr1_handler;
+    sigaction(SIGUSR1, &action, NULL);
 }
 
 static int decode_interrupt_cb(void *ctx)
@@ -2419,7 +2432,6 @@ static int transcode(void)
     AVFormatContext *os;
     OutputStream *ost;
     InputStream *ist;
-    int64_t timer_start;
 
     ret = transcode_init();
     if (ret < 0)
