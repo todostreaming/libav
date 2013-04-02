@@ -213,6 +213,15 @@ described.
 
 @c man end STREAM SELECTION
 
+@chapter Reporting
+
+@c man begin REPORTING
+
+The conversion status is reported on stderror either every half second or, if
+using the option @code{-nostat}, when the signal USR1 is sent to the process.
+
+@c man end REPORTING
+
 @chapter Options
 @c man begin OPTIONS
 
