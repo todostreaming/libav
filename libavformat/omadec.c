@@ -200,13 +200,13 @@ static int decrypt_init(AVFormatContext *s, ID3v2ExtraMeta *em, uint8_t *header)
     }
     if (!em) {
         av_log(s, AV_LOG_ERROR, "No encryption header found\n");
-        return -1;
+        return AVERROR_INVALIDDATA;
     }
 
     if (geob->datasize < 64) {
         av_log(s, AV_LOG_ERROR,
                "Invalid GEOB data size: %u\n", geob->datasize);
-        return -1;
+        return AVERROR_INVALIDDATA;
     }
 
     gdata = geob->data;
@@ -221,7 +221,7 @@ static int decrypt_init(AVFormatContext *s, ID3v2ExtraMeta *em, uint8_t *header)
 
     if (memcmp(&gdata[OMA_ENC_HEADER_SIZE], "KEYRING     ", 12)) {
         av_log(s, AV_LOG_ERROR, "Invalid encryption header\n");
-        return -1;
+        return AVERROR_INVALIDDATA;
     }
     oc->rid = AV_RB32(&gdata[OMA_ENC_HEADER_SIZE + 28]);
     av_log(s, AV_LOG_DEBUG, "RID: %.8x\n", oc->rid);
@@ -251,7 +251,7 @@ static int decrypt_init(AVFormatContext *s, ID3v2ExtraMeta *em, uint8_t *header)
         }
         if (i >= sizeof(leaf_table)) {
             av_log(s, AV_LOG_ERROR, "Invalid key\n");
-            return -1;
+            return AVERROR_INVALIDDATA;
         }
     }
 
@@ -286,7 +286,7 @@ static int oma_read_header(AVFormatContext *s)
     if (memcmp(buf, ((const uint8_t[]){'E', 'A', '3'}), 3) ||
         buf[4] != 0 || buf[5] != EA3_HEADER_SIZE) {
         av_log(s, AV_LOG_ERROR, "Couldn't find the EA3 header !\n");
-        return -1;
+        return AVERROR_INVALIDDATA;
     }
 
     oc->content_start = avio_tell(s->pb);
@@ -379,7 +379,7 @@ static int oma_read_header(AVFormatContext *s)
         break;
     default:
         av_log(s, AV_LOG_ERROR, "Unsupported codec %d!\n", buf[32]);
-        return -1;
+        return AVERROR(ENOSYS);
     }
 
     st->codec->block_align = framesize;
@@ -441,24 +441,23 @@ static int oma_read_seek(struct AVFormatContext *s,
                          int stream_index, int64_t timestamp, int flags)
 {
     OMAContext *oc = s->priv_data;
-
-    ff_pcm_read_seek(s, stream_index, timestamp, flags);
+    int err = ff_pcm_read_seek(s, stream_index, timestamp, flags);
 
     if (oc->encrypted) {
         /* readjust IV for CBC */
         int64_t pos = avio_tell(s->pb);
-        if (pos < oc->content_start)
+        if (err || pos < oc->content_start)
             memset(oc->iv, 0, 8);
         else {
-            if (avio_seek(s->pb, -8, SEEK_CUR) < 0 ||
-                avio_read(s->pb, oc->iv, 8) < 8) {
+            if (err = avio_seek(s->pb, -8, SEEK_CUR) >= 0)
+                if (avio_read(s->pb, oc->iv, 8) < 8)
+                    err = AVERROR_EOF;
+            if (err)
                 memset(oc->iv, 0, 8);
-                return -1;
-            }
         }
     }
 
-    return 0;
+    return err;
 }
 
 AVInputFormat ff_oma_demuxer = {
