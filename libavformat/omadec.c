@@ -142,19 +142,26 @@ static int rprobe(AVFormatContext *s, uint8_t *enc_header, const uint8_t *r_val)
     return memcmp(&enc_header[pos], oc->sm_val, 8) ? -1 : 0;
 }
 
-static int nprobe(AVFormatContext *s, uint8_t *enc_header, int size,
+#define PROBE_SIZE 4 + 4 + 4 + 4
+
+static int nprobe(AVFormatContext *s, uint8_t *enc_header, unsigned size,
                   const uint8_t *n_val)
 {
     OMAContext *oc = s->priv_data;
-    uint32_t pos, taglen, datalen;
+    uint64_t pos;
+    uint32_t taglen, datalen;
     struct AVDES av_des;
 
-    if (!enc_header || !n_val)
+    if (!enc_header || !n_val ||
+        size < OMA_ENC_HEADER_SIZE + oc->k_size + PROBE_SIZE)
         return -1;
 
     pos = OMA_ENC_HEADER_SIZE + oc->k_size;
     if (!memcmp(&enc_header[pos], "EKB ", 4))
         pos += 32;
+
+    if (size < pos)
+        return -1;
 
     if (AV_RB32(&enc_header[pos]) != oc->rid)
         av_log(s, AV_LOG_DEBUG, "Mismatching RID\n");
@@ -162,10 +169,10 @@ static int nprobe(AVFormatContext *s, uint8_t *enc_header, int size,
     taglen  = AV_RB32(&enc_header[pos + 32]);
     datalen = AV_RB32(&enc_header[pos + 36]) >> 4;
 
-    if (taglen + (((uint64_t)datalen) << 4) + 44 > size)
-        return -1;
-
     pos += 44 + taglen;
+
+    if (datalen << 4 > size - pos)
+        return -1;
 
     av_des_init(&av_des, n_val, 192, 1);
     while (datalen-- > 0) {
