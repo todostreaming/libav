@@ -144,6 +144,13 @@ typedef struct AVClass {
 #define AV_LOG_DEBUG    48
 
 /**
+ * Additional colors when supported, useful for extended debugging sessions
+ * to be or-ed with the above flags. Do not use it beside for debugging.
+ */
+
+#define AV_LOG_C(x) (x << 8)
+
+/**
  * @}
  */
 
