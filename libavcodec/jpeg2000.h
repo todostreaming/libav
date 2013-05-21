@@ -146,6 +146,8 @@ typedef struct Jpeg2000CodingStyle {
     uint8_t log2_prec_heights[JPEG2000_MAX_RESLEVELS]; // TODO: initialize prec_size array with 0?
 } Jpeg2000CodingStyle;
 
+#define MAX_LEVELS 32 * 3
+
 typedef struct Jpeg2000QuantStyle {
     uint8_t expn[JPEG2000_MAX_DECLEVELS * 3];  // quantization exponent
     uint32_t mant[JPEG2000_MAX_DECLEVELS * 3]; // quantization mantissa
