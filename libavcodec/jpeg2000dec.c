@@ -161,6 +161,7 @@ static int tag_tree_decode(Jpeg2000DecoderContext *s, Jpeg2000TgtNode *node,
 static int get_siz(Jpeg2000DecoderContext *s)
 {
     int i;
+    int ncomponents;
 
     if (s->buf_end - s->buf < 36)
         return AVERROR_INVALIDDATA;
@@ -174,7 +175,28 @@ static int get_siz(Jpeg2000DecoderContext *s)
     s->tile_height    = bytestream_get_be32(&s->buf); // YTSiz
     s->tile_offset_x  = bytestream_get_be32(&s->buf); // XT0Siz
     s->tile_offset_y  = bytestream_get_be32(&s->buf); // YT0Siz
-    s->ncomponents    = bytestream_get_be16(&s->buf); // CSiz
+    ncomponents       = bytestream_get_be16(&s->buf); // CSiz
+
+    if (ncomponents <= 0) {
+        av_log(s->avctx, AV_LOG_ERROR, "Invalid number of components: %d\n",
+               s->ncomponents);
+        return AVERROR_INVALIDDATA;
+    }
+
+    if (ncomponents > 4) {
+        avpriv_request_sample(s->avctx, "Support for %d components",
+                              s->ncomponents);
+        return AVERROR_PATCHWELCOME;
+    }
+
+    s->ncomponents = ncomponents;
+
+    if (s->tile_width <= 0 || s->tile_height <= 0 ||
+        s->tile_width > s->width || s->tile_height > s->height) {
+        av_log(s->avctx, AV_LOG_ERROR, "Invalid tile dimension %dx%d.\n",
+               s->tile_width, s->tile_height);
+        return AVERROR_INVALIDDATA;
+    }
 
     if (s->buf_end - s->buf < 2 * s->ncomponents)
         return AVERROR_INVALIDDATA;
