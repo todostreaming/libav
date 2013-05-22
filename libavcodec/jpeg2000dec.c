@@ -451,6 +451,11 @@ static int get_sot(Jpeg2000DecoderContext *s, int n)
     /* Read TNSot but not used */
     bytestream2_get_byteu(&s->g);               // TNsot
 
+    if (TPsot >= FF_ARRAY_ELEMS(s->tile[s->curtileno].tile_part)) {
+        avpriv_request_sample(s->avctx, "Support for %d components", TPsot);
+        return AVERROR_PATCHWELCOME;
+    }
+
     tp             = s->tile[s->curtileno].tile_part + TPsot;
     tp->tile_index = Isot;
     tp->tp_len     = Psot;
