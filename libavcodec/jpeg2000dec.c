@@ -72,7 +72,7 @@ typedef struct Jpeg2000DecoderContext {
     int             precision;
     int             ncomponents;
     int             tile_width, tile_height;
-    int             numXtiles, numYtiles;
+    unsigned        numXtiles, numYtiles;
     int             maxtilelen;
 
     Jpeg2000CodingStyle codsty[4];
@@ -206,7 +206,7 @@ static int get_siz(Jpeg2000DecoderContext *s)
     s->numXtiles = ff_jpeg2000_ceildiv(s->width  - s->tile_offset_x, s->tile_width);
     s->numYtiles = ff_jpeg2000_ceildiv(s->height - s->tile_offset_y, s->tile_height);
 
-    s->tile = av_mallocz(s->numXtiles * s->numYtiles * sizeof(*s->tile));
+    s->tile = av_mallocz_array(s->numXtiles * s->numYtiles, sizeof(*s->tile));
     if (!s->tile)
         return AVERROR(ENOMEM);
 
