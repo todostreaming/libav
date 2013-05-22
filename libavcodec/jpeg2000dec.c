@@ -438,6 +438,9 @@ static int get_sot(Jpeg2000DecoderContext *s, int n)
         return AVERROR_INVALIDDATA;
 
     Isot = bytestream2_get_be16u(&s->g);        // Isot
+    if (Isot >= s->numXtiles * s->numYtiles) {
+        return AVERROR_INVALIDDATA;
+    }
     if (Isot) {
         avpriv_request_sample(s->avctx, "Support for more than one tile");
         return AVERROR_PATCHWELCOME;
