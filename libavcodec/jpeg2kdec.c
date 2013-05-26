@@ -317,6 +317,9 @@ static int get_cox(Jpeg2KDecoderContext *s, Jpeg2KCodingStyle *c)
             c->log2_prec_widths[i]  =  byte       & 0x0F;    // precinct PPx
             c->log2_prec_heights[i] = (byte >> 4) & 0x0F;    // precinct PPy
         }
+    } else {
+        memset(c->log2_prec_widths , 15, sizeof(c->log2_prec_widths ));
+        memset(c->log2_prec_heights, 15, sizeof(c->log2_prec_heights));
     }
     return 0;
 }
@@ -330,9 +333,6 @@ static int get_cod(Jpeg2KDecoderContext *s, Jpeg2KCodingStyle *c,
 
     if (bytestream2_get_bytes_left(&s->g) < 5)
         return AVERROR_INVALIDDATA;
-
-    tmp.log2_prec_width  =
-    tmp.log2_prec_height = 15;
 
     tmp.csty = bytestream2_get_byteu(&s->g);
 
@@ -645,8 +645,6 @@ static int jpeg2k_decode_packet(Jpeg2KDecoderContext *s,
         if (band->coord[0][0] == band->coord[0][1] ||
             band->coord[1][0] == band->coord[1][1])
             continue;
-        prec->yi0 = 0;
-        prec->xi0 = 0;
         nb_code_blocks =  prec->nb_codeblocks_height *
                           prec->nb_codeblocks_width;
         for (cblkno = 0; cblkno < nb_code_blocks; cblkno++) {
