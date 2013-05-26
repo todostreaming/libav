@@ -266,6 +266,12 @@ static int get_cox(Jpeg2KDecoderContext *s, Jpeg2KCodingStyle *c)
     c->log2_cblk_width  = bytestream_get_byte(&s->buf) + 2; // cblk width
     c->log2_cblk_height = bytestream_get_byte(&s->buf) + 2; // cblk height
 
+    if (c->log2_cblk_width > 10 || c->log2_cblk_height > 10 ||
+        c->log2_cblk_width + c->log2_cblk_height > 14) {
+        av_log(s->avctx, AV_LOG_ERROR, "cblk size invalid\n");
+        return AVERROR_INVALIDDATA;
+    }
+
     c->cblk_style = bytestream_get_byte(&s->buf);
     if (c->cblk_style != 0) { // cblk style
         av_log(s->avctx, AV_LOG_ERROR, "no extra cblk styles supported\n");
