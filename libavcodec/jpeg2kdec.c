@@ -84,8 +84,7 @@ typedef struct Jpeg2KDecoderContext {
     Jpeg2KTile    *tile;
 
     /*options parameters*/
-    int16_t         lowres;
-    int16_t         reduction_factor;
+    int             reduction_factor;
 } Jpeg2KDecoderContext;
 
 /* get_bits functions for JPEG2K packet bitstream
@@ -594,12 +593,10 @@ static int init_tile(Jpeg2KDecoderContext *s, int tileno)
         comp->coord_o[1][0] = FFMAX(tiley       * s->tile_height + s->tile_offset_y, s->image_offset_y);
         comp->coord_o[1][1] = FFMIN((tiley + 1) * s->tile_height + s->tile_offset_y, s->height);
 
-        // FIXME: add a dcinema profile check ?
-        // value is guaranteed by profile (orig=0, 1 tile)
-        comp->coord[0][0] = 0;
-        comp->coord[0][1] = s->avctx->width;
-        comp->coord[1][0] = 0;
-        comp->coord[1][1] = s->avctx->height;
+        comp->coord[0][0] = ff_jpeg2k_ceildivpow2(comp->coord_o[0][0], s->reduction_factor);
+        comp->coord[0][1] = ff_jpeg2k_ceildivpow2(comp->coord_o[0][1], s->reduction_factor);
+        comp->coord[1][0] = ff_jpeg2k_ceildivpow2(comp->coord_o[1][0], s->reduction_factor);
+        comp->coord[1][1] = ff_jpeg2k_ceildivpow2(comp->coord_o[1][1], s->reduction_factor);
 
         if (ret = ff_jpeg2k_init_component(comp, codsty, qntsty,
                                              s->cbps[compno], s->cdx[compno],
@@ -1345,9 +1342,6 @@ static int jpeg2k_decode_frame(AVCodecContext *avctx, void *data,
     bytestream2_init(&s->g, avpkt->data, avpkt->size);
     s->curtileno = 0; // TODO: only one tile in DCI JP2K. to implement for more tiles
 
-    // reduction factor, i.e number of resolution levels to skip
-    s->reduction_factor = s->lowres;
-
     if (bytestream2_get_bytes_left(&s->g) < 2)
         return AVERROR_INVALIDDATA;
 
@@ -1406,7 +1400,7 @@ static void jpeg2k_init_static_data(AVCodec *codec)
 
 static const AVOption options[] = {
     { "lowres",  "Lower the decoding resolution by a power of two",
-        OFFSET(lowres), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, JPEG2K_MAX_RESLEVELS - 1, VD },
+        OFFSET(reduction_factor), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, JPEG2K_MAX_RESLEVELS - 1, VD },
     { NULL },
 };
 
