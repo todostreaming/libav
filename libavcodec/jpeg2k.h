@@ -178,12 +178,11 @@ typedef struct Jpeg2KPrec {
     uint16_t coord[2][2]; // border coordinates {{x0, x1}, {y0, y1}}
 } Jpeg2KPrec; // precinct
 
-/* TODO: stepsize can be float or integer depending on
- * reversible or irreversible transformation. */
 typedef struct Jpeg2KBand {
     uint16_t coord[2][2]; // border coordinates {{x0, x1}, {y0, y1}}
     uint16_t log2_cblk_width, log2_cblk_height;
-    float stepsize; // quantization stepsize
+    int i_stepsize; // quantization stepsize
+    float f_stepsize; // quantization stepsize
     Jpeg2KPrec *prec;
 } Jpeg2KBand; // subband
 
@@ -195,13 +194,11 @@ typedef struct Jpeg2KResLevel {
     Jpeg2KBand *band;
 } Jpeg2KResLevel; // resolution level
 
-/* TODO: data can be float of integer depending of reversible/irreversible
- * transformation.
- */
 typedef struct Jpeg2KComponent {
     Jpeg2KResLevel *reslevel;
     DWTContext dwt;
-    float *data;
+    float *f_data;
+    int *i_data;
     uint16_t coord[2][2];   // border coordinates {{x0, x1}, {y0, y1}} -- can be reduced with lowres option
     uint16_t coord_o[2][2]; // border coordinates {{x0, x1}, {y0, y1}} -- original values from jpeg2k headers
 } Jpeg2KComponent;
