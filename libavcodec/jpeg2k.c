@@ -285,7 +285,7 @@ int ff_jpeg2k_init_component(Jpeg2KComponent *comp,
             case JPEG2K_QSTY_NONE:
                 /* TODO: to verify. No quantization in this case */
                 numbps = cbps +
-                         lut_gain[codsty->transform][bandno + reslevelno > 0];
+                         lut_gain[codsty->transform][bandno + (reslevelno > 0)];
                 band->stepsize = (float)SHL(2048 + qntsty->mant[gbandno],
                                             2 + numbps - qntsty->expn[gbandno]);
                 break;
