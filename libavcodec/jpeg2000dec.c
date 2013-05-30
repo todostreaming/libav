@@ -681,12 +681,10 @@ static int jpeg2000_decode_packet(Jpeg2000DecoderContext *s,
 static int jpeg2000_decode_packets(Jpeg2000DecoderContext *s, Jpeg2000Tile *tile)
 {
     int layno, reslevelno, compno, precno, ok_reslevel, ret;
-    uint8_t prog_order = tile->codsty[0].prog_order;
-    uint16_t x;
-    uint16_t y;
+    int x, y;
 
     s->bit_index = 8;
-    switch (prog_order) {
+    switch (tile->codsty[0].prog_order) {
     case JPEG2000_PGOD_LRCP:
         for (layno = 0; layno < tile->codsty[0].nlayers; layno++) {
             ok_reslevel = 1;
