@@ -84,8 +84,8 @@ typedef struct Jpeg2000DecoderContext {
     Jpeg2000Tile    *tile;
 
     /*options parameters*/
-    int16_t         lowres;
-    int16_t         reduction_factor;
+    int             lowres;
+    int             reduction_factor;
 } Jpeg2000DecoderContext;
 
 /* get_bits functions for JPEG2000 packet bitstream
