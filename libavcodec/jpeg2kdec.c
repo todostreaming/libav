@@ -1214,6 +1214,7 @@ static void jpeg2k_dec_cleanup(Jpeg2KDecoderContext *s)
         av_freep(&s->tile[tileno].comp);
     }
     av_freep(&s->tile);
+    s->numXtiles = s->numYtiles = 0;
 }
 
 static int jpeg2k_read_main_headers(Jpeg2KDecoderContext *s)
