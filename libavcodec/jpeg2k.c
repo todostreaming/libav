@@ -206,6 +206,11 @@ int ff_jpeg2k_init_component(Jpeg2KComponent *comp,
     int reslevelno, bandno, gbandno = 0, ret, i, j;
     uint32_t csize = 1;
 
+    if (!codsty->nreslevels2decode) {
+        av_log(avctx, AV_LOG_ERROR, "nreslevels2decode uninitialized\n");
+        return AVERROR_INVALIDDATA;
+    }
+
     if (ret = ff_jpeg2k_dwt_init(&comp->dwt, comp->coord,
                                  codsty->nreslevels2decode - 1,
                                  codsty->transform))
