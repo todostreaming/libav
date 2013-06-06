@@ -1231,6 +1231,22 @@ static int jpeg2k_read_main_headers(Jpeg2KDecoderContext *s)
         marker = bytestream2_get_be16u(&s->g);
         oldpos = bytestream2_tell(&s->g);
 
+        if (marker == JPEG2K_SOD) {
+            Jpeg2KTile *tile;
+            Jpeg2KTilePart *tp;
+
+            if (s->curtileno < 0) {
+                av_log(s->avctx, AV_LOG_ERROR, "Missing SOT\n");
+                return AVERROR_INVALIDDATA;
+            }
+
+            tile = s->tile + s->curtileno;
+            tp = tile->tile_part + tile->tp_idx;
+            bytestream2_init(&tp->tpg, s->g.buffer, tp->tp_end - s->g.buffer);
+            bytestream2_skip(&s->g, tp->tp_end - s->g.buffer);
+
+            continue;
+        }
         if (marker == JPEG2K_EOC)
             break;
 
