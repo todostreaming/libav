@@ -361,6 +361,11 @@ static int get_coc(Jpeg2KDecoderContext *s, Jpeg2KCodingStyle *c,
 
     compno = bytestream2_get_byteu(&s->g);
 
+    if (compno >= s->ncomponents) {
+        av_log(s->avctx, AV_LOG_ERROR, "Invalid compno %d\n", compno);
+        return AVERROR_INVALIDDATA;
+    }
+
     c      += compno;
     c->csty = bytestream2_get_byteu(&s->g);
     get_cox(s, c);
@@ -439,7 +444,13 @@ static int get_qcc(Jpeg2KDecoderContext *s, int n, Jpeg2KQuantStyle *q,
     if (bytestream2_get_bytes_left(&s->g) < 1)
         return AVERROR_INVALIDDATA;
 
-    compno              = bytestream2_get_byteu(&s->g);
+    compno = bytestream2_get_byteu(&s->g);
+
+    if (compno >= s->ncomponents) {
+        av_log(s->avctx, AV_LOG_ERROR, "Invalid compno %d\n", compno);
+        return AVERROR_INVALIDDATA;
+    }
+
     properties[compno] |= HAD_QCC;
     return get_qcx(s, n - 1, q + compno);
 }
