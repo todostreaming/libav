@@ -1236,9 +1236,10 @@ static int jpeg2k_read_main_headers(Jpeg2KDecoderContext *s)
         if (marker == JPEG2K_EOC)
             break;
 
-        if (bytestream2_get_bytes_left(&s->g) < 2)
-            return AVERROR_INVALIDDATA;
         len = bytestream2_get_be16u(&s->g);
+        if (len < 2 || bytestream2_get_bytes_left(&s->g) < len - 2)
+            return AVERROR_INVALIDDATA;
+
         switch (marker) {
         case JPEG2K_SIZ:
             ret = get_siz(s);
