@@ -485,6 +485,11 @@ static int get_sot(Jpeg2000DecoderContext *s, int n)
     /* Read TNSot but not used */
     bytestream2_get_byteu(&s->g);               // TNsot
 
+    if (Psot > bytestream2_get_bytes_left(&s->g) + n + 2) {
+        av_log(s->avctx, AV_LOG_ERROR, "Psot %d too big\n", Psot);
+        return AVERROR_INVALIDDATA;
+    }
+
     if (TPsot >= FF_ARRAY_ELEMS(s->tile[Isot].tile_part)) {
         avpriv_request_sample(s->avctx, "Support for %d components", TPsot);
         return AVERROR_PATCHWELCOME;
