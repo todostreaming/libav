@@ -758,6 +758,10 @@ typedef struct RcOverride{
  * Audio encoder supports receiving a different number of samples in each call.
  */
 #define CODEC_CAP_VARIABLE_FRAME_SIZE 0x10000
+/**
+ * Codec sets by its own the frame pkt_pts and pkt_dts. (internal use only)
+ */
+#define CODEC_CAP_PKT_TS 0x20000
 
 //The following defines may change, don't expect compatibility if you use them.
 #define MB_TYPE_INTRA4x4   0x0001
