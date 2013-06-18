@@ -1508,7 +1508,8 @@ int attribute_align_arg avcodec_decode_video2(AVCodecContext *avctx, AVFrame *pi
         else {
             ret = avctx->codec->decode(avctx, picture, got_picture_ptr,
                                        avpkt);
-            picture->pkt_dts = avpkt->dts;
+            if (!(avctx->codec->capabilities & CODEC_CAP_PKT_TS))
+                picture->pkt_dts = avpkt->dts;
             /* get_buffer is supposed to set frame parameters */
             if (!(avctx->codec->capabilities & CODEC_CAP_DR1)) {
                 picture->sample_aspect_ratio = avctx->sample_aspect_ratio;
@@ -1566,7 +1567,8 @@ int attribute_align_arg avcodec_decode_audio4(AVCodecContext *avctx,
         ret = avctx->codec->decode(avctx, frame, got_frame_ptr, avpkt);
         if (ret >= 0 && *got_frame_ptr) {
             avctx->frame_number++;
-            frame->pkt_dts = avpkt->dts;
+            if (!(avctx->codec->capabilities & CODEC_CAP_PKT_TS))
+                frame->pkt_dts = avpkt->dts;
             if (frame->format == AV_SAMPLE_FMT_NONE)
                 frame->format = avctx->sample_fmt;
 
