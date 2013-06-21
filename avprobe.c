@@ -92,6 +92,7 @@ typedef struct {
 } PrintElement;
 
 typedef struct {
+    AVIOContext *out;
     PrintElement *prefix;
     int level;
     void (*print_header)(void);
@@ -106,9 +107,8 @@ typedef struct {
     void (*print_string)  (const char *key, const char *value);
 } PrintContext;
 
-static AVIOContext *probe_out = NULL;
 static PrintContext octx;
-#define AVP_INDENT() avio_printf(probe_out, "%*c", octx.level * 2, ' ')
+#define AVP_INDENT() avio_printf(octx.out, "%*c", octx.level * 2, ' ')
 
 /*
  * Default format, INI
@@ -124,11 +124,11 @@ static PrintContext octx;
 
 static void ini_print_header(void)
 {
-    avio_printf(probe_out, "# avprobe output\n\n");
+    avio_printf(octx.out, "# avprobe output\n\n");
 }
 static void ini_print_footer(void)
 {
-    avio_w8(probe_out, '\n');
+    avio_w8(octx.out, '\n');
 }
 
 static void ini_escape_print(const char *s)
@@ -138,20 +138,20 @@ static void ini_escape_print(const char *s)
 
     while (c = s[i++]) {
         switch (c) {
-        case '\r': avio_printf(probe_out, "%s", "\\r"); break;
-        case '\n': avio_printf(probe_out, "%s", "\\n"); break;
-        case '\f': avio_printf(probe_out, "%s", "\\f"); break;
-        case '\b': avio_printf(probe_out, "%s", "\\b"); break;
-        case '\t': avio_printf(probe_out, "%s", "\\t"); break;
+        case '\r': avio_printf(octx.out, "%s", "\\r"); break;
+        case '\n': avio_printf(octx.out, "%s", "\\n"); break;
+        case '\f': avio_printf(octx.out, "%s", "\\f"); break;
+        case '\b': avio_printf(octx.out, "%s", "\\b"); break;
+        case '\t': avio_printf(octx.out, "%s", "\\t"); break;
         case '\\':
         case '#' :
         case '=' :
-        case ':' : avio_w8(probe_out, '\\');
+        case ':' : avio_w8(octx.out, '\\');
         default:
             if ((unsigned char)c < 32)
-                avio_printf(probe_out, "\\x00%02x", c & 0xff);
+                avio_printf(octx.out, "\\x00%02x", c & 0xff);
             else
-                avio_w8(probe_out, c);
+                avio_w8(octx.out, c);
         break;
         }
     }
@@ -160,7 +160,7 @@ static void ini_escape_print(const char *s)
 static void ini_print_array_header(const char *name)
 {
     if (octx.prefix[octx.level -1].nb_elems)
-        avio_printf(probe_out, "\n");
+        avio_printf(octx.out, "\n");
 }
 
 static void ini_print_object_header(const char *name)
@@ -169,36 +169,36 @@ static void ini_print_object_header(const char *name)
     PrintElement *el = octx.prefix + octx.level -1;
 
     if (el->nb_elems)
-        avio_printf(probe_out, "\n");
+        avio_printf(octx.out, "\n");
 
-    avio_printf(probe_out, "[");
+    avio_printf(octx.out, "[");
 
     for (i = 1; i < octx.level; i++) {
         el = octx.prefix + i;
-        avio_printf(probe_out, "%s.", el->name);
+        avio_printf(octx.out, "%s.", el->name);
         if (el->index >= 0)
-            avio_printf(probe_out, "%"PRId64".", el->index);
+            avio_printf(octx.out, "%"PRId64".", el->index);
     }
 
-    avio_printf(probe_out, "%s", name);
+    avio_printf(octx.out, "%s", name);
     if (el && el->type == ARRAY)
-        avio_printf(probe_out, ".%"PRId64"", el->nb_elems);
-    avio_printf(probe_out, "]\n");
+        avio_printf(octx.out, ".%"PRId64"", el->nb_elems);
+    avio_printf(octx.out, "]\n");
 }
 
 static void ini_print_integer(const char *key, int64_t value)
 {
     ini_escape_print(key);
-    avio_printf(probe_out, "=%"PRId64"\n", value);
+    avio_printf(octx.out, "=%"PRId64"\n", value);
 }
 
 
 static void ini_print_string(const char *key, const char *value)
 {
     ini_escape_print(key);
-    avio_printf(probe_out, "=");
+    avio_printf(octx.out, "=");
     ini_escape_print(value);
-    avio_w8(probe_out, '\n');
+    avio_w8(octx.out, '\n');
 }
 
 /*
@@ -207,52 +207,52 @@ static void ini_print_string(const char *key, const char *value)
 
 static void json_print_header(void)
 {
-    avio_printf(probe_out, "{");
+    avio_printf(octx.out, "{");
 }
 static void json_print_footer(void)
 {
-    avio_printf(probe_out, "}\n");
+    avio_printf(octx.out, "}\n");
 }
 
 static void json_print_array_header(const char *name)
 {
     if (octx.prefix[octx.level -1].nb_elems)
-        avio_printf(probe_out, ",\n");
+        avio_printf(octx.out, ",\n");
     AVP_INDENT();
-    avio_printf(probe_out, "\"%s\" : ", name);
-    avio_printf(probe_out, "[\n");
+    avio_printf(octx.out, "\"%s\" : ", name);
+    avio_printf(octx.out, "[\n");
 }
 
 static void json_print_array_footer(const char *name)
 {
-    avio_printf(probe_out, "\n");
+    avio_printf(octx.out, "\n");
     AVP_INDENT();
-    avio_printf(probe_out, "]");
+    avio_printf(octx.out, "]");
 }
 
 static void json_print_object_header(const char *name)
 {
     if (octx.prefix[octx.level -1].nb_elems)
-        avio_printf(probe_out, ",\n");
+        avio_printf(octx.out, ",\n");
     AVP_INDENT();
     if (octx.prefix[octx.level -1].type == OBJECT)
-        avio_printf(probe_out, "\"%s\" : ", name);
-    avio_printf(probe_out, "{\n");
+        avio_printf(octx.out, "\"%s\" : ", name);
+    avio_printf(octx.out, "{\n");
 }
 
 static void json_print_object_footer(const char *name)
 {
-    avio_printf(probe_out, "\n");
+    avio_printf(octx.out, "\n");
     AVP_INDENT();
-    avio_printf(probe_out, "}");
+    avio_printf(octx.out, "}");
 }
 
 static void json_print_integer(const char *key, int64_t value)
 {
     if (octx.prefix[octx.level -1].nb_elems)
-        avio_printf(probe_out, ",\n");
+        avio_printf(octx.out, ",\n");
     AVP_INDENT();
-    avio_printf(probe_out, "\"%s\" : %"PRId64"", key, value);
+    avio_printf(octx.out, "\"%s\" : %"PRId64"", key, value);
 }
 
 static void json_escape_print(const char *s)
@@ -262,18 +262,18 @@ static void json_escape_print(const char *s)
 
     while (c = s[i++]) {
         switch (c) {
-        case '\r': avio_printf(probe_out, "%s", "\\r"); break;
-        case '\n': avio_printf(probe_out, "%s", "\\n"); break;
-        case '\f': avio_printf(probe_out, "%s", "\\f"); break;
-        case '\b': avio_printf(probe_out, "%s", "\\b"); break;
-        case '\t': avio_printf(probe_out, "%s", "\\t"); break;
+        case '\r': avio_printf(octx.out, "%s", "\\r"); break;
+        case '\n': avio_printf(octx.out, "%s", "\\n"); break;
+        case '\f': avio_printf(octx.out, "%s", "\\f"); break;
+        case '\b': avio_printf(octx.out, "%s", "\\b"); break;
+        case '\t': avio_printf(octx.out, "%s", "\\t"); break;
         case '\\':
-        case '"' : avio_w8(probe_out, '\\');
+        case '"' : avio_w8(octx.out, '\\');
         default:
             if ((unsigned char)c < 32)
-                avio_printf(probe_out, "\\u00%02x", c & 0xff);
+                avio_printf(octx.out, "\\u00%02x", c & 0xff);
             else
-                avio_w8(probe_out, c);
+                avio_w8(octx.out, c);
         break;
         }
     }
@@ -282,13 +282,13 @@ static void json_escape_print(const char *s)
 static void json_print_string(const char *key, const char *value)
 {
     if (octx.prefix[octx.level -1].nb_elems)
-        avio_printf(probe_out, ",\n");
+        avio_printf(octx.out, ",\n");
     AVP_INDENT();
-    avio_w8(probe_out, '\"');
+    avio_w8(octx.out, '\"');
     json_escape_print(key);
-    avio_printf(probe_out, "\" : \"");
+    avio_printf(octx.out, "\" : \"");
     json_escape_print(value);
-    avio_w8(probe_out, '\"');
+    avio_w8(octx.out, '\"');
 }
 
 /*
@@ -307,7 +307,7 @@ static void old_print_object_header(const char *name)
         p++;
     }
 
-    avio_printf(probe_out, "[%s]\n", str);
+    avio_printf(octx.out, "[%s]\n", str);
     av_freep(&str);
 }
 
@@ -324,14 +324,14 @@ static void old_print_object_footer(const char *name)
         p++;
     }
 
-    avio_printf(probe_out, "[/%s]\n", str);
+    avio_printf(octx.out, "[/%s]\n", str);
     av_freep(&str);
 }
 
 static void old_print_string(const char *key, const char *value)
 {
     if (!strcmp(octx.prefix[octx.level - 1].name, "tags"))
-        avio_printf(probe_out, "TAG:");
+        avio_printf(octx.out, "TAG:");
     ini_print_string(key, value);
 }
 
@@ -343,8 +343,8 @@ static void show_format_entry_integer(const char *key, int64_t value)
 {
     if (key && av_dict_get(fmt_entries_to_show, key, NULL, 0)) {
         if (nb_fmt_entries_to_show > 1)
-            avio_printf(probe_out, "%s=", key);
-        avio_printf(probe_out, "%"PRId64"\n", value);
+            avio_printf(octx.out, "%s=", key);
+        avio_printf(octx.out, "%"PRId64"\n", value);
     }
 }
 
@@ -352,8 +352,8 @@ static void show_format_entry_string(const char *key, const char *value)
 {
     if (key && av_dict_get(fmt_entries_to_show, key, NULL, 0)) {
         if (nb_fmt_entries_to_show > 1)
-            avio_printf(probe_out, "%s=", key);
-        avio_printf(probe_out, "%s\n", value);
+            avio_printf(octx.out, "%s=", key);
+        avio_printf(octx.out, "%s\n", value);
     }
 }
 
@@ -952,16 +952,16 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    probe_out = avio_alloc_context(buffer, AVP_BUFFSIZE, 1, NULL, NULL,
+    octx.out = avio_alloc_context(buffer, AVP_BUFFSIZE, 1, NULL, NULL,
                                  probe_buf_write, NULL);
-    if (!probe_out)
+    if (!octx.out)
         exit(1);
 
     probe_header();
     ret = probe_file(input_filename);
     probe_footer();
-    avio_flush(probe_out);
-    avio_close(probe_out);
+    avio_flush(octx.out);
+    avio_close(octx.out);
 
     avformat_network_deinit();
 
