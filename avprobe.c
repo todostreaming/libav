@@ -796,39 +796,46 @@ static int opt_format(void *optctx, const char *opt, const char *arg)
     }
     return 0;
 }
+static int print_set_formatter(PrintContext *pctx, const char *formatter)
+{
+    if (!formatter)
+        return AVERROR(EINVAL);
+
+    if (!strcmp(formatter, "json")) {
+        pctx->print_header        = json_print_header;
+        pctx->print_footer        = json_print_footer;
+        pctx->print_array_header  = json_print_array_header;
+        pctx->print_array_footer  = json_print_array_footer;
+        pctx->print_object_header = json_print_object_header;
+        pctx->print_object_footer = json_print_object_footer;
+
+        pctx->print_integer = json_print_integer;
+        pctx->print_string  = json_print_string;
+    } else if (!strcmp(formatter, "ini")) {
+        pctx->print_header        = ini_print_header;
+        pctx->print_footer        = ini_print_footer;
+        pctx->print_array_header  = ini_print_array_header;
+        pctx->print_object_header = ini_print_object_header;
+
+        pctx->print_integer = ini_print_integer;
+        pctx->print_string  = ini_print_string;
+    } else if (!strcmp(formatter, "old")) {
+        pctx->print_header        = NULL;
+        pctx->print_object_header = old_print_object_header;
+        pctx->print_object_footer = old_print_object_footer;
+
+        pctx->print_string        = old_print_string;
+    } else {
+        av_log(NULL, AV_LOG_ERROR, "Unsupported formatter %s\n", formatter);
+        return AVERROR(EINVAL);
+    }
+
+    return 0;
+}
 
 static int opt_output_format(void *optctx, const char *opt, const char *arg)
 {
-
-    if (!strcmp(arg, "json")) {
-        octx.print_header        = json_print_header;
-        octx.print_footer        = json_print_footer;
-        octx.print_array_header  = json_print_array_header;
-        octx.print_array_footer  = json_print_array_footer;
-        octx.print_object_header = json_print_object_header;
-        octx.print_object_footer = json_print_object_footer;
-
-        octx.print_integer = json_print_integer;
-        octx.print_string  = json_print_string;
-    } else if (!strcmp(arg, "ini")) {
-        octx.print_header        = ini_print_header;
-        octx.print_footer        = ini_print_footer;
-        octx.print_array_header  = ini_print_array_header;
-        octx.print_object_header = ini_print_object_header;
-
-        octx.print_integer = ini_print_integer;
-        octx.print_string  = ini_print_string;
-    } else if (!strcmp(arg, "old")) {
-        octx.print_header        = NULL;
-        octx.print_object_header = old_print_object_header;
-        octx.print_object_footer = old_print_object_footer;
-
-        octx.print_string        = old_print_string;
-    } else {
-        av_log(NULL, AV_LOG_ERROR, "Unsupported formatter %s\n", arg);
-        return AVERROR(EINVAL);
-    }
-    return 0;
+    return print_set_formatter(&octx, arg);
 }
 
 static int opt_show_format_entry(void *optctx, const char *opt, const char *arg)
@@ -932,14 +939,7 @@ int main(int argc, char **argv)
 
     show_banner();
 
-    octx.print_header = ini_print_header;
-    octx.print_footer = ini_print_footer;
-
-    octx.print_array_header = ini_print_array_header;
-    octx.print_object_header = ini_print_object_header;
-
-    octx.print_integer = ini_print_integer;
-    octx.print_string = ini_print_string;
+    print_set_formatter(&octx, "ini");
 
     parse_options(NULL, argc, argv, options, opt_input_file);
 
