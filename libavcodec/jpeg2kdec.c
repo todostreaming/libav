@@ -251,7 +251,11 @@ static int get_cox(Jpeg2KDecoderContext *s, Jpeg2KCodingStyle *c)
 
     if (s->buf_end - s->buf < 5)
         return AVERROR(EINVAL);
-    c->nreslevels = bytestream_get_byte(&s->buf) + 1; // num of resolution levels - 1
+    // num of resolution levels - 1
+    c->nreslevels = bytestream_get_byte(&s->buf) + 1;
+
+    if (c->nreslevels > JPEG2K_MAX_RESLEVELS)
+        return AVERROR_INVALIDDATA;
 
     /* compute number of resolution levels to decode */
     if (c->nreslevels < s->reduction_factor)
