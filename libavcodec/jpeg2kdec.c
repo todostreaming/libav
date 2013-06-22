@@ -366,7 +366,7 @@ static int get_qcx(Jpeg2KDecoderContext *s, int n, Jpeg2KQuantStyle *q)
         x          = bytestream_get_be16(&s->buf);
         q->expn[0] = x >> 11;
         q->mant[0] = x & 0x7ff;
-        for (i = 1; i < 32 * 3; i++) {
+        for (i = 1; i < JPEG2K_MAX_DECLEVELS * 3; i++) {
             int curexpn = FFMAX(0, q->expn[0] - (i - 1) / 3);
             q->expn[i] = curexpn;
             q->mant[i] = q->mant[0];

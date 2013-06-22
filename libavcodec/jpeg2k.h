@@ -67,7 +67,9 @@ enum Jpeg2KQuantsty { // quantization style
 #define JPEG2K_MAX_CBLKW 64
 #define JPEG2K_MAX_CBLKH 64
 
-#define JPEG2K_MAX_RESLEVELS 33
+
+#define JPEG2K_MAX_DECLEVELS 32
+#define JPEG2K_MAX_RESLEVELS JPEG2K_MAX_DECLEVELS + 1
 
 // T1 flags
 // flags determining significance of neighbor coefficients
@@ -145,8 +147,8 @@ typedef struct Jpeg2KCodingStyle {
 } Jpeg2KCodingStyle;
 
 typedef struct Jpeg2KQuantStyle {
-    uint8_t expn[32 * 3];  // quantization exponent
-    uint32_t mant[32 * 3]; // quantization mantissa
+    uint8_t expn[JPEG2K_MAX_DECLEVELS * 3];  // quantization exponent
+    uint32_t mant[JPEG2K_MAX_DECLEVELS * 3]; // quantization mantissa
     uint8_t quantsty;      // quantization style
     uint8_t nguardbits;    // number of guard bits
 } Jpeg2KQuantStyle;
