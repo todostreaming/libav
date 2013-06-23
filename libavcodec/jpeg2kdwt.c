@@ -27,7 +27,7 @@
 
 #include "libavutil/common.h"
 #include "libavutil/mem.h"
-#include "jpeg2000dwt.h"
+#include "jpeg2kdwt.h"
 #include "internal.h"
 
 /* Defines for 9/7 DWT lifting parameters.
@@ -39,7 +39,7 @@
 #define F_LFTG_K      1.230174104914001f
 #define F_LFTG_X      1.625732422f
 /* FIXME: Why use 1.625732422 instead of 1/F_LFTG_K?
- * Incorrect value in JPEG2000 norm.
+ * Incorrect value in JPEG2K norm.
  * see (ISO/IEC 15444:1 (version 2002) F.3.8.2 */
 
 /* Lifting parameters in integer format.
@@ -302,8 +302,8 @@ static void dwt_decode97_int(DWTContext *s, int32_t *t)
     }
 }
 
-int ff_jpeg2000_dwt_init(DWTContext *s, uint16_t border[2][2],
-                         int decomp_levels, int type)
+int ff_jpeg2k_dwt_init(DWTContext *s, uint16_t border[2][2],
+                       int decomp_levels, int type)
 {
     int i, j, lev = decomp_levels, maxlen,
         b[2][2];

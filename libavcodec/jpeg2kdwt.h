@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef AVCODEC_JPEG2000DWT_H
-#define AVCODEC_JPEG2000DWT_H
+#ifndef AVCODEC_JPEG2KDWT_H
+#define AVCODEC_JPEG2KDWT_H
 
 /**
  * @file
@@ -54,11 +54,11 @@ typedef struct DWTContext {
  * @param decomp_levels     number of decomposition levels
  * @param type              0 for DWT 9/7; 1 for DWT 5/3
  */
-int ff_jpeg2000_dwt_init(DWTContext *s, uint16_t border[2][2],
-                         int decomp_levels, int type);
+int ff_jpeg2k_dwt_init(DWTContext *s, uint16_t border[2][2],
+                       int decomp_levels, int type);
 
 int ff_dwt_decode(DWTContext *s, void *t);
 
 void ff_dwt_destroy(DWTContext *s);
 
-#endif /* AVCODEC_JPEG2000DWT_H */
+#endif /* AVCODEC_JPEG2KDWT_H */

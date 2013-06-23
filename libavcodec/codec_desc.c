@@ -645,7 +645,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
     {
         .id        = AV_CODEC_ID_JPEG2000,
         .type      = AVMEDIA_TYPE_VIDEO,
-        .name      = "jpeg2000",
+        .name      = "jpeg2k",
         .long_name = NULL_IF_CONFIG_SMALL("JPEG 2000"),
         .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY |
                      AV_CODEC_PROP_LOSSLESS,
