@@ -41,9 +41,8 @@
 #define HAD_QCC 0x02
 
 typedef struct Jpeg2KTilePart {
-    uint16_t tp_idx;                    // Tile-part index
     uint8_t tile_index;                 // Tile index who refers the tile-part
-    uint32_t tp_len;                    // Length of tile-part
+    const uint8_t *tp_end;
     GetByteContext tpg;                 // bit stream in tile-part
 } Jpeg2KTilePart;
 
@@ -55,6 +54,7 @@ typedef struct Jpeg2KTile {
     Jpeg2KCodingStyle codsty[4];
     Jpeg2KQuantStyle  qntsty[4];
     Jpeg2KTilePart    tile_part[3];
+    uint16_t tp_idx;                    // Tile-part index
 } Jpeg2KTile;
 
 typedef struct Jpeg2KDecoderContext {
@@ -498,24 +498,18 @@ static int get_sot(Jpeg2KDecoderContext *s, int n)
         return AVERROR_PATCHWELCOME;
     }
 
-    tp             = s->tile[s->curtileno].tile_part + TPsot;
+    s->tile[Isot].tp_idx = TPsot;
+    tp             = s->tile[Isot].tile_part + TPsot;
     tp->tile_index = Isot;
-    tp->tp_len     = Psot;
-    tp->tp_idx     = TPsot;
+    tp->tp_end     = s->g.buffer + Psot - n - 2;
 
-    /* Start of bit stream. Pointer to SOD marker
-     * Check SOD marker is present. */
-    if (JPEG2K_SOD == bytestream2_get_be16(&s->g)) {
-        bytestream2_init(&tp->tpg, s->g.buffer, tp->tp_len - n - 4);
-        bytestream2_skip(&s->g, tp->tp_len - n - 4);
-    } else {
-        av_log(s->avctx, AV_LOG_ERROR, "SOD marker not found \n");
-        return AVERROR_INVALIDDATA;
+    if (!TPsot) {
+        Jpeg2KTile *tile = s->tile + s->curtileno;
+
+        /* copy defaults */
+        memcpy(tile->codsty, s->codsty, s->ncomponents * sizeof(Jpeg2KCodingStyle));
+        memcpy(tile->qntsty, s->qntsty, s->ncomponents * sizeof(Jpeg2KQuantStyle));
     }
-
-    /* End address of bit stream =
-     *     start address + (Psot - size of SOT HEADER(n)
-     *     - size of SOT MARKER(2)  - size of SOD marker(2) */
 
     return 0;
 }
@@ -571,12 +565,6 @@ static int init_tile(Jpeg2KDecoderContext *s, int tileno)
 
     if (!tile->comp)
         return AVERROR(ENOMEM);
-
-    /* copy codsty, qnsty to tile. TODO: Is it the best way?
-     * codsty, qnsty is an array of 4 structs Jpeg2KCodingStyle
-     * and Jpeg2KQuantStyle */
-    memcpy(tile->codsty, s->codsty, s->ncomponents * sizeof(*tile->codsty));
-    memcpy(tile->qntsty, s->qntsty, s->ncomponents * sizeof(*tile->qntsty));
 
     for (compno = 0; compno < s->ncomponents; compno++) {
         Jpeg2KComponent *comp = tile->comp + compno;
@@ -1265,7 +1253,11 @@ static int jpeg2k_read_main_headers(Jpeg2KDecoderContext *s)
             ret = get_qcd(s, len, qntsty, properties);
             break;
         case JPEG2K_SOT:
-            ret = get_sot(s, len);
+            if (!(ret = get_sot(s, len))) {
+                codsty = s->tile[s->curtileno].codsty;
+                qntsty = s->tile[s->curtileno].qntsty;
+                properties = s->tile[s->curtileno].properties;
+            }
             break;
         case JPEG2K_COM:
             // the comment is ignored
@@ -1282,7 +1274,7 @@ static int jpeg2k_read_main_headers(Jpeg2KDecoderContext *s)
             bytestream2_skip(&s->g, len - 2);
             break;
         }
-        if (((bytestream2_tell(&s->g) - oldpos != len) && (marker != JPEG2K_SOT)) || ret) {
+        if (bytestream2_tell(&s->g) - oldpos != len || ret) {
             av_log(s->avctx, AV_LOG_ERROR,
                    "error during processing marker segment %.4x\n", marker);
             return ret ? ret : -1;
