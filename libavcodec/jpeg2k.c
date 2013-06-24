@@ -480,7 +480,9 @@ int ff_jpeg2k_init_component(Jpeg2KComponent *comp,
 void ff_jpeg2k_cleanup(Jpeg2KComponent *comp, Jpeg2KCodingStyle *codsty)
 {
     int reslevelno, bandno, precno;
-    for (reslevelno = 0; reslevelno < codsty->nreslevels; reslevelno++) {
+    for (reslevelno = 0;
+         comp->reslevel && reslevelno < codsty->nreslevels;
+         reslevelno++) {
         Jpeg2KResLevel *reslevel = comp->reslevel + reslevelno;
 
         for (bandno = 0; bandno < reslevel->nbands; bandno++) {
