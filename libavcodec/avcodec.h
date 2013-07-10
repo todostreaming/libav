@@ -977,6 +977,11 @@ typedef struct AVPacket {
 #define AV_PKT_FLAG_KEY     0x0001 ///< The packet contains a keyframe
 #define AV_PKT_FLAG_CORRUPT 0x0002 ///< The packet content is corrupted
 
+typedef struct AVPacketList {
+    AVPacket pkt;
+    struct AVPacketList *next;
+} AVPacketList;
+
 enum AVSideDataParamChangeFlags {
     AV_SIDE_DATA_PARAM_CHANGE_CHANNEL_COUNT  = 0x0001,
     AV_SIDE_DATA_PARAM_CHANGE_CHANNEL_LAYOUT = 0x0002,
@@ -3287,6 +3292,42 @@ void av_packet_move_ref(AVPacket *dst, AVPacket *src);
  *
  */
 int av_packet_copy_props(AVPacket *dst, const AVPacket *src);
+
+/**
+ * Append an AVPacket to the list creating a new reference
+ * to it.
+ *
+ * @param head List head
+ * @param tail List tail
+ * @param pkt  The packet being appended
+ * @return < 0 on failure and 0 on success.
+ */
+int av_packet_list_put(AVPacketList **head, AVPacketList **tail,
+                       AVPacket *pkt);
+
+/**
+ * Remove the oldest AVPacket in the list and return it.
+ *
+ * @note The pkt will be overwritten completely. The caller
+ *       owns the packet and must unref it by itself.
+ *
+ * @see av_packet_unref av_packet_ref
+ *
+ * @param head List head.
+ * @param tail List tail.
+ * @param pkt  Pointer to an initialized AVPacket struct
+ * @return < 0 on failure and 0 on success.
+ */
+int av_packet_list_get(AVPacketList **head, AVPacketList **tail,
+                       AVPacket *pkt);
+
+/**
+ * Wipe the list and unref all the packets in it.
+ *
+ * @param head List head.
+ * @param tail List tail.
+ */
+void av_packet_list_free(AVPacketList **head, AVPacketList **tail);
 
 /**
  * @}
