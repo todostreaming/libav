@@ -1254,12 +1254,6 @@ typedef struct AVFormatContext {
     AVFormatInternal *internal;
 } AVFormatContext;
 
-typedef struct AVPacketList {
-    AVPacket pkt;
-    struct AVPacketList *next;
-} AVPacketList;
-
-
 /**
  * @defgroup lavf_core Core functions
  * @ingroup libavf
