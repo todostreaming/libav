@@ -993,14 +993,10 @@ FF_DISABLE_DEPRECATION_WARNINGS
 FF_ENABLE_DEPRECATION_WARNINGS
 #endif
         }
-        if ((ret = av_dup_packet(&out_pkt)) < 0)
+        if ((ret = ff_packet_list_put(&s->parse_queue,
+                                      &s->parse_queue_end,
+                                      &out_pkt)) < 0)
             goto fail;
-
-        if (!add_to_pktbuf(&s->parse_queue, &out_pkt, &s->parse_queue_end)) {
-            av_free_packet(&out_pkt);
-            ret = AVERROR(ENOMEM);
-            goto fail;
-        }
     }
 
     /* end of the stream => close and free the parser */
@@ -1105,7 +1101,7 @@ static int read_frame_internal(AVFormatContext *s, AVPacket *pkt)
     }
 
     if (!got_packet && s->parse_queue)
-        ret = read_from_packet_buffer(&s->parse_queue, &s->parse_queue_end, pkt);
+        ret = ff_packet_list_get(&s->parse_queue, &s->parse_queue_end, pkt);
 
     if (s->debug & FF_FDEBUG_TS)
         av_log(s, AV_LOG_DEBUG,
