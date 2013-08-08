@@ -28,6 +28,7 @@
 #include "libavutil/avstring.h"
 #include "libavutil/base64.h"
 #include "libavutil/intfloat.h"
+#include "libavutil/time.h"
 #include "libavutil/lfg.h"
 #include "libavutil/md5.h"
 #include "libavutil/opt.h"
@@ -659,6 +660,29 @@ static int gen_delete_stream(URLContext *s, RTMPContext *rt)
     return rtmp_send_packet(rt, &pkt, 0);
 }
 
+static int gen_wallclock(URLContext *s, RTMPContext *rt)
+{
+    RTMPPacket pkt;
+    int64_t wallclock = av_gettime();
+    uint8_t *p;
+    int ret;
+
+    if ((ret = ff_rtmp_packet_create(&pkt, RTMP_SOURCE_CHANNEL, RTMP_PT_NOTIFY,
+                                     0, 31)) < 0)
+        return ret;
+
+    p = pkt.data;
+    ff_amf_write_string(&p, "wallclock");
+    ff_amf_write_number(&p, 0);
+    ff_amf_write_null(&p);
+    ff_amf_write_number(&p, wallclock);
+
+    pkt.extra = rt->main_channel_id;
+
+    return rtmp_send_packet(rt, &pkt, 0);
+}
+
+
 /**
  * Generate client buffer time and send it to the server.
  */
@@ -717,7 +741,8 @@ static int gen_seek(URLContext *s, RTMPContext *rt, int64_t timestamp)
     av_log(s, AV_LOG_DEBUG, "Sending seek command for timestamp %"PRId64"\n",
            timestamp);
 
-    if ((ret = ff_rtmp_packet_create(&pkt, 3, RTMP_PT_INVOKE, 0, 26)) < 0)
+    if ((ret = ff_rtmp_packet_create(&pkt, RTMP_SYSTEM_CHANNEL, RTMP_PT_INVOKE,
+                                     0, 26)) < 0)
         return ret;
 
     pkt.extra = rt->main_channel_id;
@@ -1992,6 +2017,33 @@ static int handle_invoke_status(URLContext *s, RTMPPacket *pkt)
     return 0;
 }
 
+static int handle_notify_wallclock(URLContext *s, RTMPPacket *pkt)
+{
+    const uint8_t *data     = pkt->data;
+    const uint8_t *data_end = data + pkt->size;
+    GetByteContext gbc;
+    int offset, ret, i;
+    double val;
+
+    for (i = 0; i < 3; i++) {
+        offset = ff_amf_tag_size(data, data_end);
+        if (offset < 0)
+            return offset;
+
+        data += offset;
+    }
+
+    bytestream2_init(&gbc, data, data_end - data);
+
+    if ((ret = ff_amf_read_number(&gbc, &val)) < 0)
+        return ret;
+
+    av_log(s, AV_LOG_INFO, "Wallclock delay %f\n",
+           (av_gettime() - val)/1000000);
+
+    return 0;
+}
+
 static int handle_invoke(URLContext *s, RTMPPacket *pkt)
 {
     RTMPContext *rt = s->priv_data;
@@ -2036,6 +2088,9 @@ static int handle_notify(URLContext *s, RTMPPacket *pkt) {
     const uint8_t *datatowrite;
     unsigned datatowritelength;
 
+    if (ff_amf_match_string(pkt->data, pkt->size, "wallclock")) {
+        return handle_notify_wallclock(s, pkt);
+    }
     p = pkt->data;
     bytestream2_init(&gbc, p, pkt->size);
     if (ff_amf_read_string(&gbc, commandbuffer, sizeof(commandbuffer),
@@ -2659,6 +2714,7 @@ static int rtmp_write(URLContext *s, const uint8_t *buf, int size)
     rt->stream->flags &= ~AVIO_FLAG_NONBLOCK;
 
     if (ret == AVERROR(EAGAIN)) {
+        gen_wallclock(s, rt);
         /* no incoming data to handle */
         return size;
     } else if (ret < 0) {
