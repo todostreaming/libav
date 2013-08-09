@@ -186,6 +186,7 @@ External library support:
   --enable-libfreetype     enable libfreetype [no]
   --enable-libgsm          enable GSM de/encoding via libgsm [no]
   --enable-libilbc         enable iLBC de/encoding via libilbc [no]
+  --enable-libmfx          enable hardware encoding via libmfx [no]
   --enable-libmp3lame      enable MP3 encoding via libmp3lame [no]
   --enable-libopencore-amrnb enable AMR-NB de/encoding via libopencore-amrnb [no]
   --enable-libopencore-amrwb enable AMR-WB decoding via libopencore-amrwb [no]
@@ -1113,6 +1114,7 @@ EXTERNAL_LIBRARY_LIST="
     libfreetype
     libgsm
     libilbc
+    libmfx
     libmp3lame
     libopencore_amrnb
     libopencore_amrwb
@@ -1850,6 +1852,7 @@ mpegvideo_parser_select="error_resilience mpegvideo"
 vc1_parser_select="mpegvideo"
 
 # external libraries
+h264_qsv_encoder_deps="libmfx"
 libfaac_encoder_deps="libfaac"
 libfaac_encoder_select="audio_frame_queue"
 libfdk_aac_decoder_deps="libfdk_aac"
@@ -3874,6 +3877,7 @@ check_header dxva.h
 check_header dxva2api.h
 check_header io.h
 check_header malloc.h
+check_header mfx/mfxvideo.h
 check_header poll.h
 check_header sys/mman.h
 check_header sys/param.h
@@ -3982,6 +3986,8 @@ enabled openssl           && { check_lib openssl/ssl.h SSL_library_init -lssl -l
                                check_lib openssl/ssl.h SSL_library_init -lssl32 -leay32 ||
                                check_lib openssl/ssl.h SSL_library_init -lssl -lcrypto -lws2_32 -lgdi32 ||
                                die "ERROR: openssl not found"; }
+
+enabled libmfx            && require_pkg_config libmfx "mfx/mfxvideo.h" MFXInit
 
 if enabled gnutls; then
     { check_lib nettle/bignum.h nettle_mpz_get_str_256 -lnettle -lhogweed -lgmp && enable nettle; } ||
