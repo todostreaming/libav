@@ -202,6 +202,7 @@ OBJS-$(CONFIG_H264_DECODER)            += h264.o h264_cabac.o h264_cavlc.o \
                                           h264_direct.o h264_loopfilter.o  \
                                           h264_mb.o h264_picture.o h264_ps.o \
                                           h264_refs.o h264_sei.o h264_slice.o
+OBJS-$(CONFIG_H264_QSV_ENCODER)        += qsvenc_h264.o qsvenc.o qsv.o
 OBJS-$(CONFIG_HEVC_DECODER)            += hevc.o hevc_mvs.o hevc_ps.o hevc_sei.o \
                                           hevc_cabac.o hevc_refs.o hevcpred.o    \
                                           hevcdsp.o hevc_filter.o
@@ -685,6 +686,7 @@ SKIPHEADERS                            += %_tablegen.h                  \
 SKIPHEADERS-$(CONFIG_DXVA2)            += dxva2.h dxva2_internal.h
 SKIPHEADERS-$(CONFIG_LIBSCHROEDINGER)  += libschroedinger.h
 SKIPHEADERS-$(CONFIG_MPEG_XVMC_DECODER) += xvmc.h
+SKIPHEADERS-$(CONFIG_QSVENC)           += qsvenc.h
 SKIPHEADERS-$(CONFIG_VAAPI)            += vaapi_internal.h
 SKIPHEADERS-$(CONFIG_VDA)              += vda.h
 SKIPHEADERS-$(CONFIG_VDPAU)            += vdpau.h vdpau_internal.h
