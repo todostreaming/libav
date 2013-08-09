@@ -134,6 +134,7 @@ Component options:
 
 Hardware accelerators:
   --enable-dxva2           enable DXVA2 code
+  --enable-qsv             enable QSV code
   --enable-vaapi           enable VAAPI code
   --enable-vda             enable VDA code
   --enable-vdpau           enable VDPAU code
@@ -1190,6 +1191,7 @@ FEATURE_LIST="
 
 HWACCEL_LIST="
     dxva2
+    qsv
     vaapi
     vda
     vdpau
@@ -1939,6 +1941,8 @@ h263_vdpau_hwaccel_deps="vdpau"
 h263_vdpau_hwaccel_select="h263_decoder"
 h264_dxva2_hwaccel_deps="dxva2"
 h264_dxva2_hwaccel_select="h264_decoder"
+h264_qsv_hwaccel_deps="qsv"
+h264_qsv_hwaccel_select="h264_mp4toannexb_bsf"
 h264_vaapi_hwaccel_deps="vaapi"
 h264_vaapi_hwaccel_select="h264_decoder"
 h264_vda_hwaccel_deps="vda"
@@ -4096,6 +4100,7 @@ check_header dxva2api.h
 check_header io.h
 check_header mach/mach_time.h
 check_header malloc.h
+check_header mfx/mfxvideo.h
 check_header poll.h
 check_header sys/mman.h
 check_header sys/param.h
@@ -4206,6 +4211,8 @@ enabled openssl           && { check_lib openssl/ssl.h SSL_library_init -lssl -l
                                check_lib openssl/ssl.h SSL_library_init -lssl32 -leay32 ||
                                check_lib openssl/ssl.h SSL_library_init -lssl -lcrypto -lws2_32 -lgdi32 ||
                                die "ERROR: openssl not found"; }
+
+enabled qsv                && require_pkg_config libmfx "mfx/mfxvideo.h" MFXInit
 
 if enabled gnutls; then
     { check_lib nettle/bignum.h nettle_mpz_get_str_256 -lnettle -lhogweed -lgmp && enable nettle; } ||
