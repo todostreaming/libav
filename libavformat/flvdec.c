@@ -27,6 +27,7 @@
 #include "libavutil/avstring.h"
 #include "libavutil/channel_layout.h"
 #include "libavutil/dict.h"
+#include "libavutil/time.h"
 #include "libavutil/opt.h"
 #include "libavutil/intfloat.h"
 #include "libavutil/mathematics.h"
@@ -528,6 +529,14 @@ static int flv_read_metabody(AVFormatContext *s, int64_t next_pos)
     if (type != AMF_DATA_TYPE_STRING ||
         amf_get_string(ioc, buffer, sizeof(buffer)) < 0)
         return -1;
+    if (!strcmp(buffer, "wallclock")) {
+        double val;
+        avio_skip(ioc, 1 + 8 + 1 + 1);
+        val = av_int2double(avio_rb64(ioc));
+        av_log(s, AV_LOG_INFO, "Wallclock %f\n",
+               (av_gettime() - val)/1000000.0);
+        return -1;
+    }
 
     if (!strcmp(buffer, "onTextData"))
         return 1;
