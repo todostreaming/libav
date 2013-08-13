@@ -2038,7 +2038,7 @@ static int handle_notify_wallclock(URLContext *s, RTMPPacket *pkt)
     if ((ret = ff_amf_read_number(&gbc, &val)) < 0)
         return ret;
 
-    av_log(s, AV_LOG_INFO, "Wallclock delay %f\n",
+    av_log(s, AV_LOG_INFO, "Wallclock delay %f\r",
            (av_gettime() - val)/1000000);
 
     return 0;

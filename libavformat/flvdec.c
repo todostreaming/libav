@@ -533,7 +533,7 @@ static int flv_read_metabody(AVFormatContext *s, int64_t next_pos)
         double val;
         avio_skip(ioc, 1 + 8 + 1 + 1);
         val = av_int2double(avio_rb64(ioc));
-        av_log(s, AV_LOG_INFO, "Wallclock %f\n",
+        av_log(s, AV_LOG_INFO, "Wallclock %f\r",
                (av_gettime() - val)/1000000.0);
         return -1;
     }
