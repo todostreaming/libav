@@ -190,7 +190,8 @@ static void FUNC(intra_pred)(HEVCContext *s, int x0, int y0, int log2_size, int 
             } else {
                 j = 0;
                 while(j<size_max_x && !IS_INTRA(j, -1)) j++;
-                EXTEND_LEFT_CIP(top, j, j+1);
+                if (j > 0)
+                    EXTEND_LEFT_CIP(top, j, j+1);
                 left[-1] = top[-1];
                 j = 0;
             }
@@ -203,7 +204,7 @@ static void FUNC(intra_pred)(HEVCContext *s, int x0, int y0, int log2_size, int 
             if (!cand_bottom_left) {
                 EXTEND_DOWN(left, size, size);
             }
-            if (y0 != 0) {
+            if (x0 != 0 && y0 != 0) {
                 EXTEND_UP_CIP(left, size_max_y-1, size_max_y);
             } else {
                 EXTEND_UP_CIP(left, size_max_y-1, size_max_y-1);
