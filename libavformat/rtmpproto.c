@@ -234,6 +234,18 @@ static int rtmp_send_packet(RTMPContext *rt, RTMPPacket *pkt, int track)
             goto fail;
     }
 
+    if (pkt->type == RTMP_PT_NOTIFY) {
+        GetByteContext gbc;
+        char name[128];
+        int len;
+
+        bytestream2_init(&gbc, pkt->data, pkt->size);
+        if ((ret = ff_amf_read_string(&gbc, name, sizeof(name), &len)) < 0)
+            goto fail;
+
+        av_log(NULL, AV_LOG_INFO, "Received %s notify\n", name);
+    }
+
     ret = ff_rtmp_packet_write(rt->stream, pkt, rt->out_chunk_size,
                                rt->prev_pkt[1]);
 fail:
@@ -1903,6 +1915,13 @@ static int send_invoke_response(URLContext *s, RTMPPacket *pkt)
         // Send onStatus(NetStream.Publish.Start)
         return write_status(s, pkt, "NetStream.Publish.Start",
                            filename);
+    } else if (!strcmp(command, "play")) {
+        ret = write_begin(s);
+        if (ret < 0)
+            return ret;
+        rt->state = STATE_PUBLISHING;
+        return write_status(s, pkt, "NetStream.Play.Start",
+                            filename);
     } else {
         if ((ret = ff_rtmp_packet_create(&spkt, RTMP_SYSTEM_CHANNEL,
                                          RTMP_PT_INVOKE, 0,
@@ -2019,6 +2038,7 @@ static int handle_invoke_status(URLContext *s, RTMPPacket *pkt)
     }
 
     t = ff_amf_get_field_value(ptr, data_end, "code", tmpstr, sizeof(tmpstr));
+    av_log(NULL, AV_LOG_ERROR, "Code %s\n", tmpstr);
     if (!t && !strcmp(tmpstr, "NetStream.Play.Start")) rt->state = STATE_PLAYING;
     if (!t && !strcmp(tmpstr, "NetStream.Play.Stop")) rt->state = STATE_STOPPED;
     if (!t && !strcmp(tmpstr, "NetStream.Play.UnpublishNotify")) rt->state = STATE_STOPPED;
