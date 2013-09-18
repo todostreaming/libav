@@ -69,6 +69,10 @@ also sources and sinks).
 
 @section Advanced options
 @table @option
+@item -ac @var{codec}
+Select the audio decoder to be used.
+@item -vc @var{codec}
+Select the video decoder to be used.
 @item -pix_fmt @var{format}
 This option has been removed. Use private options for specifying the
 input pixel format. For example with the rawvideo demuxer you need to specify
