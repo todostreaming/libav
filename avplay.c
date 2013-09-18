@@ -233,6 +233,8 @@ static int screen_width  = 0;
 static int screen_height = 0;
 static int audio_disable;
 static int video_disable;
+static const char *acodec_name;
+static const char *vcodec_name;
 static int wanted_stream[AVMEDIA_TYPE_NB] = {
     [AVMEDIA_TYPE_AUDIO]    = -1,
     [AVMEDIA_TYPE_VIDEO]    = -1,
@@ -2024,10 +2026,11 @@ static int stream_component_open(VideoState *is, int stream_index)
 {
     AVFormatContext *ic = is->ic;
     AVCodecContext *avctx;
-    AVCodec *codec;
+    AVCodec *codec = NULL;
     SDL_AudioSpec wanted_spec, spec;
     AVDictionary *opts;
     AVDictionaryEntry *t = NULL;
+    enum AVMediaType codec_type;
 
     if (stream_index < 0 || stream_index >= ic->nb_streams)
         return -1;
@@ -2035,7 +2038,26 @@ static int stream_component_open(VideoState *is, int stream_index)
 
     opts = filter_codec_opts(codec_opts, avctx->codec_id, ic, ic->streams[stream_index], NULL);
 
-    codec = avcodec_find_decoder(avctx->codec_id);
+    codec_type = avcodec_get_type(avctx->codec_id);
+    if (acodec_name && codec_type == AVMEDIA_TYPE_AUDIO ||
+        vcodec_name && codec_type == AVMEDIA_TYPE_VIDEO) {
+        const char *name;
+        if (codec_type == AVMEDIA_TYPE_AUDIO)
+            name = acodec_name;
+        else
+            name = vcodec_name;
+
+        codec = avcodec_find_decoder_by_name(name);
+        if (!codec) {
+            av_log(NULL, AV_LOG_FATAL, "Unknown decoder '%s'\n", name);
+        } else if (codec->type != codec_type) {
+            av_log(NULL, AV_LOG_FATAL, "Invalid decoder type '%s'\n", name);
+            codec = NULL;
+        }
+    } else {
+        codec = avcodec_find_decoder(avctx->codec_id);
+    }
+
     avctx->workaround_bugs   = workaround_bugs;
     avctx->idct_algo         = idct;
     avctx->skip_frame        = skip_frame;
@@ -2314,9 +2336,6 @@ static int decode_thread(void *arg)
                                  st_index[AVMEDIA_TYPE_AUDIO] :
                                  st_index[AVMEDIA_TYPE_VIDEO]),
                                 NULL, 0);
-    if (show_status) {
-        av_dump_format(ic, 0, is->filename, 0);
-    }
 
     /* open the streams */
     if (st_index[AVMEDIA_TYPE_AUDIO] >= 0) {
@@ -2341,6 +2360,10 @@ static int decode_thread(void *arg)
         fprintf(stderr, "%s: could not open codecs\n", is->filename);
         ret = -1;
         goto fail;
+    }
+
+    if (show_status) {
+        av_dump_format(ic, 0, is->filename, 0);
     }
 
     for (;;) {
@@ -2885,6 +2908,8 @@ static const OptionDef options[] = {
     { "rdftspeed", OPT_INT | HAS_ARG| OPT_AUDIO | OPT_EXPERT, { &rdftspeed }, "rdft speed", "msecs" },
     { "default", HAS_ARG | OPT_AUDIO | OPT_VIDEO | OPT_EXPERT, { opt_default }, "generic catch all option", "" },
     { "i", 0, { NULL }, "avconv compatibility dummy option", ""},
+    { "ac", HAS_ARG | OPT_STRING, { &acodec_name }, "audio codec name", "" },
+    { "vc", HAS_ARG | OPT_STRING, { &vcodec_name }, "video codec name", "" },
     { NULL, },
 };
 
