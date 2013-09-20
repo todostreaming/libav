@@ -530,6 +530,8 @@ static int flv_read_metabody(AVFormatContext *s, int64_t next_pos)
         amf_get_string(ioc, buffer, sizeof(buffer)) < 0)
         return -1;
 
+    av_log(NULL, AV_LOG_ERROR, "FLV %s\n", buffer);
+
     if (!strcmp(buffer, "onTextData"))
         return 1;
 
