@@ -94,14 +94,22 @@ struct AVCodecDefault {
 };
 
 /**
- * Return the hardware accelerated codec for codec codec_id and
- * pixel format pix_fmt.
+ * Enable hardware accelerated decoding depending on the codec
+ * and pix_fmt.
  *
- * @param codec_id the codec to match
- * @param pix_fmt the pixel format to match
- * @return the hardware accelerated codec, or NULL if none was found.
+ * @param  avctx The codec context to enable
+ * @param  options HWAccel specific options
+ * @return 0 on success, AVERROR otherwise.
  */
-AVHWAccel *ff_find_hwaccel(enum AVCodecID codec_id, enum AVPixelFormat pix_fmt);
+int ff_hwaccel_open(AVCodecContext *avctx, AVDictionary **options);
+
+
+/**
+ * Deallocate the hardware accelerated context if hwaccel is in use
+ *
+ * @param avctx The codec context
+ */
+void ff_hwaccel_close(AVCodecContext *avctx);
 
 /**
  * Return the index into tab at which {a,b} match elements {[0],[1]} of tab.

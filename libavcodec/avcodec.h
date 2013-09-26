@@ -2762,7 +2762,8 @@ typedef struct AVCodec {
      */
     int (*encode2)(AVCodecContext *avctx, AVPacket *avpkt, const AVFrame *frame,
                    int *got_packet_ptr);
-    int (*decode)(AVCodecContext *, void *outdata, int *outdata_size, AVPacket *avpkt);
+    int (*decode)(AVCodecContext *avctx, AVFrame *frame, int *got_frame_ptr,
+                                              AVPacket *avpkt);
     int (*close)(AVCodecContext *);
     /**
      * Flush buffers.
@@ -2859,6 +2860,21 @@ typedef struct AVHWAccel {
      * AVCodecContext.release_buffer().
      */
     int priv_data_size;
+
+    /**
+     * Initialization function.
+     *
+     * @param avctx The codec context
+     * @return zero on success, AVERROR otherwise
+     */
+    int (*init)(AVCodecContext *avctx);
+
+    /**
+     * Deallocation function
+     *
+     * @param avctx The codec context
+     */
+    void (*close)(AVCodecContext *avctx);
 } AVHWAccel;
 
 /**
