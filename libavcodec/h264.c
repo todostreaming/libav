@@ -287,7 +287,7 @@ static void release_unused_pictures(H264Context *h, int remove_current)
 
 static int ref_picture(H264Context *h, Picture *dst, Picture *src)
 {
-    int ret, i;
+    int ret = AVERROR(ENOMEM), i;
 
     av_assert0(!dst->f.buf[0]);
     av_assert0(src->f.buf[0]);
