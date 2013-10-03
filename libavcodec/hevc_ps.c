@@ -531,9 +531,12 @@ int ff_hevc_decode_nal_sps(HEVCContext *s)
     int max_sublayers;
     int i;
 
-    HEVCSPS *sps = av_mallocz(sizeof(*sps));
-    if (!sps)
+    HEVCSPS *sps;
+    AVBufferRef *sps_buf = av_buffer_alloc(sizeof(*sps));
+
+    if (!sps_buf)
         return AVERROR(ENOMEM);
+    sps = (HEVCSPS*)sps_buf->data;
 
     av_log(s->avctx, AV_LOG_DEBUG, "Decoding SPS\n");
 
@@ -849,19 +852,19 @@ int ff_hevc_decode_nal_sps(HEVCContext *s)
 
     /* if an SPS with this id but different dimensions already exists, remove
      * all PPSes that depend on it */
-#define DIFF(x) (sps->x != s->sps_list[sps_id]->x)
+#define DIFF(x) (sps->x != ((HEVCSPS*)s->sps_list[sps_id]->data)->x)
     if (s->sps_list[sps_id] &&
         (DIFF(width) || DIFF(height) || DIFF(chroma_format_idc) ||
          DIFF(bit_depth) || DIFF(ctb_width) || DIFF(ctb_height))) {
         for (i = 0; i < FF_ARRAY_ELEMS(s->pps_list); i++) {
-            if (s->pps_list[i] && s->pps_list[i]->sps_id == sps_id)
-                ff_hevc_pps_free(&s->pps_list[i]);
+            if (s->pps_list[i] && ((HEVCPPS*)s->pps_list[i]->data)->sps_id == sps_id)
+                av_buffer_unref(&s->pps_list[i]);
         }
     }
 #undef DIFF
 
-    av_free(s->sps_list[sps_id]);
-    s->sps_list[sps_id] = sps;
+    av_buffer_unref(&s->sps_list[sps_id]);
+    s->sps_list[sps_id] = sps_buf;
 
     if (s->avctx->debug & FF_DEBUG_BITSTREAM) {
         av_log(s->avctx, AV_LOG_DEBUG, "Parsed SPS: id %d; coded wxh: %dx%d; "
@@ -874,16 +877,13 @@ int ff_hevc_decode_nal_sps(HEVCContext *s)
     return 0;
 err:
 
-    av_free(sps);
+    av_buffer_unref(&sps_buf);
     return ret;
 }
 
-void ff_hevc_pps_free(PPS **ppps)
+static void hevc_pps_free(void *opaque, uint8_t *data)
 {
-    PPS *pps = *ppps;
-
-    if (!pps)
-        return;
+    HEVCPPS *pps = (HEVCPPS*)data;
 
     av_freep(&pps->column_width);
     av_freep(&pps->row_height);
@@ -897,7 +897,7 @@ void ff_hevc_pps_free(PPS **ppps)
     av_freep(&pps->min_cb_addr_zs);
     av_freep(&pps->min_tb_addr_zs);
 
-    av_freep(ppps);
+    av_freep(&pps);
 }
 
 int ff_hevc_decode_nal_pps(HEVCContext *s)
@@ -910,9 +910,17 @@ int ff_hevc_decode_nal_pps(HEVCContext *s)
     int ret    = 0;
     int pps_id = 0;
 
-    PPS *pps = av_mallocz(sizeof(*pps));
+    AVBufferRef *pps_buf;
+    HEVCPPS *pps = av_mallocz(sizeof(*pps));
+
     if (!pps)
         return AVERROR(ENOMEM);
+
+    pps_buf = av_buffer_create((uint8_t*)pps, sizeof(*pps), hevc_pps_free, NULL, 0);
+    if (!pps_buf) {
+        av_freep(&pps);
+        return AVERROR(ENOMEM);
+    }
 
     av_log(s->avctx, AV_LOG_DEBUG, "Decoding PPS\n");
 
@@ -938,7 +946,7 @@ int ff_hevc_decode_nal_pps(HEVCContext *s)
         ret = AVERROR_INVALIDDATA;
         goto err;
     }
-    sps = s->sps_list[pps->sps_id];
+    sps = (HEVCSPS*)s->sps_list[pps->sps_id]->data;
     if (!sps) {
         av_log(s->avctx, AV_LOG_ERROR, "SPS does not exist \n");
         ret = AVERROR_INVALIDDATA;
@@ -1226,14 +1234,12 @@ int ff_hevc_decode_nal_pps(HEVCContext *s)
         }
     }
 
-    if (s->pps_list[pps_id] != NULL)
-        ff_hevc_pps_free(&s->pps_list[pps_id]);
+    av_buffer_unref(&s->pps_list[pps_id]);
+    s->pps_list[pps_id] = pps_buf;
 
-    s->pps_list[pps_id] = pps;
     return 0;
 
 err:
-    ff_hevc_pps_free(&pps);
-
+    av_buffer_unref(&pps_buf);
     return ret;
 }
