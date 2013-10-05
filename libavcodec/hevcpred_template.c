@@ -28,33 +28,38 @@
 
 static void FUNC(intra_pred)(HEVCContext *s, int x0, int y0, int log2_size, int c_idx)
 {
-#define IS_INTRA(x, y) (s->ref->tab_mvf[((x0+((x)<<hshift)) >> s->sps->log2_min_pu_size) + (((y0+((y)<<vshift))>> s->sps->log2_min_pu_size) * pic_width_in_min_pu)].is_intra || !s->pps->constrained_intra_pred_flag)
-#define MIN_TB_ADDR_ZS(x, y)                            \
+#define MVF(x, y) \
+    (s->ref->tab_mvf[((x0 + ((x) << hshift)) >> s->sps->log2_min_pu_size) + \
+                     ((y0 + ((y) << vshift)) >> s->sps->log2_min_pu_size) * \
+                     pic_width_in_min_pu])
+#define IS_INTRA(x, y) \
+    (MVF(x, y).is_intra || !s->pps->constrained_intra_pred_flag)
+#define MIN_TB_ADDR_ZS(x, y) \
     s->pps->min_tb_addr_zs[(y) * s->sps->min_tb_width + (x)]
-#define EXTEND_LEFT(ptr, start, length)                 \
-        for (i = (start); i > (start)-(length); i--)    \
-            ptr[i-1] = ptr[i]
-#define EXTEND_RIGHT(ptr, start, length)                \
-        for (i = (start); i < (start)+(length); i++)    \
-            ptr[i] = ptr[i-1]
+#define EXTEND_LEFT(ptr, start, length) \
+        for (i = (start); i > (start) - (length); i--) \
+            ptr[i - 1] = ptr[i]
+#define EXTEND_RIGHT(ptr, start, length) \
+        for (i = (start); i < (start) + (length); i++) \
+            ptr[i] = ptr[i - 1]
 #define EXTEND_UP(ptr, start, length)   EXTEND_LEFT(ptr, start, length)
 #define EXTEND_DOWN(ptr, start, length) EXTEND_RIGHT(ptr, start, length)
-#define EXTEND_LEFT_CIP(ptr, start, length)             \
-        for (i = (start); i > (start)-(length); i--)    \
-            if (!IS_INTRA(i-1, -1))           \
-                ptr[i-1] = ptr[i]
-#define EXTEND_RIGHT_CIP(ptr, start, length)            \
-        for (i = (start); i < (start)+(length); i++)    \
-            if (!IS_INTRA(i, -1))             \
-                ptr[i] = ptr[i-1]
-#define EXTEND_UP_CIP(ptr, start, length)               \
-        for (i = (start); i > (start)-(length); i--)    \
-            if (!IS_INTRA(-1, i-1))           \
-                ptr[i-1] = ptr[i]
-#define EXTEND_DOWN_CIP(ptr, start, length)             \
-        for (i = (start); i < (start)+(length); i++)    \
-            if (!IS_INTRA(-1, i))             \
-            ptr[i] = ptr[i-1]
+#define EXTEND_LEFT_CIP(ptr, start, length) \
+        for (i = (start); i > (start) - (length); i--) \
+            if (!IS_INTRA(i - 1, -1)) \
+                ptr[i - 1] = ptr[i]
+#define EXTEND_RIGHT_CIP(ptr, start, length) \
+        for (i = (start); i < (start) + (length); i++) \
+            if (!IS_INTRA(i, -1)) \
+                ptr[i] = ptr[i - 1]
+#define EXTEND_UP_CIP(ptr, start, length) \
+        for (i = (start); i > (start) - (length); i--) \
+            if (!IS_INTRA(-1, i - 1)) \
+                ptr[i - 1] = ptr[i]
+#define EXTEND_DOWN_CIP(ptr, start, length) \
+        for (i = (start); i < (start) + (length); i++) \
+            if (!IS_INTRA(-1, i)) \
+            ptr[i] = ptr[i - 1]
     HEVCLocalContext *lc = &s->HEVClc;
     int i;
     int hshift = s->sps->hshift[c_idx];
