@@ -247,6 +247,7 @@ int ff_vda_destroy_decoder(struct vda_context *vda_ctx)
 
 AVHWAccel ff_h264_vda_hwaccel = {
     .name           = "h264_vda",
+
     .type           = AVMEDIA_TYPE_VIDEO,
     .id             = AV_CODEC_ID_H264,
     .pix_fmt        = AV_PIX_FMT_VDA_VLD,
