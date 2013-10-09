@@ -107,6 +107,12 @@ static int vda_h264_decode_slice(AVCodecContext *avctx,
     return 0;
 }
 
+static void vda_h264_release_buffer(void *opaque, uint8_t *data)
+{
+    CVPixelBufferRef cv_buffer = opaque;
+    CVPixelBufferRelease(cv_buffer);
+}
+
 static int vda_h264_end_frame(AVCodecContext *avctx)
 {
     H264Context *h                      = avctx->priv_data;
@@ -120,8 +126,25 @@ static int vda_h264_end_frame(AVCodecContext *avctx)
     status = vda_sync_decode(vda_ctx);
     frame->data[3] = (void*)vda_ctx->cv_buffer;
 
-    if (status)
+    if (status) {
         av_log(avctx, AV_LOG_ERROR, "Failed to decode frame (%d)\n", status);
+        return status;
+    }
+
+    /* VDA workaround to release properly each core video buffer:
+     * we need to create an extra av_buffer with a custom freeing callback
+     * to avoid potential memory leaks. */
+    h->cur_pic_ptr->hwaccel_priv_buf = av_buffer_create(frame->data[0],
+                                                        0,
+                                                        vda_h264_release_buffer,
+                                                        vda_ctx->cv_buffer,
+                                                        0);
+    if (!h->cur_pic_ptr->hwaccel_priv_buf) {
+        CVPixelBufferRelease(vda_ctx->cv_buffer);
+        return AVERROR(ENOMEM);
+    }
+
+    h->cur_pic_ptr->hwaccel_picture_private = h->cur_pic_ptr->hwaccel_priv_buf->data;
 
     return status;
 }
