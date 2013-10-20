@@ -25,19 +25,18 @@
  * FF Video Codec 1 (a lossless codec) decoder
  */
 
-#include "libavutil/pixdesc.h"
 #include "libavutil/crc.h"
-#include "libavutil/opt.h"
 #include "libavutil/imgutils.h"
-#include "libavutil/timer.h"
+#include "libavutil/opt.h"
+#include "libavutil/pixdesc.h"
+
 #include "avcodec.h"
-#include "internal.h"
 #include "get_bits.h"
-#include "put_bits.h"
-#include "rangecoder.h"
-#include "golomb.h"
-#include "mathops.h"
 #include "ffv1.h"
+#include "golomb.h"
+#include "internal.h"
+#include "mathops.h"
+#include "rangecoder.h"
 
 static inline av_flatten int get_symbol_inline(RangeCoder *c, uint8_t *state,
                                                int is_signed)
@@ -191,7 +190,6 @@ static int decode_plane(FFV1Context *s, uint8_t *src,
         sample[1][-1] = sample[0][0];
         sample[0][w]  = sample[0][w - 1];
 
-// { START_TIMER
         if (s->avctx->bits_per_raw_sample <= 8) {
             ret = decode_line(s, w, sample, plane_index, 8);
             if (ret < 0)
@@ -211,7 +209,6 @@ static int decode_plane(FFV1Context *s, uint8_t *src,
                     ((uint16_t *)(src + stride * y))[x] = sample[1][x] << (16 - s->avctx->bits_per_raw_sample);
             }
         }
-// STOP_TIMER("decode-line") }
     }
     return 0;
 }
