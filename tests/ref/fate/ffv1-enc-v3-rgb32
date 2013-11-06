@@ -1,0 +1,4 @@
+33b6638e0ec61e5b1e7f1d9c4e819be0 *tests/data/fate/ffv1-enc-v3-rgb32.avi
+659576 tests/data/fate/ffv1-enc-v3-rgb32.avi
+99918fb1e0aee3274ad4ed33891aa702 *tests/data/fate/ffv1-enc-v3-rgb32.out.rawvideo
+stddev: 6828.22 PSNR: 19.64 MAXDIFF:65299 bytes:  7603200/   608256

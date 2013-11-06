@@ -1,0 +1,4 @@
+24f95e41b1d3f8fa10f444ca377fc9bf *tests/data/fate/ffv1-enc-v1-yuv411p.avi
+239044 tests/data/fate/ffv1-enc-v1-yuv411p.avi
+4d40041ca4b40a7747729c5bb97df43e *tests/data/fate/ffv1-enc-v1-yuv411p.out.rawvideo
+stddev: 8125.90 PSNR: 18.13 MAXDIFF:65290 bytes:  7603200/   608256

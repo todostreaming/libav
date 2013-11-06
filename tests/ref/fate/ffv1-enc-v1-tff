@@ -1,0 +1,4 @@
+ca220f499d4bf37cc062ccb2e4a8b853 *tests/data/fate/ffv1-enc-v1-tff.avi
+1103420 tests/data/fate/ffv1-enc-v1-tff.avi
+5ae298fe228fc3a27a02812e6fbfff81 *tests/data/fate/ffv1-enc-v1-tff.out.rawvideo
+stddev: 7922.96 PSNR: 18.35 MAXDIFF:65296 bytes:  7603200/   608256

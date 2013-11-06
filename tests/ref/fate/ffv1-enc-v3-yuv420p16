@@ -1,0 +1,4 @@
+f3892ff2bbf2392e65c051d479c540ca *tests/data/fate/ffv1-enc-v3-yuv420p16.avi
+615368 tests/data/fate/ffv1-enc-v3-yuv420p16.avi
+3d2b0883b3b04d35210dc8366995cfbc *tests/data/fate/ffv1-enc-v3-yuv420p16.out.rawvideo
+stddev: 3882.29 PSNR: 24.55 MAXDIFF:65280 bytes:  7603200/   608256

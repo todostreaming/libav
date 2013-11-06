@@ -1,0 +1,4 @@
+c1115552432b0b68a314f33b874d7726 *tests/data/fate/ffv1-enc-v3-yuv444p10.avi
+689952 tests/data/fate/ffv1-enc-v3-yuv444p10.avi
+6147e60c2830e29433b6d583dc3aa449 *tests/data/fate/ffv1-enc-v3-yuv444p10.out.rawvideo
+stddev: 5415.12 PSNR: 21.66 MAXDIFF:65297 bytes:  7603200/   608256

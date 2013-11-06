@@ -1,0 +1,4 @@
+c08c821b7965a20729744bfb91d659c7 *tests/data/fate/ffv1-enc-v1-gray.avi
+143520 tests/data/fate/ffv1-enc-v1-gray.avi
+3163c8149fce17b6a640d9f37953603a *tests/data/fate/ffv1-enc-v1-gray.out.rawvideo
+stddev:23295.44 PSNR:  8.98 MAXDIFF:65344 bytes:  7603200/   608256

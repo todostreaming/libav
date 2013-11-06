@@ -1,0 +1,4 @@
+f7904f9b392c5bfcc5c805d357f11b05 *tests/data/fate/ffv1-enc-v3-yuv422p9_crc.avi
+379624 tests/data/fate/ffv1-enc-v3-yuv422p9_crc.avi
+cda73ae0e4e6f02292a619728ad03f84 *tests/data/fate/ffv1-enc-v3-yuv422p9_crc.out.rawvideo
+stddev: 4484.11 PSNR: 23.30 MAXDIFF:65290 bytes:  7603200/   608256

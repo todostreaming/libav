@@ -1,0 +1,4 @@
+c33c6371ba23733e2ba36dd2c09760c1 *tests/data/fate/ffv1-enc-v1-bgra.avi
+615682 tests/data/fate/ffv1-enc-v1-bgra.avi
+99918fb1e0aee3274ad4ed33891aa702 *tests/data/fate/ffv1-enc-v1-bgra.out.rawvideo
+stddev: 6828.22 PSNR: 19.64 MAXDIFF:65299 bytes:  7603200/   608256
