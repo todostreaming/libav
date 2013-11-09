@@ -1574,6 +1574,8 @@ av_cold int avcodec_close(AVCodecContext *avctx)
         avctx->coded_frame = NULL;
         if (!avctx->refcounted_frames)
             av_frame_unref(&avctx->internal->to_free);
+        if (avctx->hwaccel && avctx->hwaccel->close)
+            avctx->hwaccel->close(avctx);
         for (i = 0; i < FF_ARRAY_ELEMS(pool->pools); i++)
             av_buffer_pool_uninit(&pool->pools[i]);
         av_freep(&avctx->internal->pool);
@@ -2146,8 +2148,10 @@ AVHWAccel *ff_find_hwaccel(AVCodecContext *avctx)
 
     while ((hwaccel = av_hwaccel_next(hwaccel)))
         if (hwaccel->id == codec_id
-            && hwaccel->pix_fmt == pix_fmt)
-            return hwaccel;
+            && hwaccel->pix_fmt == pix_fmt) {
+            if (!hwaccel->init || !hwaccel->init(avctx))
+                return hwaccel;
+        }
     return NULL;
 }
 

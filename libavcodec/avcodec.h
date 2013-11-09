@@ -2898,6 +2898,21 @@ typedef struct AVHWAccel {
      * AVCodecContext.release_buffer().
      */
     int priv_data_size;
+
+    /**
+     * Initialization function.
+     *
+     * @param avctx The codec context
+     * @return zero on success, AVERROR otherwise
+     */
+    int (*init)(AVCodecContext *avctx);
+
+    /**
+     * Deallocation function
+     *
+     * @param avctx The codec context
+     */
+    void (*close)(AVCodecContext *avctx);
 } AVHWAccel;
 
 /**
