@@ -275,6 +275,7 @@ static int bitstream_enqueue(mfxBitstream *bs, uint8_t *data, int size)
 static mfxFrameSurface1 *get_surface(QSVContext *q)
 {
     int i;
+    av_log(NULL, AV_LOG_WARNING, "Surfaces %d\n", q->nb_surfaces);
     for (i = 0; i < q->nb_surfaces; i++) {
         if (!q->surfaces[i].Data.Locked)
             break;
