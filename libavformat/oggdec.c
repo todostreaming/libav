@@ -56,88 +56,6 @@ static const struct ogg_codec * const ogg_codecs[] = {
     NULL
 };
 
-//FIXME We could avoid some structure duplication
-static int ogg_save(AVFormatContext *s)
-{
-    struct ogg *ogg = s->priv_data;
-    struct ogg_state *ost =
-        av_malloc(sizeof(*ost) + (ogg->nstreams - 1) * sizeof(*ogg->streams));
-    int i;
-    ost->pos      = avio_tell(s->pb);
-    ost->curidx   = ogg->curidx;
-    ost->next     = ogg->state;
-    ost->nstreams = ogg->nstreams;
-    memcpy(ost->streams, ogg->streams, ogg->nstreams * sizeof(*ogg->streams));
-
-    for (i = 0; i < ogg->nstreams; i++) {
-        struct ogg_stream *os = ogg->streams + i;
-        os->buf = av_mallocz(os->bufsize + FF_INPUT_BUFFER_PADDING_SIZE);
-        memcpy(os->buf, ost->streams[i].buf, os->bufpos);
-    }
-
-    ogg->state = ost;
-
-    return 0;
-}
-
-static int ogg_restore(AVFormatContext *s, int discard)
-{
-    struct ogg *ogg = s->priv_data;
-    AVIOContext *bc = s->pb;
-    struct ogg_state *ost = ogg->state;
-    int i, err;
-
-    if (!ost)
-        return 0;
-
-    ogg->state = ost->next;
-
-    if (!discard) {
-
-        for (i = 0; i < ogg->nstreams; i++)
-            av_free(ogg->streams[i].buf);
-
-        avio_seek(bc, ost->pos, SEEK_SET);
-        ogg->curidx   = ost->curidx;
-        ogg->nstreams = ost->nstreams;
-        if ((err = av_reallocp_array(&ogg->streams, ogg->nstreams,
-                                     sizeof(*ogg->streams))) < 0) {
-            ogg->nstreams = 0;
-            return err;
-        } else
-            memcpy(ogg->streams, ost->streams,
-                   ost->nstreams * sizeof(*ogg->streams));
-    }
-
-    av_free(ost);
-
-    return 0;
-}
-
-static int ogg_reset(struct ogg *ogg)
-{
-    int i;
-
-    for (i = 0; i < ogg->nstreams; i++) {
-        struct ogg_stream *os = ogg->streams + i;
-        os->bufpos     = 0;
-        os->pstart     = 0;
-        os->psize      = 0;
-        os->granule    = -1;
-        os->lastpts    = AV_NOPTS_VALUE;
-        os->lastdts    = AV_NOPTS_VALUE;
-        os->sync_pos   = -1;
-        os->page_pos   = 0;
-        os->nsegs      = 0;
-        os->segp       = 0;
-        os->incomplete = 0;
-    }
-
-    ogg->curidx = -1;
-
-    return 0;
-}
-
 static const struct ogg_codec *ogg_find_codec(uint8_t *buf, int size)
 {
     int i;
@@ -494,6 +412,80 @@ static int ogg_get_headers(AVFormatContext *s)
     return 0;
 }
 
+static int ogg_read_close(AVFormatContext *s)
+{
+    struct ogg *ogg = s->priv_data;
+    int i;
+
+    for (i = 0; i < ogg->nstreams; i++) {
+        av_free(ogg->streams[i].buf);
+        if (ogg->streams[i].codec &&
+            ogg->streams[i].codec->cleanup) {
+            ogg->streams[i].codec->cleanup(s, i);
+        }
+        av_free(ogg->streams[i].private);
+    }
+    av_free(ogg->streams);
+    return 0;
+}
+
+//FIXME We could avoid some structure duplication
+static int ogg_save(AVFormatContext *s)
+{
+    struct ogg *ogg = s->priv_data;
+    struct ogg_state *ost =
+        av_malloc(sizeof(*ost) + (ogg->nstreams - 1) * sizeof(*ogg->streams));
+    int i;
+    ost->pos      = avio_tell(s->pb);
+    ost->curidx   = ogg->curidx;
+    ost->next     = ogg->state;
+    ost->nstreams = ogg->nstreams;
+    memcpy(ost->streams, ogg->streams, ogg->nstreams * sizeof(*ogg->streams));
+
+    for (i = 0; i < ogg->nstreams; i++) {
+        struct ogg_stream *os = ogg->streams + i;
+        os->buf = av_mallocz(os->bufsize + FF_INPUT_BUFFER_PADDING_SIZE);
+        memcpy(os->buf, ost->streams[i].buf, os->bufpos);
+    }
+
+    ogg->state = ost;
+
+    return 0;
+}
+
+static int ogg_restore(AVFormatContext *s, int discard)
+{
+    struct ogg *ogg = s->priv_data;
+    AVIOContext *bc = s->pb;
+    struct ogg_state *ost = ogg->state;
+    int i, err;
+
+    if (!ost)
+        return 0;
+
+    ogg->state = ost->next;
+
+    if (!discard) {
+        for (i = 0; i < ogg->nstreams; i++)
+            av_free(ogg->streams[i].buf);
+
+        avio_seek(bc, ost->pos, SEEK_SET);
+        ogg->curidx   = ost->curidx;
+        ogg->nstreams = ost->nstreams;
+        if ((err = av_reallocp_array(&ogg->streams, ogg->nstreams,
+                                     sizeof(*ogg->streams))) < 0) {
+            ogg->nstreams = 0;
+            return err;
+        } else
+            memcpy(ogg->streams, ost->streams,
+                   ost->nstreams * sizeof(*ogg->streams));
+    }
+
+    av_free(ost);
+
+    return 0;
+}
+
 static int ogg_get_length(AVFormatContext *s)
 {
     struct ogg *ogg = s->priv_data;
@@ -527,23 +519,6 @@ static int ogg_get_length(AVFormatContext *s)
 
     ogg_restore(s, 0);
 
-    return 0;
-}
-
-static int ogg_read_close(AVFormatContext *s)
-{
-    struct ogg *ogg = s->priv_data;
-    int i;
-
-    for (i = 0; i < ogg->nstreams; i++) {
-        av_free(ogg->streams[i].buf);
-        if (ogg->streams[i].codec &&
-            ogg->streams[i].codec->cleanup) {
-            ogg->streams[i].codec->cleanup(s, i);
-        }
-        av_free(ogg->streams[i].private);
-    }
-    av_free(ogg->streams);
     return 0;
 }
 
@@ -640,6 +615,30 @@ retry:
     pkt->pos      = fpos;
 
     return psize;
+}
+
+static int ogg_reset(struct ogg *ogg)
+{
+    int i;
+
+    for (i = 0; i < ogg->nstreams; i++) {
+        struct ogg_stream *os = ogg->streams + i;
+        os->bufpos     = 0;
+        os->pstart     = 0;
+        os->psize      = 0;
+        os->granule    = -1;
+        os->lastpts    = AV_NOPTS_VALUE;
+        os->lastdts    = AV_NOPTS_VALUE;
+        os->sync_pos   = -1;
+        os->page_pos   = 0;
+        os->nsegs      = 0;
+        os->segp       = 0;
+        os->incomplete = 0;
+    }
+
+    ogg->curidx = -1;
+
+    return 0;
 }
 
 static int64_t ogg_read_timestamp(AVFormatContext *s, int stream_index,
