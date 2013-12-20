@@ -433,9 +433,13 @@ static int ogg_read_close(AVFormatContext *s)
 static int ogg_save(AVFormatContext *s)
 {
     struct ogg *ogg = s->priv_data;
+    int i;
     struct ogg_state *ost =
         av_malloc(sizeof(*ost) + (ogg->nstreams - 1) * sizeof(*ogg->streams));
-    int i;
+
+    if (!ost)
+        return AVERROR(ENOMEM);
+
     ost->pos      = avio_tell(s->pb);
     ost->curidx   = ogg->curidx;
     ost->next     = ogg->state;
@@ -444,13 +448,27 @@ static int ogg_save(AVFormatContext *s)
 
     for (i = 0; i < ogg->nstreams; i++) {
         struct ogg_stream *os = ogg->streams + i;
+
         os->buf = av_mallocz(os->bufsize + FF_INPUT_BUFFER_PADDING_SIZE);
+        if (!os->buf)
+            goto fail;
+
         memcpy(os->buf, ost->streams[i].buf, os->bufpos);
     }
 
     ogg->state = ost;
 
     return 0;
+
+fail:
+    while (--i) {
+        av_free(ogg->streams[i].buf);
+        ogg->streams[i].buf = ost->streams[i].buf;
+    }
+
+    av_free(ost);
+
+    return AVERROR(ENOMEM);
 }
 
 static int ogg_restore(AVFormatContext *s, int discard)
@@ -489,7 +507,7 @@ static int ogg_restore(AVFormatContext *s, int discard)
 static int ogg_get_length(AVFormatContext *s)
 {
     struct ogg *ogg = s->priv_data;
-    int i;
+    int i, ret;
     int64_t size, end;
 
     if (!s->pb->seekable)
@@ -504,7 +522,8 @@ static int ogg_get_length(AVFormatContext *s)
         return 0;
     end = size > MAX_PAGE_SIZE ? size - MAX_PAGE_SIZE : 0;
 
-    ogg_save(s);
+    if ((ret = ogg_save(s)) < 0)
+        return ret;
     avio_seek(s->pb, end, SEEK_SET);
 
     while (!ogg_read_page(s, &i)) {
@@ -529,20 +548,24 @@ static int ogg_read_header(AVFormatContext *s)
     ogg->curidx = -1;
     //linear headers seek from start
     ret = ogg_get_headers(s);
-    if (ret < 0) {
-        ogg_read_close(s);
-        return ret;
-    }
+    if (ret < 0)
+        goto fail;
 
     for (i = 0; i < ogg->nstreams; i++)
         if (ogg->streams[i].header < 0)
             ogg->streams[i].codec = NULL;
 
     //linear granulepos seek from end
-    ogg_get_length(s);
+    ret = ogg_get_length(s);
+    if (ret < 0)
+        goto fail;
 
     //fill the extradata in the per codec callbacks
     return 0;
+
+fail:
+    ogg_read_close(s);
+    return ret;
 }
 
 static int64_t ogg_calc_pts(AVFormatContext *s, int idx, int64_t *dts)
