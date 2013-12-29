@@ -803,15 +803,23 @@ static av_cold int ffv1_decode_init(AVCodecContext *avctx)
 
     ffv1_common_init(avctx);
 
+    if (avctx->extradata) {
+        if ((ret = read_extra_header(f)) < 0) {
+            ffv1_close(avctx);
+            return ret;
+        }
+    }
+
+    if ((ret = ffv1_init_slice_contexts(f)) < 0) {
+        ffv1_close(avctx);
+        return ret;
+    }
+
     f->last_picture = av_frame_alloc();
-    if (!f->last_picture)
+    if (!f->last_picture) {
+        ffv1_close(avctx);
         return AVERROR(ENOMEM);
-
-    if (avctx->extradata && (ret = read_extra_header(f)) < 0)
-        return ret;
-
-    if ((ret = ffv1_init_slice_contexts(f)) < 0)
-        return ret;
+    }
 
     return 0;
 }

@@ -189,12 +189,14 @@ int ffv1_init_slice_state(FFV1Context *f, FFV1Context *fs)
 
 av_cold int ffv1_init_slice_contexts(FFV1Context *f)
 {
-    int i;
+    int i, j;
 
     f->slice_count = f->num_h_slices * f->num_v_slices;
-    if (f->slice_count <= 0) {
-        av_log(f->avctx, AV_LOG_ERROR, "Invalid number of slices\n");
-        return AVERROR(EINVAL);
+    if (f->slice_count <= 0 || f->slice_count >= MAX_SLICES) {
+        av_log(f->avctx, AV_LOG_ERROR,
+               "Invalid number of slices %d\n",
+               f->slice_count);
+        return AVERROR_INVALIDDATA;
     }
 
     for (i = 0; i < f->slice_count; i++) {
@@ -205,6 +207,10 @@ av_cold int ffv1_init_slice_contexts(FFV1Context *f)
         int sxe         = f->avctx->width  * (sx + 1) / f->num_h_slices;
         int sys         = f->avctx->height *  sy      / f->num_v_slices;
         int sye         = f->avctx->height * (sy + 1) / f->num_v_slices;
+
+        if (!fs)
+            goto fail;
+
         f->slice_context[i] = fs;
         memcpy(fs, f, sizeof(*fs));
         memset(fs->rc_stat2, 0, sizeof(fs->rc_stat2));
@@ -216,10 +222,20 @@ av_cold int ffv1_init_slice_contexts(FFV1Context *f)
 
         fs->sample_buffer = av_malloc(3 * MAX_PLANES * (fs->width + 6) *
                                       sizeof(*fs->sample_buffer));
-        if (!fs->sample_buffer)
-            return AVERROR(ENOMEM);
+        if (!fs->sample_buffer) {
+            av_freep(f->slice_context + i);
+            goto fail;
+        }
     }
     return 0;
+
+fail:
+    for (j = 0; j < i; j++) {
+        FFV1Context *sctx = f->slice_context[j];
+        av_free(sctx->sample_buffer);
+        av_freep(&sctx);
+    }
+    return AVERROR(ENOMEM);
 }
 
 int ffv1_allocate_initial_states(FFV1Context *f)
@@ -229,8 +245,12 @@ int ffv1_allocate_initial_states(FFV1Context *f)
     for (i = 0; i < f->quant_table_count; i++) {
         f->initial_states[i] = av_malloc(f->context_count[i] *
                                          sizeof(*f->initial_states[i]));
-        if (!f->initial_states[i])
+        if (!f->initial_states[i]) {
+            int j;
+            for (j = 0; j < i; j++)
+                av_freep(f->initial_states + j);
             return AVERROR(ENOMEM);
+        }
         memset(f->initial_states[i], 128,
                f->context_count[i] * sizeof(*f->initial_states[i]));
     }
