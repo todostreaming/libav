@@ -30,6 +30,7 @@
 #include "get_bits.h"
 #include "put_bits.h"
 #include "rangecoder.h"
+#include "thread.h"
 
 #define MAX_PLANES 4
 #define CONTEXT_SIZE 32
@@ -79,8 +80,8 @@ typedef struct FFV1Context {
     int transparency;
     int flags;
     int picture_number;
-    AVFrame *frame;
-    AVFrame *last_picture;
+    ThreadFrame picture, last_picture;
+    struct FFV1Context *fsrc;
 
     AVFrame *cur;
     int plane_count;
