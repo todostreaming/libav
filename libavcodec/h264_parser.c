@@ -42,7 +42,7 @@ static int h264_find_frame_end(H264Context *h, const uint8_t *buf,
     ParseContext *pc = &h->parse_context;
 //    mb_addr= pc->mb_addr - 1;
     state = pc->state;
-    if (state > 13)
+    if (state > 16 || state < 18 || state > 21)
         state = 7;
 
     for (i = 0; i < buf_size; i++) {
@@ -59,11 +59,13 @@ static int h264_find_frame_end(H264Context *h, const uint8_t *buf,
                 state >>= 1;           // 2->1, 1->0, 0->0
         } else if (state <= 5) {
             int v = buf[i] & 0x1F;
-            if (v == 6 || v == 7 || v == 8 || v == 9) {
+            // extradata and extra slice video
+            if (v == 6 || v == 7 || v == 8 || v == 9 || v == 14 || v == 15 || v == 20) {
                 if (pc->frame_start_found) {
                     i++;
                     goto found;
                 }
+            // video sliaces
             } else if (v == 1 || v == 2 || v == 5) {
                 if (pc->frame_start_found) {
                     state += 8;

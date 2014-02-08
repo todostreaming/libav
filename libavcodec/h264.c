@@ -4337,7 +4337,9 @@ static int decode_slice(struct AVCodecContext *avctx, void *arg)
 {
     H264Context *h = *(void **)arg;
     int lf_x_start = h->mb_x;
-
+av_log(avctx, AV_LOG_WARNING, "view_id: %d\n", h->view_id);
+if (h->view_id != 0)
+    return 0;
     h->mb_skip_run = -1;
 
     h->is_complex = FRAME_MBAFF(h) || h->picture_structure != PICT_FRAME ||
@@ -4514,7 +4516,8 @@ static int execute_decode_slices(H264Context *h, int context_count)
 
     if (h->avctx->hwaccel)
         return 0;
-    if (context_count == 1) {
+    // slice threading is disabled for MVC
+    if (context_count == 1 || h->is_mvc) {
         return decode_slice(avctx, &h);
     } else {
         for (i = 1; i < context_count; i++) {
@@ -4688,7 +4691,7 @@ again:
                 }
                 idr(h); // FIXME ensure we don't lose some frames if there is reordering
             case NAL_SLICE:
-            //case NAL_EXT_SLICE:
+            case NAL_EXT_SLICE:
                 init_get_bits(&hx->gb, ptr, bit_length);
                 hx->intra_gb_ptr      =
                 hx->inter_gb_ptr      = &hx->gb;
