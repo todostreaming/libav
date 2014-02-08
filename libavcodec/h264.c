@@ -4688,6 +4688,7 @@ again:
                 }
                 idr(h); // FIXME ensure we don't lose some frames if there is reordering
             case NAL_SLICE:
+            //case NAL_EXT_SLICE:
                 init_get_bits(&hx->gb, ptr, bit_length);
                 hx->intra_gb_ptr      =
                 hx->inter_gb_ptr      = &hx->gb;
@@ -4805,6 +4806,10 @@ again:
                     goto end;
 
                 break;
+            case NAL_SUB_SPS:
+                init_get_bits(&h->gb, ptr, bit_length);
+                ff_mvc_decode_subset_sequence_parameter_set(h);
+                break;
             case NAL_PPS:
                 init_get_bits(&h->gb, ptr, bit_length);
                 ff_h264_decode_picture_parameter_set(h, bit_length);
@@ -4814,6 +4819,7 @@ again:
             case NAL_END_STREAM:
             case NAL_FILLER_DATA:
             case NAL_SPS_EXT:
+            case NAL_PREFIX:
             case NAL_AUXILIARY_SLICE:
                 break;
             case NAL_FF_IGNORE:
@@ -5017,12 +5023,14 @@ static const AVProfile profiles[] = {
     { FF_PROFILE_H264_HIGH_444_PREDICTIVE,  "High 4:4:4 Predictive" },
     { FF_PROFILE_H264_HIGH_444_INTRA,       "High 4:4:4 Intra"      },
     { FF_PROFILE_H264_CAVLC_444,            "CAVLC 4:4:4"           },
+    { FF_PROFILE_MVC_MULTIVIEW_HIGH,        "Multiview High"        },
+    { FF_PROFILE_MVC_STEREO_HIGH,           "Stereo High"           },
     { FF_PROFILE_UNKNOWN },
 };
 
 AVCodec ff_h264_decoder = {
     .name                  = "h264",
-    .long_name             = NULL_IF_CONFIG_SMALL("H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10"),
+    .long_name             = NULL_IF_CONFIG_SMALL("H.264 / AVC / MPEG-4 part 10 / MVC"),
     .type                  = AVMEDIA_TYPE_VIDEO,
     .id                    = AV_CODEC_ID_H264,
     .priv_data_size        = sizeof(H264Context),

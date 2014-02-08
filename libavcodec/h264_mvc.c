@@ -21,7 +21,6 @@
 #include "h264.h"
 #include "golomb.h"
 
-#if 0
 static int mvc_decode_sps_extension(H264Context *h, SPS *sps)
 {
     int i, j, k;
@@ -124,7 +123,7 @@ static int mvc_decode_vui_parameters(H264Context *h, SPS *sps)
     return 0;
 }
 
-int ff_h264_decode_subset_sequence_parameter_set(H264Context *h)
+int ff_mvc_decode_subset_sequence_parameter_set(H264Context *h)
 {
     int ret;
 
@@ -134,7 +133,8 @@ int ff_h264_decode_subset_sequence_parameter_set(H264Context *h)
 
     if (h->sps.profile_idc != FF_PROFILE_MVC_MULTIVIEW_HIGH &&
         h->sps.profile_idc != FF_PROFILE_MVC_STEREO_HIGH) {
-        av_log(h, AV_LOG_ERROR, "Unsupported sequence extension\n");
+        avpriv_request_sample(h->avctx, "Profile IDC %d",
+                              h->sps.profile_idc);
         return AVERROR_PATCHWELCOME;
     }
 
@@ -155,7 +155,6 @@ int ff_h264_decode_subset_sequence_parameter_set(H264Context *h)
 
     return 0;
 }
-#endif
 
 int ff_mvc_decode_nal_header(H264Context *h)
 {

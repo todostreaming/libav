@@ -103,7 +103,7 @@ static const uint8_t default_scaling8[2][64] = {
       24, 25, 27, 28, 30, 32, 33, 35 }
 };
 
-static inline int decode_hrd_parameters(H264Context *h, SPS *sps)
+int ff_decode_hrd_parameters(H264Context *h, SPS *sps)
 {
     int cpb_count, i;
     cpb_count = get_ue_golomb_31(&h->gb) + 1;
@@ -195,11 +195,11 @@ static inline int decode_vui_parameters(H264Context *h, SPS *sps)
 
     sps->nal_hrd_parameters_present_flag = get_bits1(&h->gb);
     if (sps->nal_hrd_parameters_present_flag)
-        if (decode_hrd_parameters(h, sps) < 0)
+        if (ff_decode_hrd_parameters(h, sps) < 0)
             return AVERROR_INVALIDDATA;
     sps->vcl_hrd_parameters_present_flag = get_bits1(&h->gb);
     if (sps->vcl_hrd_parameters_present_flag)
-        if (decode_hrd_parameters(h, sps) < 0)
+        if (ff_decode_hrd_parameters(h, sps) < 0)
             return AVERROR_INVALIDDATA;
     if (sps->nal_hrd_parameters_present_flag ||
         sps->vcl_hrd_parameters_present_flag)
