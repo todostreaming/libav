@@ -225,6 +225,11 @@ static inline int parse_nal_units(AVCodecParserContext *s,
         case NAL_SEI:
             ff_h264_decode_sei(h);
             break;
+        case NAL_PREFIX:
+        case NAL_SUB_SPS:
+        case NAL_EXT_SLICE:
+            ff_mvc_decode_nal_header(h);
+            break;
         case NAL_IDR_SLICE:
             s->key_frame = 1;
 
