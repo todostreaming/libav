@@ -205,6 +205,16 @@ typedef struct SPS {
     int residual_color_transform_flag;    ///< residual_colour_transform_flag
     int constraint_set_flags;             ///< constraint_set[0-3]_flag
     int new;                              ///< flag to keep track if the decoder context needs re-init due to changed SPS
+
+#define MAX_VIEW_COUNT 3
+    int num_views;
+    int num_level_values_signalled;
+    int num_anchor_refs[2][MAX_VIEW_COUNT];
+    int num_non_anchor_refs_lX[2][MAX_VIEW_COUNT];
+    int anchor_ref[2][MAX_VIEW_COUNT][16];
+    int non_anchor_ref_lX[2][MAX_VIEW_COUNT][16];
+    int view_id[MAX_VIEW_COUNT];
+    int inter_layer_deblocking_filter_control_present_flag;
 } SPS;
 
 /**
@@ -996,5 +1006,8 @@ int ff_pred_weight_table(H264Context *h);
 int ff_set_ref_count(H264Context *h);
 
 int ff_mvc_decode_nal_header(H264Context *h);
+int ff_mvc_decode_subset_sequence_parameter_set(H264Context *h);
+
+int ff_decode_hrd_parameters(H264Context *h, SPS *sps);
 
 #endif /* AVCODEC_H264_H */
