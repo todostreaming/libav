@@ -112,7 +112,10 @@ enum {
     NAL_END_STREAM      = 11,
     NAL_FILLER_DATA     = 12,
     NAL_SPS_EXT         = 13,
+    NAL_PREFIX          = 14,
+    NAL_SUB_SPS         = 15,
     NAL_AUXILIARY_SLICE = 19,
+    NAL_EXT_SLICE       = 20,
     NAL_FF_IGNORE       = 0xff0f001,
 };
 
@@ -657,6 +660,15 @@ typedef struct H264Context {
     AVBufferPool *mb_type_pool;
     AVBufferPool *motion_val_pool;
     AVBufferPool *ref_index_pool;
+
+    int non_idr_flag;
+    int priority_id;
+    int view_id;
+    int temporal_id;
+    int anchor_pic_flag;
+    int inter_view_flag;
+
+    int is_mvc;
 } H264Context;
 
 extern const uint8_t ff_h264_chroma_qp[3][QP_MAX_NUM + 1]; ///< One chroma qp table for each supported bit depth (8, 9, 10).
@@ -982,5 +994,7 @@ void ff_h264_draw_horiz_band(H264Context *h, int y, int height);
 int ff_init_poc(H264Context *h, int pic_field_poc[2], int *pic_poc);
 int ff_pred_weight_table(H264Context *h);
 int ff_set_ref_count(H264Context *h);
+
+int ff_mvc_decode_nal_header(H264Context *h);
 
 #endif /* AVCODEC_H264_H */
