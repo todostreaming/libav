@@ -46,6 +46,8 @@
 
 #define MAX_DELAYED_PIC_COUNT  16
 
+#define H264_MAX_PICTURE_COUNT 32 * 2 * 8 // TODO: dynamic allocation
+
 /* Compiling in interlaced support reduces the speed
  * of progressive decoding by about 2%. */
 #define ALLOW_INTERLACE
