@@ -228,9 +228,10 @@ static inline int parse_nal_units(AVCodecParserContext *s,
             ff_h264_decode_sei(h);
             break;
         case NAL_PREFIX:
-        case NAL_SUB_SPS:
-        case NAL_EXT_SLICE:
             ff_mvc_decode_nal_header(h);
+            break;
+        case NAL_SUB_SPS:
+            ff_mvc_decode_subset_sequence_parameter_set(h);
             break;
         case NAL_IDR_SLICE:
             s->key_frame = 1;
@@ -241,6 +242,10 @@ static inline int parse_nal_units(AVCodecParserContext *s,
             h->prev_poc_lsb          = 0;
         /* fall through */
         case NAL_SLICE:
+        case NAL_EXT_SLICE:
+            if (h->nal_unit_type == NAL_EXT_SLICE)
+                ff_mvc_decode_nal_header(h);
+
             get_ue_golomb(&h->gb);  // skip first_mb_in_slice
             slice_type   = get_ue_golomb_31(&h->gb);
             s->pict_type = golomb_to_pict_type[slice_type % 5];
