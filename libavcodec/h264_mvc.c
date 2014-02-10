@@ -21,45 +21,99 @@
 #include "h264.h"
 #include "golomb.h"
 
-static int mvc_decode_sps_extension(H264Context *h, SPS *sps)
+SPS *ff_mvc_get_active_sps(H264Context *h, unsigned int id)
+{
+    if (h->nal_unit_type == NAL_EXT_SLICE ||
+        h->nal_unit_type == NAL_SUB_SPS) {
+        if (h->sps.is_sub_sps && h->sps.sps_id == id)
+            return &h->sps;
+        else if (h->ssps_buffers[id])
+            return h->ssps_buffers[id];
+        else
+            return h->sps_buffers[id];
+    } else
+        return &h->sps;
+}
+
+int ff_mvc_set_active_sps(H264Context *h, unsigned int id)
+{
+    int i;
+    SPS *sps = ff_mvc_get_active_sps(h, id);
+    if (!sps)
+        return AVERROR_INVALIDDATA;
+
+    h->sps = *sps;
+    for (i = 0; i < sps->num_views; i++)
+        h->layer[i].sps = *sps;
+
+    return 0;
+}
+
+int ff_mvc_set_active_pps(H264Context *h, PPS *pps)
+{
+    int i;
+
+    h->pps = *pps;
+    for (i = 0; i < h->sps.num_views; i++)
+        h->layer[i].pps = *pps;
+
+    return 0;
+}
+
+int ff_mvc_voidx_to_id(H264Context *h, int i)
+{
+    return h->voidx[i];
+}
+
+static int mvc_alloc_extra_layers(H264Context *h)
+{
+    int ret, i;
+    ret = av_reallocp(&h->layer, sizeof(H264Context) * h->ssps.num_views);
+    for (i = 0; i < h->ssps.num_views; i ++)
+        ff_h264_decode_init(h->layer[i].avctx);
+
+    return 0;
+}
+
+static int mvc_decode_sps_extension(H264Context *h, SPS *ssps)
 {
     int i, j, k;
     int view_id, num_ops, num_targets;
 
-    sps->num_views = get_ue_golomb(&h->gb) + 1;
-    if (sps->num_views > FFMIN(MAX_VIEW_COUNT, 1024)) {
+    ssps->num_views = get_ue_golomb(&h->gb) + 1;
+    if (ssps->num_views > FFMIN(MAX_VIEW_COUNT, 1024)) {
         av_log(h, AV_LOG_ERROR, "Maximum number of layers reached.\n");
         return AVERROR_INVALIDDATA;
     }
 
-    for (i = 0; i < sps->num_views; i++) {
+    for (i = 0; i < ssps->num_views; i++) {
         view_id = get_ue_golomb(&h->gb);
-        sps->view_id[i] = view_id;
-        //h->voidx_list[view_id] = i;
-        av_log(h->avctx, AV_LOG_DEBUG, "NALU: %d %d %d\n", h->nal_unit_type, sps->view_id[i], sps->num_views);
+        ssps->view_id[i] = view_id;
+        h->voidx[view_id] = i;
+        av_log(h->avctx, AV_LOG_DEBUG, "NALU: %d %d %d\n", h->nal_unit_type, ssps->view_id[i], ssps->num_views);
     }
-    for (i = 1; i < sps->num_views; i++) {
-        sps->num_anchor_refs[0][i] = get_ue_golomb(&h->gb);
-        for (j = 0; j < sps->num_anchor_refs[0][i]; j++)
-            sps->anchor_ref[0][i][j] = get_ue_golomb(&h->gb);
+    for (i = 1; i < ssps->num_views; i++) {
+        ssps->num_anchor_refs[0][i] = get_ue_golomb(&h->gb);
+        for (j = 0; j < ssps->num_anchor_refs[0][i]; j++)
+            ssps->anchor_ref[0][i][j] = get_ue_golomb(&h->gb);
 
-        sps->num_anchor_refs[1][i] = get_ue_golomb(&h->gb);
-        for (j = 0; j < sps->num_anchor_refs[1][i]; j++)
-            sps->anchor_ref[1][i][j] = get_ue_golomb(&h->gb);
+        ssps->num_anchor_refs[1][i] = get_ue_golomb(&h->gb);
+        for (j = 0; j < ssps->num_anchor_refs[1][i]; j++)
+            ssps->anchor_ref[1][i][j] = get_ue_golomb(&h->gb);
     }
-    for (i = 1; i < sps->num_views; i++) {
-        sps->num_non_anchor_refs_lX[0][i] = get_ue_golomb(&h->gb);
-        for (j = 0; j < sps->num_non_anchor_refs_lX[0][i]; j++)
-            sps->non_anchor_ref_lX[0][i][j] = get_ue_golomb(&h->gb);
+    for (i = 1; i < ssps->num_views; i++) {
+        ssps->num_non_anchor_refs_lX[0][i] = get_ue_golomb(&h->gb);
+        for (j = 0; j < ssps->num_non_anchor_refs_lX[0][i]; j++)
+            ssps->non_anchor_ref_lX[0][i][j] = get_ue_golomb(&h->gb);
 
-        sps->num_non_anchor_refs_lX[1][i] = get_ue_golomb(&h->gb);
-        for (j = 0; j < sps->num_non_anchor_refs_lX[1][i]; j++)
-            sps->non_anchor_ref_lX[1][i][j] = get_ue_golomb(&h->gb);
+        ssps->num_non_anchor_refs_lX[1][i] = get_ue_golomb(&h->gb);
+        for (j = 0; j < ssps->num_non_anchor_refs_lX[1][i]; j++)
+            ssps->non_anchor_ref_lX[1][i][j] = get_ue_golomb(&h->gb);
     }
 
     // skip the rest
-    sps->num_level_values_signalled = get_ue_golomb(&h->gb) + 1;
-    for (i = 0; i < sps->num_level_values_signalled; i++) {
+    ssps->num_level_values_signalled = get_ue_golomb(&h->gb) + 1;
+    for (i = 0; i < ssps->num_level_values_signalled; i++) {
         skip_bits(&h->gb, 8);           // level_idc[i]
 
         num_ops = get_ue_golomb(&h->gb) + 1;
@@ -77,7 +131,7 @@ static int mvc_decode_sps_extension(H264Context *h, SPS *sps)
     return 0;
 }
 
-static int mvc_decode_vui_parameters(H264Context *h, SPS *sps)
+static int mvc_decode_vui_parameters(H264Context *h, SPS *ssps)
 {
     int i, j, ret;
     int vui_mvc_num_ops;
@@ -86,7 +140,7 @@ static int mvc_decode_vui_parameters(H264Context *h, SPS *sps)
     int vui_mvc_nal_hrd_parameters_present_flag;
     int vui_mvc_vcl_hrd_parameters_present_flag;
 
-    sps->inter_layer_deblocking_filter_control_present_flag = get_bits1(&h->gb);
+    ssps->inter_layer_deblocking_filter_control_present_flag = get_bits1(&h->gb);
     vui_mvc_num_ops = get_ue_golomb(&h->gb) + 1;
     for (i = 0; i < vui_mvc_num_ops; i++) {
         skip_bits(&h->gb, 3);           // vui_mvc_temporal_id[i]
@@ -102,14 +156,14 @@ static int mvc_decode_vui_parameters(H264Context *h, SPS *sps)
 
         vui_mvc_nal_hrd_parameters_present_flag = get_bits1(&h->gb);
         if (vui_mvc_nal_hrd_parameters_present_flag) {
-            ret = ff_decode_hrd_parameters(h, sps);
+            ret = ff_decode_hrd_parameters(h, ssps);
             if (ret < 0)
                 return ret;
         }
 
         vui_mvc_vcl_hrd_parameters_present_flag = get_bits1(&h->gb);
         if (vui_mvc_vcl_hrd_parameters_present_flag) {
-            ret = ff_decode_hrd_parameters(h, sps);
+            ret = ff_decode_hrd_parameters(h, ssps);
             if (ret < 0)
                 return ret;
         }
@@ -132,20 +186,20 @@ int ff_mvc_decode_subset_sequence_parameter_set(H264Context *h)
     if (ret < 0)
         return ret;
 
-    if (h->sps.profile_idc != FF_PROFILE_MVC_MULTIVIEW_HIGH &&
-        h->sps.profile_idc != FF_PROFILE_MVC_STEREO_HIGH) {
+    if (h->ssps.profile_idc != FF_PROFILE_MVC_MULTIVIEW_HIGH &&
+        h->ssps.profile_idc != FF_PROFILE_MVC_STEREO_HIGH) {
         avpriv_request_sample(h->avctx, "Profile IDC %d",
-                              h->sps.profile_idc);
+                              h->ssps.profile_idc);
         return AVERROR_PATCHWELCOME;
     }
 
     skip_bits1(&h->gb);         /* bit_equal_to_one */
-    ret = mvc_decode_sps_extension(h, &h->sps);
+    ret = mvc_decode_sps_extension(h, &h->ssps);
     if (ret < 0)
         return ret;
 
     if (get_bits1(&h->gb)) {    /* mvc_vui_parameters_present_flag */
-        ret = mvc_decode_vui_parameters(h, &h->sps);
+        ret = mvc_decode_vui_parameters(h, &h->ssps);
         if (ret < 0)
             return ret;
     }
@@ -177,7 +231,7 @@ int ff_mvc_decode_nal_header(H264Context *h)
     //if (h->nal_unit_type == NAL_PREFIX)
      //   h->base_view_id = h->view_id;
 
-    av_log(h->avctx, AV_LOG_VERBOSE, "NALU: %d %d %d %d %d %d %d\n",
+    av_log(h->avctx, AV_LOG_VERBOSE, "NALU:%d nidr:%d pri:%d vid:%d tid:%d an:%d iv:%d\n",
            h->nal_unit_type,
            h->non_idr_flag, h->priority_id, h->view_id, h->temporal_id,
            h->anchor_pic_flag, h->inter_view_flag);

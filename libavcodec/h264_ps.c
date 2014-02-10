@@ -318,6 +318,7 @@ int ff_h264_decode_seq_parameter_set(H264Context *h)
     if (!sps)
         return AVERROR(ENOMEM);
 
+    sps->sps_id               = sps_id;
     sps->time_offset_length   = 24;
     sps->profile_idc          = profile_idc;
     sps->constraint_set_flags = constraint_set_flags;
@@ -484,7 +485,7 @@ int ff_h264_decode_seq_parameter_set(H264Context *h)
         static const char csp[4][5] = { "Gray", "420", "422", "444" };
         av_log(h->avctx, AV_LOG_DEBUG,
                "sps:%u profile:%d/%d poc:%d ref:%d %dx%d %s %s crop:%d/%d/%d/%d %s %s %d/%d\n",
-               sps_id, sps->profile_idc, sps->level_idc,
+               sps->sps_id, sps->profile_idc, sps->level_idc,
                sps->poc_type,
                sps->ref_frame_count,
                sps->mb_width, sps->mb_height,
@@ -499,10 +500,17 @@ int ff_h264_decode_seq_parameter_set(H264Context *h)
     }
     sps->new = 1;
 
-    av_free(h->sps_buffers[sps_id]);
-    h->sps_buffers[sps_id] = sps;
-    h->sps                 = *sps;
-    h->current_sps_id      = sps_id;
+    if (h->nal_unit_type == NAL_SUB_SPS) {
+        av_free(h->ssps_buffers[sps_id]);
+        h->ssps_buffers[sps_id] = sps;
+        h->ssps                 = *sps;
+        h->ssps.is_sub_sps      = 1;
+    } else {
+        av_free(h->sps_buffers[sps_id]);
+        h->sps_buffers[sps_id] = sps;
+        h->sps                 = *sps;
+        h->current_sps_id      = sps_id;
+    }
 
     return 0;
 

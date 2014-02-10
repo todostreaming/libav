@@ -3414,6 +3414,9 @@ static int decode_slice_header(H264Context *h, H264Context *h0)
         return AVERROR_INVALIDDATA;
     }
 
+    ff_mvc_set_active_pps(h, &h->pps);
+    ff_mvc_set_active_sps(h, h->pps.sps_id);
+
     if (h->pps.sps_id != h->current_sps_id ||
         h0->sps_buffers[h->pps.sps_id]->new) {
         h0->sps_buffers[h->pps.sps_id]->new = 0;
@@ -4690,8 +4693,9 @@ again:
                     goto end;
                 }
                 idr(h); // FIXME ensure we don't lose some frames if there is reordering
-            case NAL_SLICE:
             case NAL_EXT_SLICE:
+av_log(avctx, AV_LOG_WARNING, "view_id in header: %d\n", h->view_id);
+            case NAL_SLICE:
                 init_get_bits(&hx->gb, ptr, bit_length);
                 hx->intra_gb_ptr      =
                 hx->inter_gb_ptr      = &hx->gb;
@@ -4812,6 +4816,11 @@ again:
             case NAL_SUB_SPS:
                 init_get_bits(&h->gb, ptr, bit_length);
                 ff_mvc_decode_subset_sequence_parameter_set(h);
+
+                ret = h264_set_parameter_from_sps(h);
+                if (ret < 0)
+                    goto end;
+
                 break;
             case NAL_PPS:
                 init_get_bits(&h->gb, ptr, bit_length);
