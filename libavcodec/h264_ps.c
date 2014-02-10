@@ -393,7 +393,7 @@ int ff_h264_decode_seq_parameter_set(H264Context *h)
 
     sps->ref_frame_count = get_ue_golomb_31(&h->gb);
     if (sps->ref_frame_count > H264_MAX_PICTURE_COUNT - 2) {
-        av_log(h->avctx, AV_LOG_ERROR, "too many reference frames\n");
+        av_log(h->avctx, AV_LOG_ERROR, "too many reference frames (%d)\n", sps->ref_frame_count);
         goto fail;
     }
     sps->gaps_in_frame_num_allowed_flag = get_bits1(&h->gb);
@@ -543,7 +543,7 @@ int ff_h264_decode_picture_parameter_set(H264Context *h, int bit_length)
     pps->sps_id = get_ue_golomb_31(&h->gb);
     if ((unsigned)pps->sps_id >= MAX_SPS_COUNT ||
         h->sps_buffers[pps->sps_id] == NULL) {
-        av_log(h->avctx, AV_LOG_ERROR, "sps_id out of range\n");
+        av_log(h->avctx, AV_LOG_ERROR, "sps_id (%d) out of range\n", pps->sps_id);
         goto fail;
     }
 
