@@ -151,6 +151,7 @@ typedef enum {
  * Sequence parameter set
  */
 typedef struct SPS {
+    unsigned int sps_id;
     int profile_idc;
     int level_idc;
     int chroma_format_idc;
@@ -209,6 +210,7 @@ typedef struct SPS {
     int new;                              ///< flag to keep track if the decoder context needs re-init due to changed SPS
 
 #define MAX_VIEW_COUNT 3
+    int is_sub_sps;
     int num_views;
     int num_level_values_signalled;
     int num_anchor_refs[2][MAX_VIEW_COUNT];
@@ -376,6 +378,8 @@ typedef struct H264Context {
      */
     PPS pps; // FIXME move to Picture perhaps? (->no) do we need that?
 
+    SPS ssps; ///< current subset sps
+
     uint32_t dequant4_buffer[6][QP_MAX_NUM + 1][16]; // FIXME should these be moved down?
     uint32_t dequant8_buffer[6][QP_MAX_NUM + 1][64];
     uint32_t(*dequant4_coeff[6])[16];
@@ -506,6 +510,7 @@ typedef struct H264Context {
 
     SPS *sps_buffers[MAX_SPS_COUNT];
     PPS *pps_buffers[MAX_PPS_COUNT];
+    SPS *ssps_buffers[MAX_SPS_COUNT];
 
     int dequant_coeff_pps;      ///< reinit tables when pps changes
 
@@ -681,6 +686,9 @@ typedef struct H264Context {
     int inter_view_flag;
 
     int is_mvc;
+
+    int voidx[1024];
+    struct H264Context *layer;
 } H264Context;
 
 extern const uint8_t ff_h264_chroma_qp[3][QP_MAX_NUM + 1]; ///< One chroma qp table for each supported bit depth (8, 9, 10).
@@ -1011,5 +1019,9 @@ int ff_mvc_decode_nal_header(H264Context *h);
 int ff_mvc_decode_subset_sequence_parameter_set(H264Context *h);
 
 int ff_decode_hrd_parameters(H264Context *h, SPS *sps);
+int ff_mvc_voidx_to_id(H264Context *h, int i);
+SPS *ff_mvc_get_active_sps(H264Context *h, unsigned int id);
+int ff_mvc_set_active_sps(H264Context *h, unsigned int id);
+int ff_mvc_set_active_pps(H264Context *h, PPS *pps);
 
 #endif /* AVCODEC_H264_H */
