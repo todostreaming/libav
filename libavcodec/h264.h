@@ -370,7 +370,6 @@ typedef struct H264Context {
     ptrdiff_t mb_linesize;  ///< may be equal to s->linesize or s->linesize * 2, for mbaff
     ptrdiff_t mb_uvlinesize;
 
-    unsigned current_sps_id; ///< id of the current SPS
     SPS sps; ///< current sps
 
     /**

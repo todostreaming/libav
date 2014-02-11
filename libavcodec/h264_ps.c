@@ -501,15 +501,13 @@ int ff_h264_decode_seq_parameter_set(H264Context *h)
     sps->new = 1;
 
     if (h->nal_unit_type == NAL_SUB_SPS) {
+        sps->is_sub_sps = 1;
         av_free(h->ssps_buffers[sps_id]);
         h->ssps_buffers[sps_id] = sps;
-        h->ssps                 = *sps;
-        h->ssps.is_sub_sps      = 1;
     } else {
         av_free(h->sps_buffers[sps_id]);
         h->sps_buffers[sps_id] = sps;
         h->sps                 = *sps;
-        h->current_sps_id      = sps_id;
     }
 
     return 0;
