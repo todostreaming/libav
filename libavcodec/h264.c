@@ -4693,10 +4693,13 @@ again:
                     goto end;
                 }
                 idr(h); // FIXME ensure we don't lose some frames if there is reordering
-            case NAL_EXT_SLICE:
-av_log(avctx, AV_LOG_WARNING, "view_id in header: %d\n", h->view_id);
             case NAL_SLICE:
+            case NAL_EXT_SLICE:
                 init_get_bits(&hx->gb, ptr, bit_length);
+                if (h->nal_unit_type == NAL_EXT_SLICE) {
+                    ff_mvc_decode_nal_header(h);
+                    av_log(avctx, AV_LOG_WARNING, "view_id in header: %d\n", h->view_id);
+                }
                 hx->intra_gb_ptr      =
                 hx->inter_gb_ptr      = &hx->gb;
                 hx->data_partitioning = 0;
@@ -4826,12 +4829,15 @@ av_log(avctx, AV_LOG_WARNING, "view_id in header: %d\n", h->view_id);
                 init_get_bits(&h->gb, ptr, bit_length);
                 ff_h264_decode_picture_parameter_set(h, bit_length);
                 break;
+            case NAL_PREFIX:
+                init_get_bits(&h->gb, ptr, bit_length);
+                ff_mvc_decode_nal_header(h);
+                break;
             case NAL_AUD:
             case NAL_END_SEQUENCE:
             case NAL_END_STREAM:
             case NAL_FILLER_DATA:
             case NAL_SPS_EXT:
-            case NAL_PREFIX:
             case NAL_AUXILIARY_SLICE:
                 break;
             case NAL_FF_IGNORE:

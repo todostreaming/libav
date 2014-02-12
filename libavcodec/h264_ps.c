@@ -530,6 +530,7 @@ int ff_h264_decode_picture_parameter_set(H264Context *h, int bit_length)
 {
     unsigned int pps_id = get_ue_golomb(&h->gb);
     PPS *pps;
+    SPS *sps;
     const int qp_bd_offset = 6 * (h->sps.bit_depth_luma - 8);
     int bits_left;
 
@@ -547,8 +548,15 @@ int ff_h264_decode_picture_parameter_set(H264Context *h, int bit_length)
     if (!pps)
         return AVERROR(ENOMEM);
     pps->sps_id = get_ue_golomb_31(&h->gb);
-    if ((unsigned)pps->sps_id >= MAX_SPS_COUNT ||
-        h->sps_buffers[pps->sps_id] == NULL) {
+    if ((unsigned)pps->sps_id >= MAX_SPS_COUNT) {
+        av_log(h->avctx, AV_LOG_ERROR, "sps_id (%d) out of range\n", pps->sps_id);
+        goto fail;
+    }
+
+    sps = h->sps_buffers[pps->sps_id];
+    if (!sps)
+        sps = h->ssps_buffers[pps->sps_id];
+    if (!sps) {
         av_log(h->avctx, AV_LOG_ERROR, "sps_id (%d) out of range\n", pps->sps_id);
         goto fail;
     }
@@ -610,16 +618,16 @@ int ff_h264_decode_picture_parameter_set(H264Context *h, int bit_length)
     pps->transform_8x8_mode = 0;
     // contents of sps/pps can change even if id doesn't, so reinit
     h->dequant_coeff_pps = -1;
-    memcpy(pps->scaling_matrix4, h->sps_buffers[pps->sps_id]->scaling_matrix4,
+    memcpy(pps->scaling_matrix4, sps->scaling_matrix4,
            sizeof(pps->scaling_matrix4));
-    memcpy(pps->scaling_matrix8, h->sps_buffers[pps->sps_id]->scaling_matrix8,
+    memcpy(pps->scaling_matrix8, sps->scaling_matrix8,
            sizeof(pps->scaling_matrix8));
 
     bits_left = bit_length - get_bits_count(&h->gb);
     if (bits_left && (bits_left > 8 ||
                       show_bits(&h->gb, bits_left) != 1 << (bits_left - 1))) {
         pps->transform_8x8_mode = get_bits1(&h->gb);
-        decode_scaling_matrices(h, h->sps_buffers[pps->sps_id], pps, 0,
+        decode_scaling_matrices(h, sps, pps, 0,
                                 pps->scaling_matrix4, pps->scaling_matrix8);
         // second_chroma_qp_index_offset
         pps->chroma_qp_index_offset[1] = get_se_golomb(&h->gb);

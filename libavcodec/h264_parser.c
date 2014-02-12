@@ -42,7 +42,7 @@ static int h264_find_frame_end(H264Context *h, const uint8_t *buf,
     ParseContext *pc = &h->parse_context;
 //    mb_addr= pc->mb_addr - 1;
     state = pc->state;
-    if (state > 16 || state < 18 || state > 21)
+    if (state > 13)
         state = 7;
 
     for (i = 0; i < buf_size; i++) {
