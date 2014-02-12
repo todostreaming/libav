@@ -377,8 +377,6 @@ typedef struct H264Context {
      */
     PPS pps; // FIXME move to Picture perhaps? (->no) do we need that?
 
-    SPS ssps; ///< current subset sps
-
     uint32_t dequant4_buffer[6][QP_MAX_NUM + 1][16]; // FIXME should these be moved down?
     uint32_t dequant8_buffer[6][QP_MAX_NUM + 1][64];
     uint32_t(*dequant4_coeff[6])[16];
