@@ -179,6 +179,8 @@ static inline int parse_nal_units(AVCodecParserContext *s,
     int field_poc[2];
     const uint8_t *start = buf;
 
+    av_log(NULL, AV_LOG_WARNING, "Parsing %d bytes\n", buf_size);
+
     /* set some sane default values */
     s->pict_type         = AV_PICTURE_TYPE_I;
     s->key_frame         = 0;
@@ -192,7 +194,10 @@ static inline int parse_nal_units(AVCodecParserContext *s,
 
     for (;;) {
         int src_length, dst_length, consumed;
+        av_log(NULL, AV_LOG_ERROR, "Start before code %d left %ld\n", state, buf - start);
         buf = avpriv_find_start_code(buf, buf_end, &state);
+        av_log(NULL, AV_LOG_ERROR, "after code %d left %ld\n", state, buf - start);
+
         if (buf >= buf_end)
             break;
         --buf;
@@ -214,7 +219,14 @@ static inline int parse_nal_units(AVCodecParserContext *s,
             break;
         }
         ptr = ff_h264_decode_nal(h, buf, &dst_length, &consumed, src_length);
-        av_log(NULL, AV_LOG_ERROR, "NAL: %d buf start %d end %d consumed %ld src %d\n", h->nal_unit_type, buf - start, dst_length, consumed, src_length);
+        av_log(NULL, AV_LOG_ERROR,
+               "NAL: %d/%d buf start %d end %d ptr %p src %d consumed %d\n",
+               h->nal_unit_type,
+               h->avctx->frame_number,
+               buf - start,
+               dst_length,
+               ptr,
+               src_length, consumed);
 
         if (ptr == NULL || dst_length < 0)
             break;
@@ -436,6 +448,8 @@ static int h264_parse(AVCodecParserContext *s,
     } else {
         next = h264_find_frame_end(h, buf, buf_size);
 
+        av_log(NULL, AV_LOG_ERROR, "Next %d\n", next);
+
         if (ff_combine_frame(pc, next, &buf, &buf_size) < 0) {
             *poutbuf      = NULL;
             *poutbuf_size = 0;
@@ -449,6 +463,8 @@ static int h264_parse(AVCodecParserContext *s,
     }
 
     parse_nal_units(s, avctx, buf, buf_size);
+
+    av_log(NULL, AV_LOG_INFO, "Out of parsing\n");
 
     if (h->sei_cpb_removal_delay >= 0) {
         s->dts_sync_point    = h->sei_buffering_period_present;
