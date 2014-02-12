@@ -256,18 +256,18 @@ static inline int parse_nal_units(AVCodecParserContext *s,
             pps_id = get_ue_golomb(&h->gb);
             if (pps_id >= MAX_PPS_COUNT) {
                 av_log(h->avctx, AV_LOG_ERROR,
-                       "pps_id out of range\n");
+                       "pps_id out of range %d\n", pps_id);
                 return -1;
             }
             if (!h->pps_buffers[pps_id]) {
                 av_log(h->avctx, AV_LOG_ERROR,
-                       "non-existing PPS referenced\n");
+                       "non-existing PPS %d referenced\n", pps_id);
                 return -1;
             }
             h->pps = *h->pps_buffers[pps_id];
             if (!h->sps_buffers[h->pps.sps_id]) {
                 av_log(h->avctx, AV_LOG_ERROR,
-                       "non-existing SPS referenced\n");
+                       "non-existing SPS %d referenced\n", h->pps.sps_id);
                 return -1;
             }
             h->sps       = *h->sps_buffers[h->pps.sps_id];
