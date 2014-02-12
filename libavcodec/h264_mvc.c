@@ -236,6 +236,7 @@ int ff_mvc_decode_nal_header(H264Context *h)
     h->temporal_id     = get_bits(gb, 3);
     h->anchor_pic_flag = get_bits1(gb);
     h->inter_view_flag = get_bits1(gb);
+    skip_bits1(gb);  /* reserved 1 bit */
     h->is_mvc          = 1;
 
     //if (h->nal_unit_type == NAL_PREFIX)
