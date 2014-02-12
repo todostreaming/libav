@@ -186,9 +186,10 @@ int ff_mvc_decode_subset_sequence_parameter_set(H264Context *h)
     if (ret < 0)
         return ret;
 
-    if (h->ssps.profile_idc != FF_PROFILE_MVC_MULTIVIEW_HIGH &&
-        h->ssps.profile_idc != FF_PROFILE_MVC_STEREO_HIGH) {
-        avpriv_request_sample(h->avctx, "Profile IDC %d",
+    if (h->sps.is_sub_sps &&
+        (h->sps.profile_idc != FF_PROFILE_MVC_MULTIVIEW_HIGH &&
+         h->sps.profile_idc != FF_PROFILE_MVC_STEREO_HIGH)) {
+        avpriv_request_sample(h->avctx, "Extended Profile IDC %d",
                               h->sps.profile_idc);
         return AVERROR_PATCHWELCOME;
     }
