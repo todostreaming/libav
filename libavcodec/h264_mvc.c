@@ -68,8 +68,8 @@ int ff_mvc_voidx_to_id(H264Context *h, int i)
 static int mvc_alloc_extra_layers(H264Context *h)
 {
     int ret, i;
-    ret = av_reallocp(&h->layer, sizeof(H264Context) * h->ssps.num_views);
-    for (i = 0; i < h->ssps.num_views; i ++)
+    ret = av_reallocp(&h->layer, sizeof(H264Context) * h->sps.num_views);
+    for (i = 0; i < h->sps.num_views; i ++)
         ff_h264_decode_init(h->layer[i].avctx);
 
     return 0;
@@ -189,17 +189,17 @@ int ff_mvc_decode_subset_sequence_parameter_set(H264Context *h)
     if (h->ssps.profile_idc != FF_PROFILE_MVC_MULTIVIEW_HIGH &&
         h->ssps.profile_idc != FF_PROFILE_MVC_STEREO_HIGH) {
         avpriv_request_sample(h->avctx, "Profile IDC %d",
-                              h->ssps.profile_idc);
+                              h->sps.profile_idc);
         return AVERROR_PATCHWELCOME;
     }
 
     skip_bits1(&h->gb);         /* bit_equal_to_one */
-    ret = mvc_decode_sps_extension(h, &h->ssps);
+    ret = mvc_decode_sps_extension(h, &h->sps);
     if (ret < 0)
         return ret;
 
     if (get_bits1(&h->gb)) {    /* mvc_vui_parameters_present_flag */
-        ret = mvc_decode_vui_parameters(h, &h->ssps);
+        ret = mvc_decode_vui_parameters(h, &h->sps);
         if (ret < 0)
             return ret;
     }
