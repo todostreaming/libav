@@ -43,6 +43,10 @@ int ff_mvc_set_active_sps(H264Context *h, unsigned int id)
         return AVERROR_INVALIDDATA;
 
     h->sps = *sps;
+
+    if (!h->layer)
+        return AVERROR(EAGAIN);
+
     for (i = 0; i < sps->num_views; i++)
         h->layer[i].sps = *sps;
 
@@ -54,6 +58,10 @@ int ff_mvc_set_active_pps(H264Context *h, PPS *pps)
     int i;
 
     h->pps = *pps;
+
+    if (!h->layer)
+        return AVERROR(EAGAIN);
+
     for (i = 0; i < h->sps.num_views; i++)
         h->layer[i].pps = *pps;
 
