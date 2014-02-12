@@ -177,6 +177,7 @@ static inline int parse_nal_units(AVCodecParserContext *s,
     int state = -1, got_reset = 0;
     const uint8_t *ptr;
     int field_poc[2];
+    const uint8_t *start = buf;
 
     /* set some sane default values */
     s->pict_type         = AV_PICTURE_TYPE_I;
@@ -213,6 +214,8 @@ static inline int parse_nal_units(AVCodecParserContext *s,
             break;
         }
         ptr = ff_h264_decode_nal(h, buf, &dst_length, &consumed, src_length);
+        av_log(NULL, AV_LOG_ERROR, "NAL: %d buf start %d end %d consumed %ld src %d\n", h->nal_unit_type, buf - start, dst_length, consumed, src_length);
+
         if (ptr == NULL || dst_length < 0)
             break;
 
