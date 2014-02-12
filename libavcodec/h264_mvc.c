@@ -44,11 +44,11 @@ int ff_mvc_set_active_sps(H264Context *h, unsigned int id)
 
     h->sps = *sps;
 
-    if (!h->layer)
+    //if (!h->layer)
         return AVERROR(EAGAIN);
 
-    for (i = 0; i < sps->num_views; i++)
-        h->layer[i].sps = *sps;
+   // for (i = 0; i < sps->num_views; i++)
+   //     h->layer[i].sps = *sps;
 
     return 0;
 }
@@ -59,11 +59,11 @@ int ff_mvc_set_active_pps(H264Context *h, PPS *pps)
 
     h->pps = *pps;
 
-    if (!h->layer)
+    //if (!h->layer)
         return AVERROR(EAGAIN);
 
-    for (i = 0; i < h->sps.num_views; i++)
-        h->layer[i].pps = *pps;
+   // for (i = 0; i < h->sps.num_views; i++)
+   //     h->layer[i].pps = *pps;
 
     return 0;
 }
@@ -72,7 +72,7 @@ int ff_mvc_voidx_to_id(H264Context *h, int i)
 {
     return h->voidx[i];
 }
-
+#if 0
 static int mvc_alloc_extra_layers(H264Context *h)
 {
     int ret, i;
@@ -82,6 +82,7 @@ static int mvc_alloc_extra_layers(H264Context *h)
 
     return 0;
 }
+#endif
 
 static int mvc_decode_sps_extension(H264Context *h, SPS *ssps)
 {
