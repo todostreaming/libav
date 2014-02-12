@@ -209,11 +209,11 @@ static inline int parse_nal_units(AVCodecParserContext *s,
             if ((state & 0x1f) == NAL_IDR_SLICE || ((state >> 5) & 0x3) == 0) {
                 /* IDR or disposable slice
                  * No need to decode many bytes because MMCOs shall not be present. */
-                if (src_length > 60)
+                if (src_length > 60 && !h->is_mvc)
                     src_length = 60;
             } else {
                 /* To decode up to MMCOs */
-                if (src_length > 1000)
+                if (src_length > 1000 && !h->is_mvc)
                     src_length = 1000;
             }
             break;
@@ -410,7 +410,8 @@ static inline int parse_nal_units(AVCodecParserContext *s,
                 s->field_order = AV_FIELD_UNKNOWN;
             }
 
-            return 0; /* no need to evaluate the rest */
+            if (!h->is_mvc || h->view_id > 0) // TODO exit when you have all the slice for the available/required views.
+                return 0; /* no need to evaluate the rest */
         }
         buf += consumed;
     }
