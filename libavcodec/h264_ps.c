@@ -535,7 +535,7 @@ int ff_h264_decode_picture_parameter_set(H264Context *h, int bit_length)
     int bits_left;
 
     if (pps_id >= MAX_PPS_COUNT) {
-        av_log(h->avctx, AV_LOG_ERROR, "pps_id (%d) out of range\n", pps_id);
+        av_log(h->avctx, AV_LOG_ERROR, "pps_id %d out of range\n", pps_id);
         return AVERROR_INVALIDDATA;
     } else if (h->sps.bit_depth_luma > 10) {
         av_log(h->avctx, AV_LOG_ERROR,
@@ -549,7 +549,7 @@ int ff_h264_decode_picture_parameter_set(H264Context *h, int bit_length)
         return AVERROR(ENOMEM);
     pps->sps_id = get_ue_golomb_31(&h->gb);
     if ((unsigned)pps->sps_id >= MAX_SPS_COUNT) {
-        av_log(h->avctx, AV_LOG_ERROR, "sps_id (%d) out of range\n", pps->sps_id);
+        av_log(h->avctx, AV_LOG_ERROR, "sps_id %d out of range\n", pps->sps_id);
         goto fail;
     }
 
@@ -557,7 +557,7 @@ int ff_h264_decode_picture_parameter_set(H264Context *h, int bit_length)
     if (!sps)
         sps = h->ssps_buffers[pps->sps_id];
     if (!sps) {
-        av_log(h->avctx, AV_LOG_ERROR, "sps_id (%d) out of range\n", pps->sps_id);
+        av_log(h->avctx, AV_LOG_ERROR, "sps_id %d out of range\n", pps->sps_id);
         goto fail;
     }
 
