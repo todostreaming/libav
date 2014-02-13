@@ -21,16 +21,21 @@
 #include "h264.h"
 #include "golomb.h"
 
+SPS *ff_mvc_get_sps(H264Context *h, unsigned int id)
+{
+    if (h->ssps_buffers[id])
+        return h->ssps_buffers[id];
+
+    return h->sps_buffers[id];
+}
+
 SPS *ff_mvc_get_active_sps(H264Context *h, unsigned int id)
 {
     if (h->nal_unit_type == NAL_EXT_SLICE ||
         h->nal_unit_type == NAL_SUB_SPS) {
         if (h->sps.is_sub_sps && h->sps.sps_id == id)
             return &h->sps;
-        else if (h->ssps_buffers[id])
-            return h->ssps_buffers[id];
-        else
-            return h->sps_buffers[id];
+        return ff_mvc_get_sps(h, id);
     } else
         return &h->sps;
 }

@@ -280,12 +280,13 @@ static inline int parse_nal_units(AVCodecParserContext *s,
                 return -1;
             }
             h->pps = *h->pps_buffers[pps_id];
-            if (!h->sps_buffers[h->pps.sps_id]) {
+
+            if (!ff_mvc_get_sps(h, h->pps.sps_id)) {
                 av_log(h->avctx, AV_LOG_ERROR,
                        "non-existing SPS %d referenced\n", h->pps.sps_id);
                 return -1;
             }
-            h->sps       = *h->sps_buffers[h->pps.sps_id];
+            h->sps       = *ff_mvc_get_sps(h, h->pps.sps_id);
             h->frame_num = get_bits(&h->gb, h->sps.log2_max_frame_num);
 
             avctx->profile = ff_h264_get_profile(&h->sps);

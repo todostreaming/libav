@@ -1017,7 +1017,10 @@ int ff_mvc_decode_subset_sequence_parameter_set(H264Context *h);
 
 int ff_decode_hrd_parameters(H264Context *h, SPS *sps);
 int ff_mvc_voidx_to_id(H264Context *h, int i);
+
+SPS *ff_mvc_get_sps(H264Context *h, unsigned int id);
 SPS *ff_mvc_get_active_sps(H264Context *h, unsigned int id);
+
 int ff_mvc_set_active_sps(H264Context *h, unsigned int id);
 int ff_mvc_set_active_pps(H264Context *h, PPS *pps);
 
