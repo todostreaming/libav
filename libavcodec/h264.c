@@ -4701,6 +4701,7 @@ again:
                 if (h->nal_unit_type == NAL_EXT_SLICE) {
                     ff_mvc_decode_nal_header(h);
                     av_log(avctx, AV_LOG_WARNING, "view_id in header: %d\n", h->view_id);
+                    break;
                 }
                 hx->intra_gb_ptr      =
                 hx->inter_gb_ptr      = &hx->gb;
