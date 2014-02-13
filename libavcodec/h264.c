@@ -3343,6 +3343,7 @@ static int decode_slice_header(H264Context *h, H264Context *h0)
     int last_pic_structure, last_pic_droppable;
     int needs_reinit = 0;
     int field_pic_flag, bottom_field_flag;
+    SPS *sps;
 
     h->me.qpel_put = h->h264qpel.put_h264_qpel_pixels_tab;
     h->me.qpel_avg = h->h264qpel.avg_h264_qpel_pixels_tab;
@@ -3407,21 +3408,22 @@ static int decode_slice_header(H264Context *h, H264Context *h0)
     }
     h->pps = *h0->pps_buffers[pps_id];
 
-    if (!h0->sps_buffers[h->pps.sps_id]) {
+    if (!ff_mvc_get_sps(h0, h->pps.sps_id)) {
         av_log(h->avctx, AV_LOG_ERROR,
                "non-existing SPS %u referenced\n",
                h->pps.sps_id);
         return AVERROR_INVALIDDATA;
     }
 
-    ff_mvc_set_active_pps(h, &h->pps);
+//    ff_mvc_set_active_pps(h, &h->pps);
     ff_mvc_set_active_sps(h, h->pps.sps_id);
+    sps = ff_mvc_get_sps(h0, h->pps.sps_id);
 
     if (h->pps.sps_id != h->sps.sps_id ||
-        h0->sps_buffers[h->pps.sps_id]->new) {
-        h0->sps_buffers[h->pps.sps_id]->new = 0;
+        sps->new) {
+        sps->new = 0;
 
-        h->sps        = *h0->sps_buffers[h->pps.sps_id];
+        h->sps        = *sps;
         h->sps.sps_id = h->pps.sps_id;
 
         if (h->bit_depth_luma    != h->sps.bit_depth_luma ||
