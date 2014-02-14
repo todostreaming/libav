@@ -108,7 +108,7 @@ static int mvc_decode_sps_extension(H264Context *h, SPS *ssps)
     for (i = 0; i < ssps->num_views; i++) {
         view_id = get_ue_golomb(&h->gb);
         ssps->view_id[i] = view_id;
-        h->voidx[view_id] = i;
+        h->voidx_list[view_id] = i;
         av_log(h->avctx, AV_LOG_DEBUG, "NALU: %d %d %d\n", h->nal_unit_type, ssps->view_id[i], ssps->num_views);
     }
     for (i = 1; i < ssps->num_views; i++) {
