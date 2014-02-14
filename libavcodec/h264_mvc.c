@@ -73,10 +73,15 @@ int ff_mvc_set_active_pps(H264Context *h, PPS *pps)
     return 0;
 }
 
-int ff_mvc_voidx_to_id(H264Context *h, int i)
+int ff_mvc_id_to_voidx(H264Context *h, int id)
 {
-    return h->voidx[i];
+    int i;
+    for (i = 0; i < sizeof(h->voidx); i++)
+        if (h->voidx_list[i] == id)
+            return i;
+    return 0;
 }
+
 #if 0
 static int mvc_alloc_extra_layers(H264Context *h)
 {
@@ -241,11 +246,11 @@ int ff_mvc_decode_nal_header(H264Context *h)
     h->temporal_id     = get_bits(gb, 3);
     h->anchor_pic_flag = get_bits1(gb);
     h->inter_view_flag = get_bits1(gb);
-    skip_bits1(gb);  /* reserved 1 bit */
+    skip_bits1(gb);     /* reserved_one_bit */
     h->is_mvc          = 1;
 
-    //if (h->nal_unit_type == NAL_PREFIX)
-     //   h->base_view_id = h->view_id;
+    if (h->nal_unit_type == NAL_PREFIX)
+        h->voidx = ff_mvc_id_to_voidx(h, h->view_id);
 
     av_log(h->avctx, AV_LOG_VERBOSE, "NALU:%d nidr:%d pri:%d vid:%d tid:%d an:%d iv:%d\n",
            h->nal_unit_type,

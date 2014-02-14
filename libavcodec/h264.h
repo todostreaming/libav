@@ -684,7 +684,8 @@ typedef struct H264Context {
 
     int is_mvc;
 
-    int voidx[1024];
+    int voidx;
+    int voidx_list[1024];
     //struct H264Context *layer;
 } H264Context;
 
@@ -1016,7 +1017,7 @@ int ff_mvc_decode_nal_header(H264Context *h);
 int ff_mvc_decode_subset_sequence_parameter_set(H264Context *h);
 
 int ff_decode_hrd_parameters(H264Context *h, SPS *sps);
-int ff_mvc_voidx_to_id(H264Context *h, int i);
+int ff_mvc_id_to_voidx(H264Context *h, int i);
 
 SPS *ff_mvc_get_sps(H264Context *h, unsigned int id);
 SPS *ff_mvc_get_active_sps(H264Context *h, unsigned int id);
