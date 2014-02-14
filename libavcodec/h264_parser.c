@@ -59,14 +59,14 @@ static int h264_find_frame_end(H264Context *h, const uint8_t *buf,
                 state >>= 1;           // 2->1, 1->0, 0->0
         } else if (state <= 5) {
             int v = buf[i] & 0x1F;
-            // extradata and extra slice video
-            if (v == 6 || v == 7 || v == 8 || v == 9) {
+            // any extradata the frame might start with
+            if (v == 6 || v == 7 || v == 8 || v == 9 || v == 14 || v == 15) {
                 if (pc->frame_start_found) {
                     i++;
                     goto found;
                 }
-            // video sliaces
-            } else if (v == 1 || v == 2 || v == 5) {
+            // video slices only
+            } else if (v == 1 || v == 2 || v == 5 || v == 20) { // 20 here is maybe unneeded
                 if (pc->frame_start_found) {
                     state += 8;
                     continue;
