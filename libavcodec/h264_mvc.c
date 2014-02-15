@@ -151,7 +151,7 @@ static int mvc_decode_sps_extension(H264Context *h)
     return 0;
 }
 
-static int mvc_decode_vui_parameters(H264Context *h, SPS *ssps)
+static int mvc_decode_vui_parameters(H264Context *h)
 {
     int i, j, ret;
     int vui_mvc_num_ops;
@@ -176,14 +176,14 @@ static int mvc_decode_vui_parameters(H264Context *h, SPS *ssps)
 
         vui_mvc_nal_hrd_parameters_present_flag = get_bits1(&h->gb);
         if (vui_mvc_nal_hrd_parameters_present_flag) {
-            ret = ff_decode_hrd_parameters(h, ssps);
+            ret = ff_decode_hrd_parameters(h, &h->ssps);
             if (ret < 0)
                 return ret;
         }
 
         vui_mvc_vcl_hrd_parameters_present_flag = get_bits1(&h->gb);
         if (vui_mvc_vcl_hrd_parameters_present_flag) {
-            ret = ff_decode_hrd_parameters(h, ssps);
+            ret = ff_decode_hrd_parameters(h, &h->ssps);
             if (ret < 0)
                 return ret;
         }
@@ -220,7 +220,7 @@ int ff_mvc_decode_subset_sequence_parameter_set(H264Context *h)
         return ret;
 
     if (get_bits1(&h->gb)) {    /* mvc_vui_parameters_present_flag */
-        ret = mvc_decode_vui_parameters(h, &h->sps);
+        ret = mvc_decode_vui_parameters(h);
         if (ret < 0)
             return ret;
     }
