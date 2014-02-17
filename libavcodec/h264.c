@@ -3238,6 +3238,8 @@ static int h264_slice_header_init(H264Context *h, int reinit)
         clone_tables(c, h, i);
 
         context_init(c);
+
+        c->context_initialized = 1;
     }
 /////////////////////////////////////////////////////////////////////
 
@@ -3409,7 +3411,7 @@ static int decode_slice_header(H264Context *h, H264Context *h0)
     if (slice_type > 9) {
         av_log(h->avctx, AV_LOG_ERROR,
                "slice type too large (%d) at %d %d\n",
-               h->slice_type, h->mb_x, h->mb_y);
+               slice_type, h->mb_x, h->mb_y);
         return AVERROR_INVALIDDATA;
     }
     if (slice_type > 4) {
@@ -4737,14 +4739,15 @@ again:
                 idr(h); // FIXME ensure we don't lose some frames if there is reordering
             case NAL_SLICE:
             case NAL_EXT_SLICE:
+                init_get_bits(&hx->gb, ptr, bit_length);
                 if (h->nal_unit_type == NAL_EXT_SLICE) {
                     init_get_bits(&h->gb, ptr, bit_length);
                     ff_mvc_decode_nal_header(h);
                     av_log(avctx, AV_LOG_WARNING, "view_id in header: %d/%d\n",
                            h->view_id, h->voidx);
                     hx = h->mvc_context[h->voidx];
+                    hx->gb = h->gb;
                 }
-                init_get_bits(&hx->gb, ptr, bit_length);
                 hx->intra_gb_ptr      =
                 hx->inter_gb_ptr      = &hx->gb;
                 hx->data_partitioning = 0;
