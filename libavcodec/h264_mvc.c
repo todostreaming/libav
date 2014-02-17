@@ -23,6 +23,8 @@
 
 SPS *ff_mvc_get_sps(H264Context *h, unsigned int id)
 {
+    av_log(NULL, AV_LOG_ERROR, "Getting ssps[%d] from %d\n",
+           id, h->nal_unit_type);
     if (h->ssps_buffers[id])
         return h->ssps_buffers[id];
 

@@ -3458,7 +3458,7 @@ static int decode_slice_header(H264Context *h, H264Context *h0)
     }
 
 //    ff_mvc_set_active_pps(h, &h->pps);
-    ff_mvc_set_active_sps(h, h->pps.sps_id);
+    ff_mvc_set_active_sps(h0, h->pps.sps_id);
     sps = ff_mvc_get_sps(h0, h->pps.sps_id);
 
     if (h->pps.sps_id != h->sps.sps_id ||
@@ -3519,8 +3519,12 @@ static int decode_slice_header(H264Context *h, H264Context *h0)
          h->height != h->avctx->coded_height  ||
          needs_reinit)) {
         if (h != h0) {
-            av_log(h->avctx, AV_LOG_ERROR, "changing width/height on "
-                   "slice %d\n", h0->current_slice + 1);
+            av_log(h->avctx, AV_LOG_ERROR,
+                   "changing width %d -> %d / height %d -> %d on "
+                   "slice %d\n",
+                   h->width, h->avctx->coded_width,
+                   h->height, h->avctx->coded_height,
+                   h0->current_slice + 1);
             return AVERROR_INVALIDDATA;
         }
 
