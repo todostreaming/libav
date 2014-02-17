@@ -508,6 +508,7 @@ int ff_h264_decode_seq_parameter_set(H264Context *h)
         av_free(h->ssps_buffers[sps_id]);
         h->ssps_buffers[sps_id] = sps;
         h->ssps                 = *sps;
+        h->is_mvc               = 1;
     } else {
         av_free(h->sps_buffers[sps_id]);
         h->sps_buffers[sps_id] = sps;
