@@ -228,7 +228,6 @@ int ff_qsv_enc_init(AVCodecContext *avctx, QSVEncContext *q)
     int ret;
 
     if ((ret = MFXInit(impl, &ver, &q->session)) < 0) {
-        av_log(avctx, AV_LOG_INFO, "MFXInit():%d\n", ret);
         return ff_qsv_error(ret);
     }
 
@@ -604,7 +603,7 @@ int ff_qsv_enc_frame(AVCodecContext *avctx, QSVEncContext *q,
     *got_packet = 0;
 
     if (frame) {
-        av_log(q, AV_LOG_INFO, "frame->pts:%"PRId64"\n", frame->pts);
+//        av_log(q, AV_LOG_INFO, "frame->pts:%"PRId64"\n", frame->pts);
 
         if (q->first_pts == AV_NOPTS_VALUE)
             q->first_pts = frame->pts;
@@ -633,7 +632,7 @@ int ff_qsv_enc_frame(AVCodecContext *avctx, QSVEncContext *q,
 
         ret = MFXVideoENCODE_EncodeFrameAsync(q->session, NULL, surf,
                                               &outbuf->bs, &outbuf->sync);
-        av_log(avctx, AV_LOG_INFO, "MFXVideoENCODE_EncodeFrameAsync():%d\n", ret);
+//        av_log(avctx, AV_LOG_INFO, "MFXVideoENCODE_EncodeFrameAsync():%d\n", ret);
 
         if (ret == MFX_WRN_DEVICE_BUSY) {
             av_usleep(1000);
@@ -657,11 +656,11 @@ int ff_qsv_enc_frame(AVCodecContext *avctx, QSVEncContext *q,
 
         ret = MFXVideoCORE_SyncOperation(q->session, outbuf->sync,
                                          SYNC_TIME_DEFAULT);
-        av_log(avctx, AV_LOG_INFO, "MFXVideoCORE_SyncOperation():%d\n", ret);
+//        av_log(avctx, AV_LOG_INFO, "MFXVideoCORE_SyncOperation():%d\n", ret);
         if ((ret = ff_qsv_error(ret)) < 0)
             return ret;
 
-        print_frametype(avctx, q, &outbuf->bs, 6);
+//        print_frametype(avctx, q, &outbuf->bs, 6);
 
         if (outbuf->bs.FrameType & MFX_FRAMETYPE_REF ||
             outbuf->bs.FrameType & MFX_FRAMETYPE_xREF) {
@@ -677,14 +676,14 @@ int ff_qsv_enc_frame(AVCodecContext *avctx, QSVEncContext *q,
     if (q->pending_dts && q->pending_dts->dts != AV_NOPTS_VALUE) {
         outbuf = dequeue_buffer(&q->pending_dts, &q->pending_dts_end, NULL);
 
-        print_frametype(avctx, q, &outbuf->bs, 12);
+//        print_frametype(avctx, q, &outbuf->bs, 12);
 
         if ((ret = ff_alloc_packet(pkt, outbuf->bs.DataLength)) < 0) {
             release_buffer(outbuf);
             return ret;
         }
 
-        pkt->dts  = outbuf->dts;
+//        pkt->dts  = outbuf->dts;
         pkt->pts  = outbuf->bs.TimeStamp;
         pkt->size = outbuf->bs.DataLength;
 
@@ -708,16 +707,12 @@ int ff_qsv_enc_frame(AVCodecContext *avctx, QSVEncContext *q,
 int ff_qsv_enc_close(AVCodecContext *avctx, QSVEncContext *q)
 {
     MFXVideoENCODE_Close(q->session);
-    av_log(avctx, AV_LOG_INFO, "MFXVideoENCODE_Close()\n");
 
     MFXClose(q->session);
-    av_log(avctx, AV_LOG_INFO, "MFXClose()\n");
 
     free_surface_pool(q);
-    av_log(avctx, AV_LOG_INFO, "free_surface_pool()\n");
 
     free_buffer_pool(q);
-    av_log(avctx, AV_LOG_INFO, "free_buffer_pool()\n");
 
     return 0;
 }
