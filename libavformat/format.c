@@ -100,7 +100,7 @@ int av_match_ext(const char *filename, const char *extensions)
     return 0;
 }
 
-static int match_format(const char *name, const char *names)
+static int match_name(const char *name, const char *names)
 {
     const char *p;
     int len, namelen;
@@ -180,7 +180,7 @@ AVInputFormat *av_find_input_format(const char *short_name)
 {
     AVInputFormat *fmt = NULL;
     while ((fmt = av_iformat_next(fmt)))
-        if (match_format(short_name, fmt->name))
+        if (match_name(short_name, fmt->name))
             return fmt;
     return NULL;
 }
