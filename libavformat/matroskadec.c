@@ -2529,4 +2529,5 @@ AVInputFormat ff_matroska_demuxer = {
     .read_packet    = matroska_read_packet,
     .read_close     = matroska_read_close,
     .read_seek      = matroska_read_seek,
+    .mime_type      = "audio/webm,video/webm,video/x-matroska"
 };
