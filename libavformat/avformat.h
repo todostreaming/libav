@@ -389,6 +389,7 @@ typedef struct AVProbeData {
     const char *filename;
     unsigned char *buf; /**< Buffer must have AVPROBE_PADDING_SIZE of extra allocated bytes filled with zero. */
     int buf_size;       /**< Size of buf except extra allocated bytes */
+    uint8_t *mime_type; /**< mime_type, when known. */
 } AVProbeData;
 
 #define AVPROBE_SCORE_EXTENSION  50 ///< score for file extension
@@ -620,6 +621,12 @@ typedef struct AVInputFormat {
      * Active streams are all streams that have AVStream.discard < AVDISCARD_ALL.
      */
     int (*read_seek2)(struct AVFormatContext *s, int stream_index, int64_t min_ts, int64_t ts, int64_t max_ts, int flags);
+
+    /**
+     * Used to raise the score while probing for unknown format
+     * @see av_probe_input_format2
+     */
+    const char *mime_type;
 } AVInputFormat;
 /**
  * @}

@@ -20,6 +20,7 @@
  */
 
 #include "libavutil/avstring.h"
+#include "libavutil/opt.h"
 
 #include "avio_internal.h"
 #include "avformat.h"
@@ -212,6 +213,9 @@ AVInputFormat *av_probe_input_format2(AVProbeData *pd, int is_opened,
             if (av_match_ext(lpd.filename, fmt1->extensions))
                 score = AVPROBE_SCORE_EXTENSION;
         }
+        if (match_name(lpd.mime_type, fmt1->mime_type))
+            score = FFMAX(score, AVPROBE_SCORE_EXTENSION);
+
         if (score > *score_max) {
             *score_max = score;
             fmt        = fmt1;
@@ -270,6 +274,9 @@ int av_probe_input_buffer(AVIOContext *pb, AVInputFormat **fmt,
     avio_skip(pb, offset);
     max_probe_size -= offset;
 
+    if (pb->av_class)
+        av_opt_get(pb, "mime_type", AV_OPT_SEARCH_CHILDREN, &pd.mime_type);
+
     for (probe_size = PROBE_BUF_MIN; probe_size <= max_probe_size && !*fmt;
          probe_size = FFMIN(probe_size << 1,
                             FFMAX(max_probe_size, probe_size + 1))) {
@@ -277,14 +284,13 @@ int av_probe_input_buffer(AVIOContext *pb, AVInputFormat **fmt,
 
         /* Read probe data. */
         if ((ret = av_reallocp(&buf, probe_size + AVPROBE_PADDING_SIZE)) < 0)
-            return ret;
+            goto fail;
         if ((ret = avio_read(pb, buf + pd.buf_size,
                              probe_size - pd.buf_size)) < 0) {
             /* Fail if error was not end of file, otherwise, lower score. */
-            if (ret != AVERROR_EOF) {
-                av_free(buf);
-                return ret;
-            }
+            if (ret != AVERROR_EOF)
+                goto fail;
+
             score = 0;
             ret   = 0;          /* error was end of file, nothing read */
         }
@@ -307,14 +313,17 @@ int av_probe_input_buffer(AVIOContext *pb, AVInputFormat **fmt,
         }
     }
 
-    if (!*fmt) {
-        av_free(buf);
-        return AVERROR_INVALIDDATA;
-    }
+    if (!*fmt)
+        ret = AVERROR_INVALIDDATA;
 
     /* Rewind. Reuse probe buffer to avoid seeking. */
-    if ((ret = ffio_rewind_with_probe_data(pb, buf, pd.buf_size)) < 0)
+    if (ret < 0 ||
+        (ret = ffio_rewind_with_probe_data(pb, buf, pd.buf_size)) < 0) {
+fail:
         av_free(buf);
+    }
+
+    av_free(pd.mime_type);
 
     return ret;
 }
