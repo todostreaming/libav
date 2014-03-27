@@ -7,6 +7,7 @@ version <next>:
 - replaygain data export
 - Alias PIX image encoder and decoder
 - BRender PIX image decoder
+- VP7 video decoder
 
 
 version 10:
