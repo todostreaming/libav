@@ -311,7 +311,9 @@ static void put_vp8_pixels16_altivec(uint8_t *dst, ptrdiff_t dstride, uint8_t *s
 
 #endif /* HAVE_ALTIVEC */
 
-av_cold void ff_vp8dsp_init_ppc(VP8DSPContext *c)
+
+
+av_cold void ff_vp7dsp_init_ppc(VP8DSPContext *c)
 {
 #if HAVE_ALTIVEC
     if (!(av_get_cpu_flags() & AV_CPU_FLAG_ALTIVEC))
@@ -342,4 +344,9 @@ av_cold void ff_vp8dsp_init_ppc(VP8DSPContext *c)
     c->put_vp8_epel_pixels_tab[2][1][2] = put_vp8_epel4_h6v4_altivec;
     c->put_vp8_epel_pixels_tab[2][2][1] = put_vp8_epel4_h4v6_altivec;
 #endif /* HAVE_ALTIVEC */
+}
+
+av_cold void ff_vp7dsp_init_ppc(VP8DSPContext *c)
+{
+    ff_vp7dsp_init_ppc(c);
 }
