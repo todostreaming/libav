@@ -2089,7 +2089,8 @@ void filter_mb_simple(VP8Context *s, uint8_t *dst, VP8FilterStrength *f,
 }
 
 #define MARGIN (16 << 2)
-static void vp78_decode_mv_mb_modes(AVCodecContext *avctx, VP8Frame *curframe,
+static av_always_inline
+void vp78_decode_mv_mb_modes(AVCodecContext *avctx, VP8Frame *curframe,
                                     VP8Frame *prev_frame, int is_vp7)
 {
     VP8Context *s = avctx->priv_data;
@@ -2119,6 +2120,18 @@ static void vp78_decode_mv_mb_modes(AVCodecContext *avctx, VP8Frame *curframe,
         s->mv_min.y -= 64;
         s->mv_max.y -= 64;
     }
+}
+
+static void vp7_decode_mv_mb_modes(AVCodecContext *avctx, VP8Frame *cur_frame,
+                                   VP8Frame *prev_frame)
+{
+    vp78_decode_mv_mb_modes(avctx, cur_frame, prev_frame, IS_VP7);
+}
+
+static void vp8_decode_mv_mb_modes(AVCodecContext *avctx, VP8Frame *cur_frame,
+                                   VP8Frame *prev_frame)
+{
+    vp78_decode_mv_mb_modes(avctx, cur_frame, prev_frame, IS_VP8);
 }
 
 #if HAVE_THREADS
@@ -2488,7 +2501,10 @@ int vp78_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
         if (prev_frame && s->segmentation.enabled &&
             !s->segmentation.update_map)
             ff_thread_await_progress(&prev_frame->tf, 1, 0);
-        vp78_decode_mv_mb_modes(avctx, curframe, prev_frame, is_vp7);
+        if (is_vp7)
+            vp7_decode_mv_mb_modes(avctx, curframe, prev_frame);
+        else
+            vp8_decode_mv_mb_modes(avctx, curframe, prev_frame);
     }
 
     if (avctx->active_thread_type == FF_THREAD_FRAME)
