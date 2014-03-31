@@ -135,7 +135,8 @@ static VP8Frame *vp8_find_free_buffer(VP8Context *s)
     return frame;
 }
 
-static int update_dimensions(VP8Context *s, int width, int height, int is_vp7)
+static av_always_inline
+int update_dimensions(VP8Context *s, int width, int height, int is_vp7)
 {
     AVCodecContext *avctx = s->avctx;
     int i, ret;
@@ -181,6 +182,16 @@ static int update_dimensions(VP8Context *s, int width, int height, int is_vp7)
     s->macroblocks = s->macroblocks_base + 1;
 
     return 0;
+}
+
+static int vp7_update_dimensions(VP8Context *s, int width, int height)
+{
+    return update_dimensions(s, width, height, IS_VP7);
+}
+
+static int vp8_update_dimensions(VP8Context *s, int width, int height)
+{
+    return update_dimensions(s, width, height, IS_VP8);
 }
 
 static void parse_segment_info(VP8Context *s)
@@ -533,7 +544,7 @@ static int vp7_decode_frame_header(VP8Context *s, const uint8_t *buf, int buf_si
     if (!s->macroblocks_base || /* first frame */
         width != s->avctx->width || height != s->avctx->height ||
         (width + 15) / 16 != s->mb_width || (height + 15) / 16 != s->mb_height) {
-        if ((ret = update_dimensions(s, width, height, IS_VP7)) < 0)
+        if ((ret = vp7_update_dimensions(s, width, height)) < 0)
             return ret;
     }
 
@@ -682,7 +693,7 @@ static int vp8_decode_frame_header(VP8Context *s, const uint8_t *buf, int buf_si
 
     if (!s->macroblocks_base || /* first frame */
         width != s->avctx->width || height != s->avctx->height)
-        if ((ret = update_dimensions(s, width, height, IS_VP8)) < 0)
+        if ((ret = vp8_update_dimensions(s, width, height)) < 0)
             return ret;
 
     get_quants(s);
