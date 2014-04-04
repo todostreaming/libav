@@ -1284,18 +1284,23 @@ int ff_set_ref_count(H264Context *h)
 static int get_nal_start(const uint8_t *buf, int buf_size,
                          int buf_index, int next_avc)
 {
-    // start code prefix search
-    for (; buf_index + 3 < next_avc; buf_index++)
-        // This should always succeed in the first iteration.
-        if (buf[buf_index]     == 0 &&
-            buf[buf_index + 1] == 0 &&
-            buf[buf_index + 2] == 1)
-            break;
+    unsigned int var, i;
 
     if (buf_index + 3 >= buf_size)
         return buf_size;
 
-    return buf_index + 3;
+    var = AV_RB24(buf + buf_index);
+
+    for (i = buf_index + 3; i < next_avc; i++) {
+        var = (var << 8) | buf[i];
+        if ((var & 0xffffff00) == 0x00000100)
+            break;
+    }
+
+    if (i >= buf_size)
+        return buf_size;
+
+    return i;
 }
 
 static int get_nalsize(H264Context *h, const uint8_t *buf,
