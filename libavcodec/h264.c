@@ -534,8 +534,7 @@ fail:
     return AVERROR(ENOMEM); // ff_h264_free_tables will clean up for us
 }
 
-static int decode_nal_units(H264Context *h, const uint8_t *buf, int buf_size,
-                            int parse_extradata);
+static int parse_extradata(H264Context *h, const uint8_t *buf, int buf_size);
 
 int ff_h264_decode_extradata(H264Context *h)
 {
@@ -563,7 +562,7 @@ int ff_h264_decode_extradata(H264Context *h)
             nalsize = AV_RB16(p) + 2;
             if (p - avctx->extradata + nalsize > avctx->extradata_size)
                 return AVERROR_INVALIDDATA;
-            ret = decode_nal_units(h, p, nalsize, 1);
+            ret = parse_extradata(h, p, nalsize);
             if (ret < 0) {
                 av_log(avctx, AV_LOG_ERROR,
                        "Decoding sps %d from avcC failed\n", i);
@@ -577,7 +576,7 @@ int ff_h264_decode_extradata(H264Context *h)
             nalsize = AV_RB16(p) + 2;
             if (p - avctx->extradata + nalsize > avctx->extradata_size)
                 return AVERROR_INVALIDDATA;
-            ret = decode_nal_units(h, p, nalsize, 1);
+            ret = parse_extradata(h, p, nalsize);
             if (ret < 0) {
                 av_log(avctx, AV_LOG_ERROR,
                        "Decoding pps %d from avcC failed\n", i);
@@ -589,7 +588,7 @@ int ff_h264_decode_extradata(H264Context *h)
         h->nal_length_size = (avctx->extradata[4] & 0x03) + 1;
     } else {
         h->is_avc = 0;
-        ret = decode_nal_units(h, avctx->extradata, avctx->extradata_size, 1);
+        ret = parse_extradata(h, avctx->extradata, avctx->extradata_size);
         if (ret < 0)
             return ret;
     }
@@ -1395,8 +1394,9 @@ static int get_last_needed_nal(H264Context *h, const uint8_t *buf, int buf_size)
     return nals_needed;
 }
 
-static int decode_nal_units(H264Context *h, const uint8_t *buf, int buf_size,
-                            int parse_extradata)
+static av_always_inline
+int decode_nal_units_internal(H264Context *h, const uint8_t *buf, int buf_size,
+                              int parse_extradata)
 {
     AVCodecContext *const avctx = h->avctx;
     H264Context *hx; ///< thread context
@@ -1660,6 +1660,16 @@ end:
     return (ret < 0) ? ret : buf_index;
 }
 
+static int decode_nal_units(H264Context *h, const uint8_t *buf, int buf_size)
+{
+    return decode_nal_units_internal(h, buf, buf_size, 0);
+}
+
+static int parse_extradata(H264Context *h, const uint8_t *buf, int buf_size)
+{
+    return decode_nal_units_internal(h, buf, buf_size, 1);
+}
+
 /**
  * Return the number of bytes consumed for building the current frame.
  */
@@ -1742,7 +1752,7 @@ out:
         return buf_index;
     }
 
-    buf_index = decode_nal_units(h, buf, buf_size, 0);
+    buf_index = decode_nal_units(h, buf, buf_size);
     if (buf_index < 0)
         return AVERROR_INVALIDDATA;
 
