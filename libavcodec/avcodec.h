@@ -440,6 +440,10 @@ enum AVCodecID {
     AV_CODEC_ID_TAK,
     AV_CODEC_ID_METASOUND,
     AV_CODEC_ID_PAF_AUDIO,
+    AV_CODEC_ID_DSD_LSBF,
+    AV_CODEC_ID_DSD_MSBF,
+    AV_CODEC_ID_DSD_LSBF_PLANAR,
+    AV_CODEC_ID_DSD_MSBF_PLANAR,
 
     /* subtitle codecs */
     AV_CODEC_ID_FIRST_SUBTITLE = 0x17000,          ///< A dummy ID pointing at the start of subtitle codecs.
