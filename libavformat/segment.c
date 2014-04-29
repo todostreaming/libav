@@ -32,7 +32,7 @@
 
 typedef struct {
     const AVClass *class;  /**< Class for private options. */
-    int number;
+    unsigned number;
     AVOutputFormat *oformat;
     AVFormatContext *avf;
     char *format;          /**< Set by a private option. */
@@ -191,7 +191,6 @@ static int seg_write_header(AVFormatContext *s)
     AVFormatContext *oc = NULL;
     int ret, i;
 
-    seg->number = 0;
     seg->offset_time = 0;
     seg->recording_time = seg->time * 1000000;
     if (!seg->write_header_trailer)
@@ -364,6 +363,7 @@ fail:
 #define OFFSET(x) offsetof(SegmentContext, x)
 #define E AV_OPT_FLAG_ENCODING_PARAM
 static const AVOption options[] = {
+    { "start_number", "",  OFFSET(number),  AV_OPT_TYPE_INT, {.i64 = 0},  0, INT_MAX,       E },
     { "segment_format",    "container format used for the segments",  OFFSET(format),  AV_OPT_TYPE_STRING, {.str = NULL},  0, 0,       E },
     { "segment_time",      "segment length in seconds",               OFFSET(time),    AV_OPT_TYPE_FLOAT,  {.dbl = 2},     0, FLT_MAX, E },
     { "segment_list",      "output the segment list",                 OFFSET(list),    AV_OPT_TYPE_STRING, {.str = NULL},  0, 0,       E },
