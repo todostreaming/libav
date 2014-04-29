@@ -108,6 +108,8 @@ static int segment_hls_window(AVFormatContext *s, int last)
         avio_printf(seg->pb, "%s\n", buf);
     }
 
+    av_log(s, AV_LOG_INFO, "%s\n", buf);
+
     if (last)
         avio_printf(seg->pb, "#EXT-X-ENDLIST\n");
 fail:

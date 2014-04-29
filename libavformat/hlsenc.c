@@ -158,6 +158,8 @@ static int hls_window(AVFormatContext *s, int last)
         avio_printf(hls->pb, "%s\n", en->name);
     }
 
+    av_log(s, AV_LOG_INFO, "%s\n", hls->end_list->name);
+
     if (last)
         avio_printf(hls->pb, "#EXT-X-ENDLIST\n");
 
