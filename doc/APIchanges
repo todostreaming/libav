@@ -13,6 +13,9 @@ libavutil:     2013-12-xx
 
 API changes, most recent first:
 
+2014-04-xx - xxxxxxx - lavr 1.3.0 - avresample.h
+  Add avresample_max_output_samples
+
 2014-04-xx - xxxxxxx - lavc 55.50.3 - avcodec.h
   Deprecate CODEC_FLAG_MV0. It is replaced by the flag "mv0" in the
   "mpv_flags" private option of the mpegvideo encoders.
