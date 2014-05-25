@@ -13,6 +13,10 @@ libavutil:     2013-12-xx
 
 API changes, most recent first:
 
+2014-04-xx - xxxxxxx - lavu 53.19.0 - error.h
+2014-04-xx - xxxxxxx - lavr 1.4.0 - avresample.h
+  Add avresample_convert_frame() and avresample_config().
+
 2014-07-xx - xxxxxxx - lavu 53.18.0 - display.h
   Add av_display_matrix_flip() to flip the transformation matrix.
 
