@@ -182,6 +182,7 @@ External library support:
   --enable-libcdio         enable audio CD grabbing with libcdio
   --enable-libdc1394       enable IIDC-1394 grabbing using libdc1394
                            and libraw1394 [no]
+  --enable-libf265         enable HEVC encoding via f265 [no]
   --enable-libfaac         enable AAC encoding via libfaac [no]
   --enable-libfdk-aac      enable AAC de/encoding via libfdk-aac [no]
   --enable-libfreetype     enable libfreetype [no]
@@ -1141,6 +1142,7 @@ EXTERNAL_LIBRARY_LIST="
     libbs2b
     libcdio
     libdc1394
+    libf265
     libfaac
     libfdk_aac
     libfontconfig
@@ -1967,6 +1969,7 @@ mpeg4video_parser_select="error_resilience h263dsp mpeg_er mpegvideo qpeldsp"
 vc1_parser_select="mpegvideo startcode"
 
 # external libraries
+libf265_encoder_deps="libf265"
 libfaac_encoder_deps="libfaac"
 libfaac_encoder_select="audio_frame_queue"
 libfdk_aac_decoder_deps="libfdk_aac"
@@ -4144,6 +4147,7 @@ enabled avisynth          && { { check_header "avisynth/avisynth_c.h" && check_l
 enabled frei0r            && { check_header frei0r.h || die "ERROR: frei0r.h header not found"; }
 enabled gnutls            && require_pkg_config gnutls gnutls/gnutls.h gnutls_global_init
 enabled libbs2b           && require_pkg_config libbs2b bs2b.h bs2b_open
+enabled libf265           && require libf265 "f265/f265.h" f265_init_enc -lf265
 enabled libfaac           && require2 libfaac "stdint.h faac.h" faacEncGetVersion -lfaac
 enabled libfdk_aac        && require libfdk_aac fdk-aac/aacenc_lib.h aacEncOpen -lfdk-aac
 enabled libfontconfig     && require_pkg_config fontconfig "fontconfig/fontconfig.h" FcInit
