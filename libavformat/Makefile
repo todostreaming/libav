@@ -169,6 +169,7 @@ OBJS-$(CONFIG_MATROSKA_DEMUXER)          += matroskadec.o matroska.o  \
                                             oggparsevorbis.o vorbiscomment.o \
                                             flac_picture.o replaygain.o
 OBJS-$(CONFIG_MATROSKA_MUXER)            += matroskaenc.o matroska.o \
+                                            matroskacodec.o \
                                             isom.o avc.o hevc.o \
                                             flacenc_header.o avlanguage.o vorbiscomment.o wv.o
 OBJS-$(CONFIG_MD5_MUXER)                 += md5enc.o
