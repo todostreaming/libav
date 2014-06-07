@@ -405,6 +405,15 @@ static int mkv_add_cuepoint(mkv_cues *cues, int stream, int64_t ts, int64_t clus
     return 0;
 }
 
+static void mkv_write_cue_entry(AVIOContext *pb, mkv_cuepoint *entry)
+{
+    ebml_master track_pos = start_ebml_master(pb, MATROSKA_ID_CUETRACKPOSITION,
+                                              MAX_CUETRACKPOS_SIZE);
+    put_ebml_uint(pb, MATROSKA_ID_CUETRACK          , entry->tracknum   );
+    put_ebml_uint(pb, MATROSKA_ID_CUECLUSTERPOSITION, entry->cluster_pos);
+    end_ebml_master(pb, track_pos);
+}
+
 static int64_t mkv_write_cues(AVIOContext *pb, mkv_cues *cues, int num_tracks)
 {
     ebml_master cues_element;
@@ -415,7 +424,7 @@ static int64_t mkv_write_cues(AVIOContext *pb, mkv_cues *cues, int num_tracks)
     cues_element = start_ebml_master(pb, MATROSKA_ID_CUES, 0);
 
     for (i = 0; i < cues->num_entries; i++) {
-        ebml_master cuepoint, track_positions;
+        ebml_master cuepoint;
         mkv_cuepoint *entry = &cues->entries[i];
         uint64_t pts = entry->pts;
 
@@ -425,10 +434,7 @@ static int64_t mkv_write_cues(AVIOContext *pb, mkv_cues *cues, int num_tracks)
         // put all the entries from different tracks that have the exact same
         // timestamp into the same CuePoint
         for (j = 0; j < cues->num_entries - i && entry[j].pts == pts; j++) {
-            track_positions = start_ebml_master(pb, MATROSKA_ID_CUETRACKPOSITION, MAX_CUETRACKPOS_SIZE);
-            put_ebml_uint(pb, MATROSKA_ID_CUETRACK          , entry[j].tracknum   );
-            put_ebml_uint(pb, MATROSKA_ID_CUECLUSTERPOSITION, entry[j].cluster_pos);
-            end_ebml_master(pb, track_positions);
+            mkv_write_cue_entry(pb, &entry[j]);
         }
         i += j - 1;
         end_ebml_master(pb, cuepoint);
