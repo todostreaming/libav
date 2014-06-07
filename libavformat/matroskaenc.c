@@ -363,18 +363,21 @@ static int64_t mkv_write_cues(AVIOContext *pb, mkv_cues *cues, int num_tracks)
     return currentpos;
 }
 
-static void mkv_write_stereo_mode(AVIOContext *pb, uint8_t stereo_fmt,
-                                  int mode)
+static void mkv_write_stereo_mode(MatroskaMuxContext *mkv, AVIOContext *pb,
+                                  uint8_t stereo_fmt)
 {
     int valid_fmt = 0;
 
-    switch (mode) {
+    if (mkv->version > 0 && mkv->version < 3)
+        return;
+
+    switch (mkv->mode) {
     case MODE_WEBM:
         if (stereo_fmt <= MATROSKA_VIDEO_STEREOMODE_TYPE_TOP_BOTTOM ||
             stereo_fmt == MATROSKA_VIDEO_STEREOMODE_TYPE_RIGHT_LEFT)
             valid_fmt = 1;
         break;
-    case MODE_MATROSKAv2:
+    case MODE_MATROSKA:
         if (stereo_fmt <= MATROSKA_VIDEO_STEREOMODE_TYPE_BOTH_EYES_BLOCK_RL)
             valid_fmt = 1;
         break;
@@ -428,13 +431,15 @@ static int mkv_write_track(AVFormatContext *s, MatroskaMuxContext *mkv,
         put_ebml_uint(pb, MATROSKA_ID_TRACKFLAGDEFAULT, !!(st->disposition & AV_DISPOSITION_DEFAULT));
 
     if (codec->codec_type == AVMEDIA_TYPE_AUDIO && codec->delay) {
-        mkv->tracks[i].ts_offset = av_rescale_q(codec->delay,
-                                                (AVRational){ 1, codec->sample_rate },
-                                                st->time_base);
+        if (mkv->version < 0 || mkv->version > 3) {
+            mkv->tracks[i].ts_offset = av_rescale_q(codec->delay,
+                                                    (AVRational){ 1, codec->sample_rate },
+                                                    st->time_base);
 
-        put_ebml_uint(pb, MATROSKA_ID_CODECDELAY,
-                      av_rescale_q(codec->delay, (AVRational){ 1, codec->sample_rate },
-                                   (AVRational){ 1, 1000000000 }));
+            put_ebml_uint(pb, MATROSKA_ID_CODECDELAY,
+                          av_rescale_q(codec->delay, (AVRational){ 1, codec->sample_rate },
+                                       (AVRational){ 1, 1000000000 }));
+        }
     }
 
     // look for a codec ID string specific to mkv to use,
@@ -483,7 +488,7 @@ static int mkv_write_track(AVFormatContext *s, MatroskaMuxContext *mkv,
         put_ebml_uint (pb, MATROSKA_ID_VIDEOPIXELWIDTH , codec->width);
         put_ebml_uint (pb, MATROSKA_ID_VIDEOPIXELHEIGHT, codec->height);
         if ((tag = av_dict_get(s->metadata, "stereo_mode", NULL, 0))) {
-            mkv_write_stereo_mode(pb, atoi(tag->value), mkv->mode);
+            mkv_write_stereo_mode(mkv, pb, atoi(tag->value));
         }
         if (st->sample_aspect_ratio.num) {
             int d_width = codec->width*av_q2d(st->sample_aspect_ratio);
@@ -764,11 +769,15 @@ static int mkv_write_header(AVFormatContext *s)
     ebml_master ebml_header, segment_info;
     AVDictionaryEntry *tag;
     int ret, i;
+    int version = 2;
 
-    if (!strcmp(s->oformat->name, "webm"))
-        mkv->mode = MODE_WEBM;
-    else
-        mkv->mode = MODE_MATROSKAv2;
+    if (mkv->mode < 0) {
+        if (!strcmp(s->oformat->name, "webm"))
+            mkv->mode = MODE_WEBM;
+    }
+
+    if (mkv->version > 2)
+        version = mkv->version;
 
     mkv->tracks = av_mallocz(s->nb_streams * sizeof(*mkv->tracks));
     if (!mkv->tracks)
@@ -780,7 +789,7 @@ static int mkv_write_header(AVFormatContext *s)
     put_ebml_uint   (pb, EBML_ID_EBMLMAXIDLENGTH    ,           4);
     put_ebml_uint   (pb, EBML_ID_EBMLMAXSIZELENGTH  ,           8);
     put_ebml_string (pb, EBML_ID_DOCTYPE            , s->oformat->name);
-    put_ebml_uint   (pb, EBML_ID_DOCTYPEVERSION     ,           2);
+    put_ebml_uint   (pb, EBML_ID_DOCTYPEVERSION     ,     version);
     put_ebml_uint   (pb, EBML_ID_DOCTYPEREADVERSION ,           2);
     end_ebml_master(pb, ebml_header);
 
@@ -1259,6 +1268,8 @@ static const AVOption options[] = {
     { "reserve_index_space", "Reserve a given amount of space (in bytes) at the beginning of the file for the index (cues).", OFFSET(reserve_cues_space), AV_OPT_TYPE_INT,   { .i64 = 0 },   0, INT_MAX,   FLAGS },
     { "cluster_size_limit",  "Store at most the provided amount of bytes in a cluster. ",                                     OFFSET(cluster_size_limit), AV_OPT_TYPE_INT  , { .i64 = -1 }, -1, INT_MAX,   FLAGS },
     { "cluster_time_limit",  "Store at most the provided number of milliseconds in a cluster.",                               OFFSET(cluster_time_limit), AV_OPT_TYPE_INT64, { .i64 = -1 }, -1, INT64_MAX, FLAGS },
+    { "mkv_version",  "Explicitly set the mkv version.",
+               OFFSET(version),            AV_OPT_TYPE_INT,   { .i64 = -1 }, -1, 4, FLAGS},
     { NULL },
 };
 

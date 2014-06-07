@@ -60,8 +60,12 @@ typedef struct mkv_track {
     int64_t         ts_offset;
 } mkv_track;
 
-#define MODE_MATROSKAv2 0x01
-#define MODE_WEBM       0x02
+
+enum {
+    MODE_COMPAT   = -1,
+    MODE_MATROSKA = 0x01,
+    MODE_WEBM     = 0x02,
+};
 
 typedef struct MatroskaMuxContext {
     const AVClass  *class;
@@ -87,6 +91,7 @@ typedef struct MatroskaMuxContext {
     int64_t cues_pos;
     int64_t cluster_time_limit;
     int wrote_chapters;
+    int version;
 } MatroskaMuxContext;
 
 void ff_put_ebml_id(AVIOContext *pb, unsigned int id);
