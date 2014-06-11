@@ -95,6 +95,7 @@ enum {
     FLV_CODECID_VP6A    = 5,
     FLV_CODECID_SCREEN2 = 6,
     FLV_CODECID_H264    = 7,
+    FLV_CODECID_HEVC    = 8,
 };
 
 enum {
