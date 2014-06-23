@@ -189,12 +189,10 @@ static int request_frame(AVFilterLink *outlink)
         if (!frame)
             return AVERROR(ENOMEM);
 
-        ret = avresample_convert(s->avr, frame->extended_data,
-                                 frame->linesize[0], nb_samples,
-                                 NULL, 0, 0);
-        if (ret <= 0) {
+        ret = avresample_convert_frame(s->avr, frame, NULL);
+        if (!frame->nb_samples) {
             av_frame_free(&frame);
-            return (ret == 0) ? AVERROR_EOF : ret;
+            return (!ret) ? AVERROR_EOF : ret;
         }
 
         frame->pts = s->next_pts;
@@ -224,10 +222,9 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *in)
             goto fail;
         }
 
-        ret = avresample_convert(s->avr, out->extended_data, out->linesize[0],
-                                 nb_samples, in->extended_data, in->linesize[0],
-                                 in->nb_samples);
-        if (ret <= 0) {
+        ret = avresample_convert_frame(s->avr, out, in);
+
+        if (!out->nb_samples) {
             av_frame_free(&out);
             if (ret < 0)
                 goto fail;
@@ -245,9 +242,7 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *in)
                                            outlink->time_base);
         }
 
-        if (ret > 0) {
-            out->nb_samples = ret;
-
+        if (out->nb_samples) {
             ret = av_frame_copy_props(out, in);
             if (ret < 0) {
                 av_frame_free(&out);
