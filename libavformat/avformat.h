@@ -789,6 +789,20 @@ typedef struct AVStream {
      */
     int            nb_side_data;
 
+    /**
+     * Alternate group the stream belongs to.
+     *
+     * An alternate group indentifier signals that a stream is equivalent
+     * to another sharing the same group_id.
+     *
+     * - demuxing: Set by libavformat when the stream is created.
+     * - muxing: May be set by the caller before avformat_write_header().
+     *
+     * By default is set to 0 to signal default grouping,
+     * -1 to signal no grouping.
+     */
+    int group_id;
+
     /*****************************************************************
      * All fields below this line are not part of the public API. They
      * may not be used outside of libavformat and can be changed and
