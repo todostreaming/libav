@@ -45,27 +45,106 @@ LFC_FUNCS(uint8_t, 10)
 LFL_FUNCS(uint8_t, 8)
 LFL_FUNCS(uint8_t, 10)
 
+#define IDCT_DC_PROTO(size, bitd, opt) \
+void ff_hevc_idct ## size ## _dc_add_ ## bitd ##_## opt(uint8_t *dst, int coeff, ptrdiff_t stride)
+
+IDCT_DC_PROTO(4,  8, mmxext);
+IDCT_DC_PROTO(8,  8, mmxext);
+IDCT_DC_PROTO(16, 8, sse2);
+IDCT_DC_PROTO(32, 8, sse2);
+
+IDCT_DC_PROTO(4,  10, mmxext);
+IDCT_DC_PROTO(8,  10, sse2);
+IDCT_DC_PROTO(16, 10, sse2);
+IDCT_DC_PROTO(32, 10, sse2);
+IDCT_DC_PROTO(8,  10, avx);
+IDCT_DC_PROTO(16, 10, avx);
+IDCT_DC_PROTO(32, 10, avx);
+
+#if HAVE_SSE2_EXTERNAL
+static void hevc_idct32_dc_add_8_sse2(uint8_t *dst, int coeff, ptrdiff_t stride)
+{
+    ff_hevc_idct16_dc_add_8_sse2(dst,                    coeff, stride);
+    ff_hevc_idct16_dc_add_8_sse2(dst + 16,               coeff, stride);
+    ff_hevc_idct16_dc_add_8_sse2(dst + 16 * stride,      coeff, stride);
+    ff_hevc_idct16_dc_add_8_sse2(dst + 16 * stride + 16, coeff, stride);
+}
+
+static void hevc_idct16_dc_add_10_sse2(uint8_t *dst, int coeff, ptrdiff_t stride)
+{
+    ff_hevc_idct8_dc_add_10_sse2(dst,                   coeff, stride);
+    ff_hevc_idct8_dc_add_10_sse2(dst + 16,              coeff, stride);
+    ff_hevc_idct8_dc_add_10_sse2(dst + 8 * stride,      coeff, stride);
+    ff_hevc_idct8_dc_add_10_sse2(dst + 8 * stride + 16, coeff, stride);
+}
+
+static void hevc_idct32_dc_add_10_sse2(uint8_t *dst, int coeff, ptrdiff_t stride)
+{
+    hevc_idct16_dc_add_10_sse2(dst,                    coeff, stride);
+    hevc_idct16_dc_add_10_sse2(dst + 32,               coeff, stride);
+    hevc_idct16_dc_add_10_sse2(dst + 16 * stride,      coeff, stride);
+    hevc_idct16_dc_add_10_sse2(dst + 16 * stride + 32, coeff, stride);
+}
+#endif //HAVE_SSE2_EXTERNAL
+
+#if HAVE_AVX_EXTERNAL
+static void hevc_idct16_dc_add_10_avx(uint8_t *dst, int coeff, ptrdiff_t stride)
+{
+    ff_hevc_idct8_dc_add_10_avx(dst,                   coeff, stride);
+    ff_hevc_idct8_dc_add_10_avx(dst + 16,              coeff, stride);
+    ff_hevc_idct8_dc_add_10_avx(dst + 8 * stride,      coeff, stride);
+    ff_hevc_idct8_dc_add_10_avx(dst + 8 * stride + 16, coeff, stride);
+}
+
+static void hevc_idct32_dc_add_10_avx(uint8_t *dst, int coeff, ptrdiff_t stride)
+{
+    hevc_idct16_dc_add_10_avx(dst,                    coeff, stride);
+    hevc_idct16_dc_add_10_avx(dst + 32,               coeff, stride);
+    hevc_idct16_dc_add_10_avx(dst + 16 * stride,      coeff, stride);
+    hevc_idct16_dc_add_10_avx(dst + 16 * stride + 32, coeff, stride);
+}
+#endif //HAVE_AVX_EXTERNAL
+
 void ff_hevc_dsp_init_x86(HEVCDSPContext *c, const int bit_depth)
 {
     int cpu_flags = av_get_cpu_flags();
 
     if (bit_depth == 8) {
+        if (EXTERNAL_MMXEXT(cpu_flags)) {
+            c->transform_dc_add[0] = ff_hevc_idct4_dc_add_8_mmxext;
+            c->transform_dc_add[1] = ff_hevc_idct8_dc_add_8_mmxext;
+        }
         if (EXTERNAL_SSE2(cpu_flags)) {
             c->hevc_v_loop_filter_chroma = ff_hevc_v_loop_filter_chroma_8_sse2;
             c->hevc_h_loop_filter_chroma = ff_hevc_h_loop_filter_chroma_8_sse2;
+
+            c->transform_dc_add[2] = ff_hevc_idct16_dc_add_8_sse2;
+            c->transform_dc_add[3] = hevc_idct32_dc_add_8_sse2;
         }
         if (EXTERNAL_SSSE3(cpu_flags) && ARCH_X86_64) {
             c->hevc_v_loop_filter_luma = ff_hevc_v_loop_filter_luma_8_ssse3;
             c->hevc_h_loop_filter_luma = ff_hevc_h_loop_filter_luma_8_ssse3;
         }
     } else if (bit_depth == 10) {
+        if (EXTERNAL_MMXEXT(cpu_flags)) {
+            c->transform_dc_add[0] = ff_hevc_idct4_dc_add_10_mmxext;
+        }
         if (EXTERNAL_SSE2(cpu_flags)) {
             c->hevc_v_loop_filter_chroma = ff_hevc_v_loop_filter_chroma_10_sse2;
             c->hevc_h_loop_filter_chroma = ff_hevc_h_loop_filter_chroma_10_sse2;
+
+            c->transform_dc_add[1] = ff_hevc_idct8_dc_add_10_sse2;
+            c->transform_dc_add[2] = hevc_idct16_dc_add_10_sse2;
+            c->transform_dc_add[3] = hevc_idct32_dc_add_10_sse2;
         }
         if (EXTERNAL_SSSE3(cpu_flags) && ARCH_X86_64) {
             c->hevc_v_loop_filter_luma = ff_hevc_v_loop_filter_luma_10_ssse3;
             c->hevc_h_loop_filter_luma = ff_hevc_h_loop_filter_luma_10_ssse3;
+        }
+        if (EXTERNAL_AVX(cpu_flags)) {
+            c->transform_dc_add[1] = ff_hevc_idct8_dc_add_10_avx;
+            c->transform_dc_add[2] = hevc_idct16_dc_add_10_avx;
+            c->transform_dc_add[3] = hevc_idct32_dc_add_10_avx;
         }
     }
 }
