@@ -296,6 +296,46 @@ static void FUNC(transform_32x32_add)(uint8_t *dst, int16_t *coeffs,
     FUNC(transform_add)(dst, coeffs, stride, 32);
 }
 
+static av_always_inline void FUNC(transform_dc_add)(uint8_t *dst_, int coeff,
+                                                    ptrdiff_t stride, int size)
+{
+    pixel *dst   = (pixel *)dst_;
+    int shift    = 14 - BIT_DEPTH;
+    int add      = 1 << (shift - 1);
+    int i, j;
+
+    stride /= sizeof(pixel);
+    coeff   = (((coeff + 1) >> 1) + add) >> shift;
+
+    for (i = 0; i < size; i++)
+        for (j = 0; j < size; j++)
+            dst[i + j * stride] = av_clip_pixel(dst[i + j * stride] + coeff);
+}
+
+static void FUNC(transform_4x4_dc_add)(uint8_t *dst, int coeff,
+                                       ptrdiff_t stride)
+{
+    FUNC(transform_dc_add)(dst, coeff, stride, 4);
+}
+
+static void FUNC(transform_8x8_dc_add)(uint8_t *dst, int coeff,
+                                       ptrdiff_t stride)
+{
+    FUNC(transform_dc_add)(dst, coeff, stride, 8);
+}
+
+static void FUNC(transform_16x16_dc_add)(uint8_t *dst, int coeff,
+                                         ptrdiff_t stride)
+{
+    FUNC(transform_dc_add)(dst, coeff, stride, 16);
+}
+
+static void FUNC(transform_32x32_dc_add)(uint8_t *dst, int coeff,
+                                         ptrdiff_t stride)
+{
+    FUNC(transform_dc_add)(dst, coeff, stride, 32);
+}
+
 static void FUNC(sao_band_filter)(uint8_t *_dst, uint8_t *_src,
                                   ptrdiff_t stride, SAOParams *sao,
                                   int *borders, int width, int height,

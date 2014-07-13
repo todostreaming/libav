@@ -1228,6 +1228,8 @@ static void hls_residual_coding(HEVCContext *s, int x0, int y0,
         else if (lc->cu.pred_mode == MODE_INTRA && c_idx == 0 &&
                  log2_trafo_size == 2)
             s->hevcdsp.transform_4x4_luma_add(dst, coeffs, stride);
+        else if (!last_significant_coeff_x && !last_significant_coeff_y)
+            s->hevcdsp.transform_dc_add[log2_trafo_size - 2](dst, coeffs[0], stride);
         else
             s->hevcdsp.transform_add[log2_trafo_size - 2](dst, coeffs, stride);
     }
