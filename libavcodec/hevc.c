@@ -27,6 +27,7 @@
 #include "libavutil/common.h"
 #include "libavutil/display.h"
 #include "libavutil/internal.h"
+#include "libavutil/intmath.h"
 #include "libavutil/md5.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
@@ -1652,6 +1653,21 @@ static void hevc_await_progress(HEVCContext *s, HEVCFrame *ref,
     ff_thread_await_progress(&ref->tf, y, 0);
 }
 
+static void put_unweighted_pred(HEVCContext *s,
+                                uint8_t *dst, ptrdiff_t dststride,
+                                int16_t *src, ptrdiff_t srcstride,
+                                int width, int height)
+{
+    if (width != height) {
+        s->hevcdsp.put_unweighted_pred(dst, dststride,
+                                       src, srcstride, width, height);
+    } else {
+        const int square = av_log2_16bit(width) - 2;
+        s->hevcdsp.put_unweighted_pred_square[square](dst, dststride,
+                                                      src, srcstride);
+    }
+}
+
 static void hls_prediction_unit(HEVCContext *s, int x0, int y0,
                                 int nPbW, int nPbH,
                                 int log2_cb_size, int partIdx)
@@ -1796,7 +1812,7 @@ static void hls_prediction_unit(HEVCContext *s, int x0, int y0,
                                      dst0, s->frame->linesize[0], tmp,
                                      tmpstride, nPbW, nPbH);
         } else {
-            s->hevcdsp.put_unweighted_pred(dst0, s->frame->linesize[0], tmp, tmpstride, nPbW, nPbH);
+            put_unweighted_pred(s, dst0, s->frame->linesize[0], tmp, tmpstride, nPbW, nPbH);
         }
         chroma_mc(s, tmp, tmp2, tmpstride, ref0->frame,
                   &current_mv.mv[0], x0 / 2, y0 / 2, nPbW / 2, nPbH / 2);
@@ -1814,8 +1830,8 @@ static void hls_prediction_unit(HEVCContext *s, int x0, int y0,
                                      dst2, s->frame->linesize[2], tmp2, tmpstride,
                                      nPbW / 2, nPbH / 2);
         } else {
-            s->hevcdsp.put_unweighted_pred(dst1, s->frame->linesize[1], tmp, tmpstride, nPbW/2, nPbH/2);
-            s->hevcdsp.put_unweighted_pred(dst2, s->frame->linesize[2], tmp2, tmpstride, nPbW/2, nPbH/2);
+            put_unweighted_pred(s, dst1, s->frame->linesize[1], tmp, tmpstride, nPbW/2, nPbH/2);
+            put_unweighted_pred(s, dst2, s->frame->linesize[2], tmp2, tmpstride, nPbW/2, nPbH/2);
         }
     } else if (!current_mv.pred_flag[0] && current_mv.pred_flag[1]) {
         DECLARE_ALIGNED(16, int16_t, tmp [MAX_PB_SIZE * MAX_PB_SIZE]);
@@ -1835,7 +1851,7 @@ static void hls_prediction_unit(HEVCContext *s, int x0, int y0,
                                       dst0, s->frame->linesize[0], tmp, tmpstride,
                                       nPbW, nPbH);
         } else {
-            s->hevcdsp.put_unweighted_pred(dst0, s->frame->linesize[0], tmp, tmpstride, nPbW, nPbH);
+            put_unweighted_pred(s, dst0, s->frame->linesize[0], tmp, tmpstride, nPbW, nPbH);
         }
 
         chroma_mc(s, tmp, tmp2, tmpstride, ref1->frame,
@@ -1852,8 +1868,8 @@ static void hls_prediction_unit(HEVCContext *s, int x0, int y0,
                                      s->sh.chroma_offset_l1[current_mv.ref_idx[1]][1],
                                      dst2, s->frame->linesize[2], tmp2, tmpstride, nPbW/2, nPbH/2);
         } else {
-            s->hevcdsp.put_unweighted_pred(dst1, s->frame->linesize[1], tmp, tmpstride, nPbW/2, nPbH/2);
-            s->hevcdsp.put_unweighted_pred(dst2, s->frame->linesize[2], tmp2, tmpstride, nPbW/2, nPbH/2);
+            put_unweighted_pred(s, dst1, s->frame->linesize[1], tmp, tmpstride, nPbW/2, nPbH/2);
+            put_unweighted_pred(s, dst2, s->frame->linesize[2], tmp2, tmpstride, nPbW/2, nPbH/2);
         }
     } else if (current_mv.pred_flag[0] && current_mv.pred_flag[1]) {
         DECLARE_ALIGNED(16, int16_t, tmp [MAX_PB_SIZE * MAX_PB_SIZE]);

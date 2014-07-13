@@ -166,6 +166,12 @@ void ff_hevc_dsp_init(HEVCDSPContext *hevcdsp, int bit_depth)
     hevcdsp->put_hevc_epel[1][1] = FUNC(put_hevc_epel_hv, depth);           \
                                                                             \
     hevcdsp->put_unweighted_pred   = FUNC(put_unweighted_pred, depth);      \
+    hevcdsp->put_unweighted_pred_square[0] = FUNC(put_unweighted_pred_4, depth);  \
+    hevcdsp->put_unweighted_pred_square[1] = FUNC(put_unweighted_pred_8, depth);  \
+    hevcdsp->put_unweighted_pred_square[2] = FUNC(put_unweighted_pred_16, depth); \
+    hevcdsp->put_unweighted_pred_square[3] = FUNC(put_unweighted_pred_32, depth); \
+    hevcdsp->put_unweighted_pred_square[4] = FUNC(put_unweighted_pred_64, depth); \
+                                                                                         \
     hevcdsp->put_weighted_pred_avg = FUNC(put_weighted_pred_avg, depth);    \
                                                                             \
     hevcdsp->weighted_pred         = FUNC(weighted_pred, depth);            \

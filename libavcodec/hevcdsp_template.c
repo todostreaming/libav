@@ -1031,6 +1031,7 @@ static void FUNC(put_hevc_epel_hv)(int16_t *dst, ptrdiff_t dststride,
     }
 }
 
+av_always_inline
 static void FUNC(put_unweighted_pred)(uint8_t *_dst, ptrdiff_t _dststride,
                                       int16_t *src, ptrdiff_t srcstride,
                                       int width, int height)
@@ -1052,6 +1053,21 @@ static void FUNC(put_unweighted_pred)(uint8_t *_dst, ptrdiff_t _dststride,
         src += srcstride;
     }
 }
+
+#define UNWEIGHTED_PRED_SQUARE(size)                                         \
+static void FUNC(put_unweighted_pred_ ## size) (uint8_t * _dst,              \
+                                                ptrdiff_t _dststride,        \
+                                                int16_t * src,               \
+                                                ptrdiff_t srcstride)         \
+{                                                                            \
+    FUNC(put_unweighted_pred)(_dst, _dststride, src, srcstride, size, size); \
+}
+
+UNWEIGHTED_PRED_SQUARE(4)
+UNWEIGHTED_PRED_SQUARE(8)
+UNWEIGHTED_PRED_SQUARE(16)
+UNWEIGHTED_PRED_SQUARE(32)
+UNWEIGHTED_PRED_SQUARE(64)
 
 static void FUNC(put_weighted_pred_avg)(uint8_t *_dst, ptrdiff_t _dststride,
                                         int16_t *src1, int16_t *src2,
