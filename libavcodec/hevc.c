@@ -1653,12 +1653,13 @@ static void hevc_await_progress(HEVCContext *s, HEVCFrame *ref,
     ff_thread_await_progress(&ref->tf, y, 0);
 }
 
+av_always_inline
 static void put_unweighted_pred(HEVCContext *s,
                                 uint8_t *dst, ptrdiff_t dststride,
                                 int16_t *src, ptrdiff_t srcstride,
-                                int width, int height)
+                                int width, int height, int square)
 {
-    if (width != height) {
+    if (!square) {
         s->hevcdsp.put_unweighted_pred(dst, dststride,
                                        src, srcstride, width, height);
     } else {
@@ -1668,9 +1669,11 @@ static void put_unweighted_pred(HEVCContext *s,
     }
 }
 
-static void hls_prediction_unit(HEVCContext *s, int x0, int y0,
-                                int nPbW, int nPbH,
-                                int log2_cb_size, int partIdx)
+av_always_inline
+static void hls_prediction_unit_internal(HEVCContext *s, int x0, int y0,
+                                         int nPbW, int nPbH,
+                                         int log2_cb_size, int partIdx,
+                                         int square)
 {
 #define POS(c_idx, x, y)                                                              \
     &s->frame->data[c_idx][((y) >> s->sps->vshift[c_idx]) * s->frame->linesize[c_idx] + \
@@ -1812,7 +1815,7 @@ static void hls_prediction_unit(HEVCContext *s, int x0, int y0,
                                      dst0, s->frame->linesize[0], tmp,
                                      tmpstride, nPbW, nPbH);
         } else {
-            put_unweighted_pred(s, dst0, s->frame->linesize[0], tmp, tmpstride, nPbW, nPbH);
+            put_unweighted_pred(s, dst0, s->frame->linesize[0], tmp, tmpstride, nPbW, nPbH, square);
         }
         chroma_mc(s, tmp, tmp2, tmpstride, ref0->frame,
                   &current_mv.mv[0], x0 / 2, y0 / 2, nPbW / 2, nPbH / 2);
@@ -1830,8 +1833,8 @@ static void hls_prediction_unit(HEVCContext *s, int x0, int y0,
                                      dst2, s->frame->linesize[2], tmp2, tmpstride,
                                      nPbW / 2, nPbH / 2);
         } else {
-            put_unweighted_pred(s, dst1, s->frame->linesize[1], tmp, tmpstride, nPbW/2, nPbH/2);
-            put_unweighted_pred(s, dst2, s->frame->linesize[2], tmp2, tmpstride, nPbW/2, nPbH/2);
+            put_unweighted_pred(s, dst1, s->frame->linesize[1], tmp, tmpstride, nPbW / 2, nPbH / 2, square);
+            put_unweighted_pred(s, dst2, s->frame->linesize[2], tmp2, tmpstride, nPbW / 2, nPbH / 2, square);
         }
     } else if (!current_mv.pred_flag[0] && current_mv.pred_flag[1]) {
         DECLARE_ALIGNED(16, int16_t, tmp [MAX_PB_SIZE * MAX_PB_SIZE]);
@@ -1851,7 +1854,7 @@ static void hls_prediction_unit(HEVCContext *s, int x0, int y0,
                                       dst0, s->frame->linesize[0], tmp, tmpstride,
                                       nPbW, nPbH);
         } else {
-            put_unweighted_pred(s, dst0, s->frame->linesize[0], tmp, tmpstride, nPbW, nPbH);
+            put_unweighted_pred(s, dst0, s->frame->linesize[0], tmp, tmpstride, nPbW, nPbH, square);
         }
 
         chroma_mc(s, tmp, tmp2, tmpstride, ref1->frame,
@@ -1868,8 +1871,8 @@ static void hls_prediction_unit(HEVCContext *s, int x0, int y0,
                                      s->sh.chroma_offset_l1[current_mv.ref_idx[1]][1],
                                      dst2, s->frame->linesize[2], tmp2, tmpstride, nPbW/2, nPbH/2);
         } else {
-            put_unweighted_pred(s, dst1, s->frame->linesize[1], tmp, tmpstride, nPbW/2, nPbH/2);
-            put_unweighted_pred(s, dst2, s->frame->linesize[2], tmp2, tmpstride, nPbW/2, nPbH/2);
+            put_unweighted_pred(s, dst1, s->frame->linesize[1], tmp, tmpstride, nPbW / 2, nPbH / 2, square);
+            put_unweighted_pred(s, dst2, s->frame->linesize[2], tmp2, tmpstride, nPbW / 2, nPbH / 2, square);
         }
     } else if (current_mv.pred_flag[0] && current_mv.pred_flag[1]) {
         DECLARE_ALIGNED(16, int16_t, tmp [MAX_PB_SIZE * MAX_PB_SIZE]);
@@ -1927,6 +1930,21 @@ static void hls_prediction_unit(HEVCContext *s, int x0, int y0,
             s->hevcdsp.put_weighted_pred_avg(dst2, s->frame->linesize[2], tmp2, tmp4, tmpstride, nPbW/2, nPbH/2);
         }
     }
+}
+
+
+static void hls_prediction_unit_square(HEVCContext *s, int x0, int y0,
+                                       int cb_size, int log2_cb_size,
+                                       int partIdx)
+{
+    hls_prediction_unit_internal(s, x0, y0, cb_size, cb_size, log2_cb_size, partIdx, 1);
+}
+
+static void hls_prediction_unit(HEVCContext *s, int x0, int y0,
+                                int nPbW, int nPbH,
+                                int log2_cb_size, int partIdx)
+{
+    hls_prediction_unit_internal(s, x0, y0, nPbW, nPbH, log2_cb_size, partIdx, 0);
 }
 
 /**
@@ -2137,7 +2155,7 @@ static int hls_coding_unit(HEVCContext *s, int x0, int y0, int log2_cb_size)
     }
 
     if (SAMPLE_CTB(s->skip_flag, x_cb, y_cb)) {
-        hls_prediction_unit(s, x0, y0, cb_size, cb_size, log2_cb_size, 0);
+        hls_prediction_unit_square(s, x0, y0, cb_size, log2_cb_size, 0);
         intra_prediction_unit_default_value(s, x0, y0, log2_cb_size);
 
         if (!s->sh.disable_deblocking_filter_flag)
@@ -2175,7 +2193,7 @@ static int hls_coding_unit(HEVCContext *s, int x0, int y0, int log2_cb_size)
             intra_prediction_unit_default_value(s, x0, y0, log2_cb_size);
             switch (lc->cu.part_mode) {
             case PART_2Nx2N:
-                hls_prediction_unit(s, x0, y0, cb_size, cb_size, log2_cb_size, 0);
+                hls_prediction_unit_square(s, x0, y0, cb_size, log2_cb_size, 0);
                 break;
             case PART_2NxN:
                 hls_prediction_unit(s, x0, y0,               cb_size, cb_size / 2, log2_cb_size, 0);
@@ -2202,10 +2220,10 @@ static int hls_coding_unit(HEVCContext *s, int x0, int y0, int log2_cb_size)
                 hls_prediction_unit(s, x0 + cb_size * 3 / 4, y0, cb_size     / 4, cb_size, log2_cb_size, 1);
                 break;
             case PART_NxN:
-                hls_prediction_unit(s, x0,               y0,               cb_size / 2, cb_size / 2, log2_cb_size, 0);
-                hls_prediction_unit(s, x0 + cb_size / 2, y0,               cb_size / 2, cb_size / 2, log2_cb_size, 1);
-                hls_prediction_unit(s, x0,               y0 + cb_size / 2, cb_size / 2, cb_size / 2, log2_cb_size, 2);
-                hls_prediction_unit(s, x0 + cb_size / 2, y0 + cb_size / 2, cb_size / 2, cb_size / 2, log2_cb_size, 3);
+                hls_prediction_unit_square(s, x0,               y0,               cb_size / 2, log2_cb_size, 0);
+                hls_prediction_unit_square(s, x0 + cb_size / 2, y0,               cb_size / 2, log2_cb_size, 1);
+                hls_prediction_unit_square(s, x0,               y0 + cb_size / 2, cb_size / 2, log2_cb_size, 2);
+                hls_prediction_unit_square(s, x0 + cb_size / 2, y0 + cb_size / 2, cb_size / 2, log2_cb_size, 3);
                 break;
             }
         }
