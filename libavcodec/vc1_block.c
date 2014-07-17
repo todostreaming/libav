@@ -1247,9 +1247,9 @@ static av_always_inline int scaleforopp(VC1Context *v, int n /* MV */,
 
 /** Predict and set motion vector
  */
-static inline void vc1_pred_mv(VC1Context *v, int n, int dmv_x, int dmv_y,
-                               int mv1, int r_x, int r_y, uint8_t* is_intra,
-                               int pred_flag, int dir)
+static void vc1_pred_mv(VC1Context *v, int n, int dmv_x, int dmv_y,
+                        int mv1, int r_x, int r_y, uint8_t* is_intra,
+                        int pred_flag, int dir)
 {
     MpegEncContext *s = &v->s;
     int xy, wrap, off = 0;
@@ -1501,8 +1501,8 @@ static inline void vc1_pred_mv(VC1Context *v, int n, int dmv_x, int dmv_y,
 
 /** Predict and set motion vector for interlaced frame picture MBs
  */
-static inline void vc1_pred_mv_intfr(VC1Context *v, int n, int dmv_x, int dmv_y,
-                                     int mvn, int r_x, int r_y, uint8_t* is_intra, int dir)
+static void vc1_pred_mv_intfr(VC1Context *v, int n, int dmv_x, int dmv_y,
+                              int mvn, int r_x, int r_y, uint8_t* is_intra, int dir)
 {
     MpegEncContext *s = &v->s;
     int xy, wrap, off = 0;
@@ -1934,8 +1934,8 @@ static inline void vc1_b_mc(VC1Context *v, int dmv_x[2], int dmv_y[2],
     vc1_mc_1mv(v, (mode == BMV_TYPE_BACKWARD));
 }
 
-static inline void vc1_pred_b_mv(VC1Context *v, int dmv_x[2], int dmv_y[2],
-                                 int direct, int mvtype)
+static void vc1_pred_b_mv(VC1Context *v, int dmv_x[2], int dmv_y[2],
+                          int direct, int mvtype)
 {
     MpegEncContext *s = &v->s;
     int xy, wrap, off = 0;
@@ -2147,7 +2147,8 @@ static inline void vc1_pred_b_mv(VC1Context *v, int dmv_x[2], int dmv_y[2],
     s->current_picture.motion_val[1][xy][1] = s->mv[1][0][1];
 }
 
-static inline void vc1_pred_b_mv_intfi(VC1Context *v, int n, int *dmv_x, int *dmv_y, int mv1, int *pred_flag)
+static void vc1_pred_b_mv_intfi(VC1Context *v, int n, int *dmv_x, int *dmv_y,
+                                int mv1, int *pred_flag)
 {
     int dir = (v->bmvtype == BMV_TYPE_BACKWARD) ? 1 : 0;
     MpegEncContext *s = &v->s;
