@@ -383,7 +383,8 @@ static void set_surface_param(QSVEncContext *q, mfxFrameSurface1 *surf,
     surf->Data.TimeStamp = frame->pts;
 }
 
-static int put_surface_from_frame(AVCodecContext *avctx, QSVEncContext *q, AVFrame *frame)
+static int put_surface_from_frame(AVCodecContext *avctx, QSVEncContext *q,
+                                  const AVFrame *frame)
 {
     QSVEncSurfaceList *list;
     AVFrame *clone;
@@ -528,19 +529,6 @@ static QSVEncBuffer *dequeue_buffer(QSVEncBuffer **head, QSVEncBuffer **tail,
     return list;
 }
 
-static void fill_buffer_dts(QSVEncContext *q, QSVEncBuffer *list,
-                            int64_t base_dts)
-{
-    QSVEncBuffer *prev = list;
-    int64_t dts        = base_dts - q->pts_delay;
-
-    while (prev && prev->dts == AV_NOPTS_VALUE) {
-        prev->dts = dts;
-        prev = prev->prev;
-        dts -= q->pts_delay;
-    }
-}
-
 static void print_frametype(AVCodecContext *avctx, QSVEncContext *q,
                             mfxBitstream *bs, int indent)
 {
@@ -550,7 +538,8 @@ static void print_frametype(AVCodecContext *avctx, QSVEncContext *q,
         buf[0] = '\0';
 
         snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
-                 "TimeStamp:%"PRId64", ", bs->TimeStamp);
+                 "TimeStamp:%"PRId64", DecodeTimeStamp:%"PRId64", ",
+                 bs->TimeStamp, bs->DecodeTimeStamp);
         snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "FrameType:");
 
         if (bs->FrameType & MFX_FRAMETYPE_I)
@@ -599,6 +588,7 @@ int ff_qsv_enc_frame(AVCodecContext *avctx, QSVEncContext *q,
 {
     mfxFrameSurface1 *surf = NULL;
     QSVEncBuffer *outbuf   = NULL;
+    mfxSyncPoint sync      = NULL;
     int ret;
 
     *got_packet = 0;
@@ -632,7 +622,7 @@ int ff_qsv_enc_frame(AVCodecContext *avctx, QSVEncContext *q,
         outbuf = get_buffer(q);
 
         ret = MFXVideoENCODE_EncodeFrameAsync(q->session, NULL, surf,
-                                              &outbuf->bs, &outbuf->sync);
+                                              &outbuf->bs, &sync);
         av_log(avctx, AV_LOG_INFO, "MFXVideoENCODE_EncodeFrameAsync():%d\n", ret);
 
         if (ret == MFX_WRN_DEVICE_BUSY) {
@@ -646,36 +636,12 @@ int ff_qsv_enc_frame(AVCodecContext *avctx, QSVEncContext *q,
 
     ret = ret == MFX_ERR_MORE_DATA ? 0 : ff_qsv_error(ret);
 
-    if (outbuf->sync)
-        enqueue_buffer(&q->pending_sync, &q->pending_sync_end, &q->nb_sync,
-                       outbuf);
-
-    if (q->pending_sync &&
-        (q->nb_sync >= q->req.NumFrameMin || !frame)) {
-        outbuf = dequeue_buffer(&q->pending_sync, &q->pending_sync_end,
-                                &q->nb_sync);
-
-        ret = MFXVideoCORE_SyncOperation(q->session, outbuf->sync,
+    if (sync || !frame) {
+        ret = MFXVideoCORE_SyncOperation(q->session, sync,
                                          SYNC_TIME_DEFAULT);
         av_log(avctx, AV_LOG_INFO, "MFXVideoCORE_SyncOperation():%d\n", ret);
         if ((ret = ff_qsv_error(ret)) < 0)
             return ret;
-
-        print_frametype(avctx, q, &outbuf->bs, 6);
-
-        if (outbuf->bs.FrameType & MFX_FRAMETYPE_REF ||
-            outbuf->bs.FrameType & MFX_FRAMETYPE_xREF) {
-            outbuf->dts = AV_NOPTS_VALUE;
-        } else {
-            outbuf->dts = outbuf->bs.TimeStamp;
-            fill_buffer_dts(q, q->pending_dts_end, outbuf->dts);
-        }
-
-        enqueue_buffer(&q->pending_dts, &q->pending_dts_end, NULL, outbuf);
-    }
-
-    if (q->pending_dts && q->pending_dts->dts != AV_NOPTS_VALUE) {
-        outbuf = dequeue_buffer(&q->pending_dts, &q->pending_dts_end, NULL);
 
         print_frametype(avctx, q, &outbuf->bs, 12);
 
@@ -684,7 +650,7 @@ int ff_qsv_enc_frame(AVCodecContext *avctx, QSVEncContext *q,
             return ret;
         }
 
-        pkt->dts  = outbuf->dts;
+        pkt->dts  = outbuf->bs.DecodeTimeStamp;
         pkt->pts  = outbuf->bs.TimeStamp;
         pkt->size = outbuf->bs.DataLength;
 

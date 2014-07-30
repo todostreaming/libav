@@ -41,7 +41,6 @@ typedef struct QSVEncBuffer {
     uint8_t *data;
     mfxBitstream bs;
     mfxSyncPoint sync;
-    int64_t dts;
     struct QSVEncBuffer *prev;
     struct QSVEncBuffer *next;
     struct QSVEncBuffer *pool;
