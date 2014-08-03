@@ -89,6 +89,8 @@ typedef struct MpegTSWrite {
 #define DEFAULT_PES_HEADER_FREQ 16
 #define DEFAULT_PES_PAYLOAD_SIZE ((DEFAULT_PES_HEADER_FREQ - 1) * 184 + 170)
 
+#define SECTION1_DATA_SIZE 1012 // H222 2.4.4.7
+
 /* NOTE: 4 bytes must be left at the end for the crc32 */
 static void mpegts_write_section(MpegTSSection *s, uint8_t *buf, int len)
 {
@@ -201,7 +203,7 @@ static void mpegts_write_pat(AVFormatContext *s)
 {
     MpegTSWrite *ts = s->priv_data;
     MpegTSService *service;
-    uint8_t data[1012], *q;
+    uint8_t data[SECTION1_DATA_SIZE], *q;
     int i;
 
     q = data;
@@ -217,7 +219,7 @@ static void mpegts_write_pat(AVFormatContext *s)
 static void mpegts_write_pmt(AVFormatContext *s, MpegTSService *service)
 {
     MpegTSWrite *ts = s->priv_data;
-    uint8_t data[1012], *q, *desc_length_ptr, *program_info_length_ptr;
+    uint8_t data[SECTION1_DATA_SIZE], *q, *desc_length_ptr, *program_info_length_ptr;
     int val, stream_type, i;
 
     q = data;
@@ -372,7 +374,7 @@ static void mpegts_write_sdt(AVFormatContext *s)
 {
     MpegTSWrite *ts = s->priv_data;
     MpegTSService *service;
-    uint8_t data[1012], *q, *desc_list_len_ptr, *desc_len_ptr;
+    uint8_t data[SECTION1_DATA_SIZE], *q, *desc_list_len_ptr, *desc_len_ptr;
     int i, running_status, free_ca_mode, val;
 
     q = data;
