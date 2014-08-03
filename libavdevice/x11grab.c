@@ -472,6 +472,7 @@ x11grab_read_packet(AVFormatContext *s1, AVPacket *pkt)
             if (delay < INT64_C(-1000000) * av_q2d(s->time_base)) {
                 s->time_frame += INT64_C(1000000);
             }
+            curtime = av_gettime();
             break;
         }
         ts.tv_sec = delay / 1000000;
