@@ -32,6 +32,7 @@
 #include "libavformat/avformat.h"
 #include "libavformat/internal.h"
 #include "libavutil/opt.h"
+#include <libavutil/time.h>
 
 #define DEFAULT_CODEC_ID AV_NE(AV_CODEC_ID_PCM_S16BE, AV_CODEC_ID_PCM_S16LE)
 
@@ -143,7 +144,8 @@ static int pulse_read_packet(AVFormatContext *s, AVPacket *pkt)
         pd->pts = -latency;
     }
 
-    pkt->pts = pd->pts;
+    pkt->pts = av_gettime();
+//    pd->pts;
 
     pd->pts += pd->frame_duration;
 
