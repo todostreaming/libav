@@ -29,6 +29,7 @@
 
 #include "libavcodec/put_bits.h"
 
+#include "avio_internal.h"
 #include "avformat.h"
 #include "internal.h"
 #include "mpeg.h"
@@ -84,6 +85,7 @@ typedef struct {
     int64_t vcd_padding_bytes_written;
 
     int preload;
+    int stream_map;
 } MpegMuxContext;
 
 extern AVOutputFormat ff_mpeg1vcd_muxer;
@@ -298,6 +300,66 @@ static int get_system_header_size(AVFormatContext *ctx)
     return buf_index;
 }
 
+static int get_type(AVFormatContext *ctx, int codec_id)
+{
+    switch (codec_id) {
+    case AV_CODEC_ID_MPEG1VIDEO:
+        return STREAM_TYPE_VIDEO_MPEG1;
+    case AV_CODEC_ID_MPEG2VIDEO:
+        return STREAM_TYPE_VIDEO_MPEG2;
+    case AV_CODEC_ID_MPEG4:
+        return STREAM_TYPE_VIDEO_MPEG4;
+    case AV_CODEC_ID_H264:
+        return STREAM_TYPE_VIDEO_H264;
+    case AV_CODEC_ID_MP2:
+        return STREAM_TYPE_AUDIO_MPEG1;
+    case AV_CODEC_ID_AAC:
+        return STREAM_TYPE_AUDIO_AAC;
+    case AV_CODEC_ID_AC3:
+        return STREAM_TYPE_AUDIO_AC3;
+    default: {
+        const AVCodecDescriptor *desc = avcodec_descriptor_get(codec_id);
+        if (desc)
+            avpriv_report_missing_feature(ctx, "Codec %s", desc->name);
+        else
+            av_log(ctx, AV_LOG_ERROR, "Codec Id %d does not exist.\n",
+                   codec_id);
+        return 0;
+        }
+    }
+}
+
+static int output_stream_map(AVFormatContext *ctx)
+{
+    AVIOContext *pb   = ctx->pb;
+    int es_map_length = ctx->nb_streams * 4;
+    int psm_length    = 1 + 1 + 2 + 2 + es_map_length + 4;
+    uint8_t buf[128];
+    int len = put_pack_header(ctx, buf, 0);
+    int i;
+
+    avio_write(pb, buf, len);
+    avio_wb32(pb, PROGRAM_STREAM_MAP);
+    avio_wb16(pb, psm_length);
+    ffio_init_checksum(pb, ff_crc04C11DB7_update, 0);
+    avio_w8(pb, 128); // current_next_indicator and version 0
+    avio_w8(pb, 1);   // marker_bit
+    avio_wb16(pb, 0); // info_length
+    avio_wb16(pb, ctx->nb_streams * 4);
+    for (i = 0; i < ctx->nb_streams; i++) {
+        AVStream *st = ctx->streams[i];
+        StreamInfo *stream = st->priv_data;
+        int type = get_type(ctx, st->codec->codec_id);
+
+        avio_w8(pb, type);
+        avio_w8(pb, stream->id);
+        avio_wb16(pb, 0); // es_info_length
+    }
+    avio_wb32(pb, ffio_get_checksum(pb));
+
+    return 0;
+}
+
 static av_cold int mpeg_mux_init(AVFormatContext *ctx)
 {
     MpegMuxContext *s = ctx->priv_data;
@@ -495,6 +557,8 @@ static av_cold int mpeg_mux_init(AVFormatContext *ctx)
     }
     s->system_header_size = get_system_header_size(ctx);
     s->last_scr           = 0;
+    if (s->stream_map)
+        return output_stream_map(ctx);
     return 0;
 
 fail:
@@ -1162,8 +1226,9 @@ static int mpeg_mux_end(AVFormatContext *ctx)
 #define OFFSET(x) offsetof(MpegMuxContext, x)
 #define E AV_OPT_FLAG_ENCODING_PARAM
 static const AVOption options[] = {
-    { "muxrate", NULL,                                          OFFSET(mux_rate), AV_OPT_TYPE_INT, { .i64 =      0 }, 0, INT_MAX, E },
-    { "preload", "Initial demux-decode delay in microseconds.", OFFSET(preload),  AV_OPT_TYPE_INT, { .i64 = 500000 }, 0, INT_MAX, E },
+    { "muxrate", NULL,                                          OFFSET(mux_rate),   AV_OPT_TYPE_INT, { .i64 =      0 }, 0, INT_MAX, E},
+    { "preload", "Initial demux-decode delay in microseconds.", OFFSET(preload),    AV_OPT_TYPE_INT, { .i64 = 500000 }, 0, INT_MAX, E},
+    { "stream_map", "Output a stream map.",                     OFFSET(stream_map), AV_OPT_TYPE_INT, { .i64 =      0 }, 0,       1, E},
     { NULL },
 };
 
