@@ -23,6 +23,8 @@ OBJS = allformats.o         \
        url.o                \
        utils.o              \
 
+OBJS-$(CONFIG_OGGENC)                    += oggenc.o                    \
+                                            vorbiscomment.o
 OBJS-$(CONFIG_NETWORK)                   += network.o
 OBJS-$(CONFIG_RIFFDEC)                   += riffdec.o
 OBJS-$(CONFIG_RIFFENC)                   += riffenc.o
@@ -225,8 +227,6 @@ OBJS-$(CONFIG_OGG_DEMUXER)               += oggdec.o         \
                                             replaygain.o     \
                                             vorbiscomment.o  \
                                             flac_picture.o
-OBJS-$(CONFIG_OGG_MUXER)                 += oggenc.o \
-                                            vorbiscomment.o
 OBJS-$(CONFIG_OMA_DEMUXER)               += omadec.o pcm.o oma.o
 OBJS-$(CONFIG_OMA_MUXER)                 += omaenc.o rawenc.o oma.o id3v2enc.o
 OBJS-$(CONFIG_PAF_DEMUXER)               += paf.o
