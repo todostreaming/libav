@@ -48,6 +48,7 @@
 #include <inttypes.h>
 
 #include "libavutil/channel_layout.h"
+#include "libavutil/opt.h"
 #include "avcodec.h"
 #include "get_bits.h"
 #include "bytestream.h"
@@ -59,6 +60,7 @@
 #define ALAC_EXTRADATA_SIZE 36
 
 typedef struct {
+    AVClass        *class;
     AVCodecContext *avctx;
     GetBitContext gb;
     int channels;
@@ -75,6 +77,8 @@ typedef struct {
 
     int extra_bits;     /**< number of extra bits beyond 16-bit */
     int nb_samples;     /**< number of samples in the current frame */
+
+    int extra_bit_bug;
 } ALACContext;
 
 static inline unsigned int decode_scalar(GetBitContext *gb, int k, int bps)
@@ -368,12 +372,17 @@ static int decode_element(AVCodecContext *avctx, AVFrame *frame, int ch_index,
         decorr_left_weight = 0;
     }
 
+    if (alac->extra_bits && alac->extra_bit_bug) {
+        append_extra_bits(alac->output_samples_buffer, alac->extra_bits_buffer,
+                          alac->extra_bits, channels, alac->nb_samples);
+    }
+
     if (channels == 2 && decorr_left_weight) {
         decorrelate_stereo(alac->output_samples_buffer, alac->nb_samples,
                            decorr_shift, decorr_left_weight);
     }
 
-    if (alac->extra_bits) {
+    if (alac->extra_bits && !alac->extra_bit_bug) {
         append_extra_bits(alac->output_samples_buffer, alac->extra_bits_buffer,
                           alac->extra_bits, channels, alac->nb_samples);
     }
@@ -572,6 +581,21 @@ static av_cold int alac_decode_init(AVCodecContext * avctx)
     return 0;
 }
 
+#define OFFSET(x) offsetof(ALACContext, x)
+#define D AV_OPT_FLAG_AUDIO_PARAM | AV_OPT_FLAG_DECODING_PARAM
+static const AVOption options[] = {
+    { "workaround", "Force non-standard decoding process",    OFFSET(extra_bit_bug), AV_OPT_TYPE_FLAGS, { .i64 = 0 }, INT_MIN, INT_MAX, D },
+    { "extra_bits", "Append extra_bits before decorrelation", NULL,                  AV_OPT_TYPE_CONST, { .i64 = 1 }, INT_MIN, INT_MAX, D, "workaround" },
+    { NULL },
+};
+
+static const AVClass alac_class = {
+    .class_name = "alac",
+    .item_name  = av_default_item_name,
+    .option     = options,
+    .version    = LIBAVUTIL_VERSION_INT,
+};
+
 AVCodec ff_alac_decoder = {
     .name           = "alac",
     .long_name      = NULL_IF_CONFIG_SMALL("ALAC (Apple Lossless Audio Codec)"),
@@ -582,4 +606,5 @@ AVCodec ff_alac_decoder = {
     .close          = alac_decode_close,
     .decode         = alac_decode_frame,
     .capabilities   = CODEC_CAP_DR1,
+    .priv_class     = &alac_class
 };

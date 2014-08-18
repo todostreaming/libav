@@ -53,4 +53,22 @@ Loud sounds are fully compressed.  Soft sounds are enhanced.
 
 @end table
 
+@section alac
+
+Apple Lossless Audio Codec decoder.
+
+This decoder is an indipendent implementation of the Apple Lossless codec.
+
+@table @option
+
+@item -workaround @var{flags}
+Decoder workarounds
+@table @option
+@item extra_bits
+Append the extra bits in the 24bit mode before decorrelation,
+the pre-Libav11 encoder assumed this behaviour.
+@end table
+
+@end table
+
 @c man end AUDIO DECODERS
