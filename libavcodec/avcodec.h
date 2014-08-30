@@ -3014,6 +3014,18 @@ typedef struct AVHWAccel {
      * AVCodecInternal.hwaccel_priv_data.
      */
     int priv_data_size;
+
+    /**
+     * Directly decode the avpacket, it is called instead of the normal
+     * AVCodec callback.
+     */
+    int (*decode)(AVCodecContext *, void *outdata, int *outdata_size,
+                  AVPacket *avpkt);
+    /**
+     * Flush the decoder, it is called instead of the normal AVCodec
+     * callback.
+     */
+    void (*flush)(AVCodecContext *);
 } AVHWAccel;
 
 /**

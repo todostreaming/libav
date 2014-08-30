@@ -1634,7 +1634,10 @@ int attribute_align_arg avcodec_decode_video2(AVCodecContext *avctx, AVFrame *pi
     av_frame_unref(picture);
 
     if ((avctx->codec->capabilities & CODEC_CAP_DELAY) || avpkt->size || (avctx->active_thread_type & FF_THREAD_FRAME)) {
-        if (HAVE_THREADS && avctx->active_thread_type & FF_THREAD_FRAME)
+        if (avctx->hwaccel && avctx->hwaccel->decode)
+            ret = avctx->hwaccel->decode(avctx, picture, got_picture_ptr,
+                                         avpkt);
+        else if (HAVE_THREADS && avctx->active_thread_type & FF_THREAD_FRAME)
             ret = ff_thread_decode_frame(avctx, picture, got_picture_ptr,
                                          avpkt);
         else {
@@ -2055,7 +2058,9 @@ const char *avcodec_license(void)
 
 void avcodec_flush_buffers(AVCodecContext *avctx)
 {
-    if (HAVE_THREADS && avctx->active_thread_type & FF_THREAD_FRAME)
+    if (avctx->hwaccel && avctx->codec->flush)
+        avctx->hwaccel->flush(avctx);
+    else if (HAVE_THREADS && avctx->active_thread_type & FF_THREAD_FRAME)
         ff_thread_flush(avctx);
     else if (avctx->codec->flush)
         avctx->codec->flush(avctx);
