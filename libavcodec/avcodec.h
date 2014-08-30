@@ -2920,8 +2920,7 @@ typedef struct AVHWAccel {
     enum AVPixelFormat pix_fmt;
 
     /**
-     * Hardware accelerated codec capabilities.
-     * see FF_HWACCEL_CODEC_CAP_*
+     * Hardware accelerated codec capabilities. (currently unused)
      */
     int capabilities;
 
