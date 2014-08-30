@@ -3009,6 +3009,13 @@ typedef struct AVHWAccel {
      * AVCodecInternal.hwaccel_priv_data.
      */
     int priv_data_size;
+
+    /**
+     * For bitstream decoders this function replaces completely the normal
+     * AVCodec decode callback
+     */
+    int (*decode)(AVCodecContext *, void *outdata, int *outdata_size,
+                  AVPacket *avpkt);
 } AVHWAccel;
 
 /**
