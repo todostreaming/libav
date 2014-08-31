@@ -63,6 +63,9 @@ const HWAccel hwaccels[] = {
 #if CONFIG_VDA
     { "vda",   vda_init,   HWACCEL_VDA,   AV_PIX_FMT_VDA },
 #endif
+#if CONFIG_QSV
+    { "qsv",   qsv_init,   HWACCEL_QSV,   AV_PIX_FMT_NONE },
+#endif
     { 0 },
 };
 

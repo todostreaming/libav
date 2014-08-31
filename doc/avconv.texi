@@ -590,6 +590,10 @@ Use VDPAU (Video Decode and Presentation API for Unix) hardware acceleration.
 Use DXVA2 (DirectX Video Acceleration) hardware acceleration.
 @end table
 
+@item qsv
+Use QSV (QuickSync Video) hardware acceleration.
+@end table
+
 This option has no effect if the selected hwaccel is not available or not
 supported by the chosen decoder.
 
