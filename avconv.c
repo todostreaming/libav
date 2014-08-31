@@ -1530,6 +1530,17 @@ static int get_buffer(AVCodecContext *s, AVFrame *frame, int flags)
     return avcodec_default_get_buffer2(s, frame, flags);
 }
 
+static const HWAccel *get_full_hwaccel(int hwaccel_id)
+{
+    int i;
+    for (i = 0; hwaccels[i].name; i++)
+        if (hwaccels[i].id == hwaccel_id &&
+            hwaccels[i].pix_fmt == AV_PIX_FMT_NONE)
+            return &hwaccels[i];
+
+    return NULL;
+}
+
 static int init_input_stream(int ist_index, char *error, int error_len)
 {
     int i, ret;
@@ -1573,6 +1584,24 @@ static int init_input_stream(int ist_index, char *error, int error_len)
                      "#%d:%d : %s",
                      ist->file_index, ist->st->index, errbuf);
             return ret;
+        }
+
+        if (ist->hwaccel_id) {
+            const HWAccel *hwaccel = get_full_hwaccel(ist->hwaccel_id);
+            if (hwaccel) {
+                if ((ret = hwaccel->init(ist->dec_ctx)) < 0) {
+                    char errbuf[128];
+
+                    av_strerror(ret, errbuf, sizeof(errbuf));
+
+                    av_log(NULL, AV_LOG_WARNING,
+                           "The hardware acceleration backend %s "
+                           "cannot be used: %s.",
+                           hwaccel->name, errbuf);
+                    av_log(NULL, AV_LOG_WARNING,
+                           "Falling back to software decoding.");
+                }
+            }
         }
         assert_avoptions(ist->decoder_opts);
     }
