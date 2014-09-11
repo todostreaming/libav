@@ -31,7 +31,6 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <time.h>
 #include <linux/fb.h>
 
 #include "libavutil/internal.h"
@@ -184,7 +183,6 @@ static int fbdev_read_packet(AVFormatContext *avctx, AVPacket *pkt)
 {
     FBDevContext *fbdev = avctx->priv_data;
     int64_t curtime, delay;
-    struct timespec ts;
     int i, ret;
     uint8_t *pin, *pout;
 
@@ -200,9 +198,7 @@ static int fbdev_read_packet(AVFormatContext *avctx, AVPacket *pkt)
     if (delay > 0) {
         if (avctx->flags & AVFMT_FLAG_NONBLOCK)
             return AVERROR(EAGAIN);
-        ts.tv_sec  =  delay / 1000000;
-        ts.tv_nsec = (delay % 1000000) * 1000;
-        while (nanosleep(&ts, &ts) < 0 && errno == EINTR);
+        av_usleep(delay);
     }
     /* compute the time of the next frame */
     fbdev->time_frame += INT64_C(1000000) / av_q2d(fbdev->framerate_q);
