@@ -373,6 +373,8 @@ static void paint_mouse_pointer(XImage *image, X11GrabContext *s)
         return;
 
     xcim = XFixesGetCursorImage(dpy);
+    if (!xcim)
+        return;
 
     x = xcim->x - xcim->xhot;
     y = xcim->y - xcim->yhot;
