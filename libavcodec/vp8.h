@@ -132,7 +132,6 @@ typedef struct VP8Frame {
     AVBufferRef *seg_map;
 } VP8Frame;
 
-#define MAX_THREADS 8
 typedef struct VP8Context {
     VP8ThreadData *thread_data;
     AVCodecContext *avctx;

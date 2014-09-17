@@ -41,7 +41,7 @@ static void free_buffers(VP8Context *s)
 {
     int i;
     if (s->thread_data)
-        for (i = 0; i < MAX_THREADS; i++) {
+        for (i = 0; i < s->num_jobs; i++) {
 #if HAVE_THREADS
             pthread_cond_destroy(&s->thread_data[i].cond);
             pthread_mutex_destroy(&s->thread_data[i].lock);
@@ -166,9 +166,9 @@ int update_dimensions(VP8Context *s, int width, int height, int is_vp7)
                                          sizeof(*s->macroblocks));
     s->top_nnz     = av_mallocz(s->mb_width * sizeof(*s->top_nnz));
     s->top_border  = av_mallocz((s->mb_width + 1) * sizeof(*s->top_border));
-    s->thread_data = av_mallocz(MAX_THREADS * sizeof(VP8ThreadData));
+    s->thread_data = av_mallocz(s->num_jobs * sizeof(VP8ThreadData));
 
-    for (i = 0; i < MAX_THREADS; i++) {
+    for (i = 0; i < s->num_jobs; i++) {
         s->thread_data[i].filter_strength =
             av_mallocz(s->mb_width * sizeof(*s->thread_data[0].filter_strength));
 #if HAVE_THREADS
@@ -2566,7 +2566,7 @@ int vp78_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     s->prev_frame = prev_frame;
     s->mv_min.y   = -MARGIN;
     s->mv_max.y   = ((s->mb_height - 1) << 6) + MARGIN;
-    for (i = 0; i < MAX_THREADS; i++) {
+    for (i = 0; i < num_jobs; i++) {
         s->thread_data[i].thread_mb_pos = 0;
         s->thread_data[i].wait_mb_pos   = INT_MAX;
     }
