@@ -1383,7 +1383,7 @@ static int process_input_packet(InputStream *ist, const AVPacket *pkt)
 
         ist->last_dts = ist->next_dts;
 
-        if (avpkt.size && avpkt.size != pkt->size &&
+        if (pkt && avpkt.size && avpkt.size != pkt->size &&
             !(ist->dec->capabilities & CODEC_CAP_SUBFRAMES)) {
             av_log(NULL, ist->showed_multi_packet_warning ? AV_LOG_VERBOSE : AV_LOG_WARNING,
                    "Multiple frames in a packet from stream %d\n", pkt->stream_index);
