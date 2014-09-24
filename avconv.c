@@ -169,7 +169,8 @@ static void avconv_cleanup(int ret)
         AVFormatContext *s = of->ctx;
         if (s && s->oformat && !(s->oformat->flags & AVFMT_NOFILE) && s->pb)
             avio_close(s->pb);
-        avformat_free_context(s);
+        if (s)
+            avformat_free_context(s);
         av_dict_free(&of->opts);
 
         av_freep(&output_files[i]);
