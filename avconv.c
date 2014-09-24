@@ -1844,7 +1844,7 @@ static int transcode_init(void)
                 }
             }
 
-            if (!ost->filter &&
+            if (!ost->filter && ist &&
                 (enc_ctx->codec_type == AVMEDIA_TYPE_VIDEO ||
                  enc_ctx->codec_type == AVMEDIA_TYPE_AUDIO)) {
                     FilterGraph *fg;
