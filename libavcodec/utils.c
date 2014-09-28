@@ -443,8 +443,10 @@ static int audio_get_buffer(AVCodecContext *avctx, AVFrame *frame)
             av_freep(&frame->extended_buf);
             return AVERROR(ENOMEM);
         }
-    } else
-        frame->extended_data = frame->data;
+    } else {
+        frame->extended_data   = frame->data;
+        frame->nb_extended_buf = 0;
+    }
 
     for (i = 0; i < FFMIN(planes, AV_NUM_DATA_POINTERS); i++) {
         frame->buf[i] = av_buffer_pool_get(pool->pools[0]);
