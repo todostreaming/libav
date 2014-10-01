@@ -443,7 +443,7 @@ static void do_subtitle_out(AVFormatContext *s,
     int subtitle_out_max_size = 1024 * 1024;
     int subtitle_out_size, nb, i;
     AVCodecContext *enc;
-    AVPacket pkt;
+    AVPacket pkt = { 0 };
 
     if (pts == AV_NOPTS_VALUE) {
         av_log(NULL, AV_LOG_ERROR, "Subtitle packets must have a pts\n");
@@ -508,7 +508,7 @@ static void do_video_out(AVFormatContext *s,
                          int *frame_size)
 {
     int ret, format_video_sync;
-    AVPacket pkt;
+    AVPacket pkt = { 0 };
     AVCodecContext *enc = ost->enc_ctx;
 
     *frame_size = 0;
@@ -1067,7 +1067,7 @@ static void do_streamcopy(InputStream *ist, OutputStream *ost, const AVPacket *p
     InputFile   *f = input_files [ist->file_index];
     int64_t start_time = (of->start_time == AV_NOPTS_VALUE) ? 0 : of->start_time;
     int64_t ost_tb_start_time = av_rescale_q(start_time, AV_TIME_BASE_Q, ost->st->time_base);
-    AVPacket opkt;
+    AVPacket opkt = { 0 };
 
     av_init_packet(&opkt);
 
