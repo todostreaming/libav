@@ -726,7 +726,7 @@ static int sab_diamond_search(MpegEncContext * s, int *best, int dmin,
 
     qsort(minima, j, sizeof(Minima), minima_cmp);
 
-    for(; j<minima_count; j++){
+    for( ; j < FFMIN(minima_count, FF_ARRAY_ELEMS(minima)); j++) {
         minima[j].height=256*256*256*64;
         minima[j].checked=0;
         minima[j].x= minima[j].y=0;
