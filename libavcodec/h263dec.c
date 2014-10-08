@@ -109,7 +109,6 @@ av_cold int ff_h263_decode_init(AVCodecContext *avctx)
                avctx->codec->id);
         return AVERROR(ENOSYS);
     }
-    s->codec_id    = avctx->codec->id;
 
     /* for h263, we allocate the images after having read the header */
     if (avctx->codec->id != AV_CODEC_ID_H263 &&
@@ -188,7 +187,7 @@ static int decode_slice(MpegEncContext *s)
     if (s->partitioned_frame) {
         const int qscale = s->qscale;
 
-        if (CONFIG_MPEG4_DECODER && s->codec_id == AV_CODEC_ID_MPEG4)
+        if (CONFIG_MPEG4_DECODER && s->avctx->codec_id == AV_CODEC_ID_MPEG4)
             if ((ret = ff_mpeg4_decode_partitions(s->avctx->priv_data)) < 0)
                 return ret;
 
@@ -283,7 +282,7 @@ static int decode_slice(MpegEncContext *s)
 
     assert(s->mb_x == 0 && s->mb_y == s->mb_height);
 
-    if (s->codec_id == AV_CODEC_ID_MPEG4         &&
+    if (s->avctx->codec_id == AV_CODEC_ID_MPEG4  &&
         (s->workaround_bugs & FF_BUG_AUTODETECT) &&
         get_bits_left(&s->gb) >= 48              &&
         show_bits(&s->gb, 24) == 0x4010          &&
@@ -291,7 +290,7 @@ static int decode_slice(MpegEncContext *s)
         s->padding_bug_score += 32;
 
     /* try to detect the padding bug */
-    if (s->codec_id == AV_CODEC_ID_MPEG4         &&
+    if (s->avctx->codec_id == AV_CODEC_ID_MPEG4  &&
         (s->workaround_bugs & FF_BUG_AUTODETECT) &&
         get_bits_left(&s->gb) >= 0               &&
         get_bits_left(&s->gb) < 48               &&
@@ -316,7 +315,7 @@ static int decode_slice(MpegEncContext *s)
     }
 
     if (s->workaround_bugs & FF_BUG_AUTODETECT) {
-        if (s->codec_id == AV_CODEC_ID_H263 ||
+        if (s->avctx->codec_id == AV_CODEC_ID_H263 ||
             (s->padding_bug_score > -2 && !s->data_partitioning))
             s->workaround_bugs |= FF_BUG_NO_PADDING;
         else
@@ -389,9 +388,9 @@ int ff_h263_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     if (s->avctx->flags & CODEC_FLAG_TRUNCATED) {
         int next;
 
-        if (CONFIG_MPEG4_DECODER && s->codec_id == AV_CODEC_ID_MPEG4) {
+        if (CONFIG_MPEG4_DECODER && s->avctx->codec_id == AV_CODEC_ID_MPEG4) {
             next = ff_mpeg4_find_frame_end(&s->parse_context, buf, buf_size);
-        } else if (CONFIG_H263_DECODER && s->codec_id == AV_CODEC_ID_H263) {
+        } else if (CONFIG_H263_DECODER && s->avctx->codec_id == AV_CODEC_ID_H263) {
             next = ff_h263_find_frame_end(&s->parse_context, buf, buf_size);
         } else {
             av_log(s->avctx, AV_LOG_ERROR,
@@ -423,7 +422,7 @@ int ff_h263_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
         ret = ff_wmv2_decode_picture_header(s);
     } else if (CONFIG_MSMPEG4_DECODER && s->msmpeg4_version) {
         ret = ff_msmpeg4_decode_picture_header(s);
-    } else if (CONFIG_MPEG4_DECODER && avctx->codec_id == AV_CODEC_ID_MPEG4) {
+    } else if (CONFIG_MPEG4_DECODER && s->avctx->codec_id == AV_CODEC_ID_MPEG4) {
         if (s->avctx->extradata_size && s->picture_number == 0) {
             GetBitContext gb;
 
@@ -434,7 +433,7 @@ int ff_h263_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
             ff_mpeg4_decode_picture_header(avctx->priv_data, &gb);
         }
         ret = ff_mpeg4_decode_picture_header(avctx->priv_data, &s->gb);
-    } else if (CONFIG_H263I_DECODER && s->codec_id == AV_CODEC_ID_H263I) {
+    } else if (CONFIG_H263I_DECODER && s->avctx->codec_id == AV_CODEC_ID_H263I) {
         ret = ff_intel_h263_decode_picture_header(s);
     } else if (CONFIG_FLV_DECODER && s->h263_flv) {
         ret = ff_flv_decode_picture_header(s);
@@ -505,9 +504,9 @@ int ff_h263_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
             return ret;
     }
 
-    if (s->codec_id == AV_CODEC_ID_H263  ||
-        s->codec_id == AV_CODEC_ID_H263P ||
-        s->codec_id == AV_CODEC_ID_H263I)
+    if (s->avctx->codec_id == AV_CODEC_ID_H263  ||
+        s->avctx->codec_id == AV_CODEC_ID_H263P ||
+        s->avctx->codec_id == AV_CODEC_ID_H263I)
         s->gob_index = ff_h263_get_gob_height(s);
 
     // for skipping the frame
@@ -599,7 +598,7 @@ int ff_h263_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
 
     assert(s->bitstream_buffer_size == 0);
 
-    if (CONFIG_MPEG4_DECODER && avctx->codec_id == AV_CODEC_ID_MPEG4)
+    if (CONFIG_MPEG4_DECODER && s->avctx->codec_id == AV_CODEC_ID_MPEG4)
         ff_mpeg4_frame_end(avctx, buf, buf_size);
 
 intrax8_decoded:

@@ -459,7 +459,6 @@ static av_cold int rv10_decode_init(AVCodecContext *avctx)
 
     s->avctx       = avctx;
     s->out_format  = FMT_H263;
-    s->codec_id    = avctx->codec_id;
 
     rv->orig_width  =
     s->width        = avctx->coded_width;
@@ -536,7 +535,7 @@ static int rv10_decode_packet(AVCodecContext *avctx, const uint8_t *buf,
 
     active_bits_size = buf_size * 8;
     init_get_bits(&s->gb, buf, FFMAX(buf_size, buf_size2) * 8);
-    if (s->codec_id == AV_CODEC_ID_RV10)
+    if (s->avctx->codec_id == AV_CODEC_ID_RV10)
         mb_count = rv10_decode_picture_header(s);
     else
         mb_count = rv20_decode_picture_header(rv);
@@ -577,7 +576,7 @@ static int rv10_decode_packet(AVCodecContext *avctx, const uint8_t *buf,
     av_dlog(avctx, "qscale=%d\n", s->qscale);
 
     /* default quantization values */
-    if (s->codec_id == AV_CODEC_ID_RV10) {
+    if (s->avctx->codec_id == AV_CODEC_ID_RV10) {
         if (s->mb_y == 0)
             s->first_slice_line = 1;
     } else {

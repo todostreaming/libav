@@ -285,7 +285,7 @@ void ff_clean_h263_qscales(MpegEncContext *s){
             qscale_table[ s->mb_index2xy[i] ]= qscale_table[ s->mb_index2xy[i+1] ]+2;
     }
 
-    if(s->codec_id != AV_CODEC_ID_H263P){
+    if (s->avctx->codec_id != AV_CODEC_ID_H263P) {
         for(i=1; i<s->mb_num; i++){
             int mb_xy= s->mb_index2xy[i];
 
@@ -791,7 +791,7 @@ av_cold void ff_h263_encode_init(MpegEncContext *s)
     s->ac_esc_length= 7+1+6+8;
 
     // use fcodes >1 only for mpeg4 & h263 & h263p FIXME
-    switch(s->codec_id){
+    switch (s->avctx->codec_id) {
     case AV_CODEC_ID_MPEG4:
         s->fcode_tab= fcode_tab;
         break;

@@ -1478,7 +1478,6 @@ av_cold int ff_rv34_decode_init(AVCodecContext *avctx)
     ff_mpv_decode_defaults(s);
     s->avctx      = avctx;
     s->out_format = FMT_H263;
-    s->codec_id   = avctx->codec_id;
 
     s->width  = avctx->width;
     s->height = avctx->height;
@@ -1495,11 +1494,11 @@ av_cold int ff_rv34_decode_init(AVCodecContext *avctx)
     ff_h264_pred_init(&r->h, AV_CODEC_ID_RV40, 8, 1);
 
 #if CONFIG_RV30_DECODER
-    if (avctx->codec_id == AV_CODEC_ID_RV30)
+    if (s->avctx->codec_id == AV_CODEC_ID_RV30)
         ff_rv30dsp_init(&r->rdsp);
 #endif
 #if CONFIG_RV40_DECODER
-    if (avctx->codec_id == AV_CODEC_ID_RV40)
+    if (s->avctx->codec_id == AV_CODEC_ID_RV40)
         ff_rv40dsp_init(&r->rdsp);
 #endif
 

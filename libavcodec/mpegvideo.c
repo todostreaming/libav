@@ -457,9 +457,9 @@ static int alloc_frame_buffer(MpegEncContext *s, Picture *pic)
     int r, ret;
 
     pic->tf.f = pic->f;
-    if (s->codec_id != AV_CODEC_ID_WMV3IMAGE &&
-        s->codec_id != AV_CODEC_ID_VC1IMAGE  &&
-        s->codec_id != AV_CODEC_ID_MSS2) {
+    if (s->avctx->codec_id != AV_CODEC_ID_WMV3IMAGE &&
+        s->avctx->codec_id != AV_CODEC_ID_VC1IMAGE  &&
+        s->avctx->codec_id != AV_CODEC_ID_MSS2) {
         if (edges_needed) {
             pic->f->width  = s->avctx->width  + 2 * EDGE_WIDTH;
             pic->f->height = s->avctx->height + 2 * EDGE_WIDTH;
@@ -673,9 +673,9 @@ void ff_mpeg_unref_picture(MpegEncContext *s, Picture *pic)
     pic->tf.f = pic->f;
     /* WM Image / Screen codecs allocate internal buffers with different
      * dimensions / colorspaces; ignore user-defined callbacks for these. */
-    if (s->codec_id != AV_CODEC_ID_WMV3IMAGE &&
-        s->codec_id != AV_CODEC_ID_VC1IMAGE  &&
-        s->codec_id != AV_CODEC_ID_MSS2)
+    if (s->avctx->codec_id != AV_CODEC_ID_WMV3IMAGE &&
+        s->avctx->codec_id != AV_CODEC_ID_VC1IMAGE  &&
+        s->avctx->codec_id != AV_CODEC_ID_MSS2)
         ff_thread_release_buffer(s->avctx, &pic->tf);
     else if (pic->f)
         av_frame_unref(pic->f);
@@ -1166,7 +1166,7 @@ static int init_context_frame(MpegEncContext *s)
 
     }
 
-    if (s->codec_id == AV_CODEC_ID_MPEG4 ||
+    if (s->avctx->codec_id == AV_CODEC_ID_MPEG4 ||
         (s->avctx->flags & CODEC_FLAG_INTERLACED_ME)) {
         /* interlaced direct mode decoding tables */
         for (i = 0; i < 2; i++) {
@@ -1242,7 +1242,7 @@ av_cold int ff_mpv_common_init(MpegEncContext *s)
     if (s->encoding && s->avctx->slices)
         nb_slices = s->avctx->slices;
 
-    if (s->codec_id == AV_CODEC_ID_MPEG2VIDEO && !s->progressive_sequence)
+    if (s->avctx->codec_id == AV_CODEC_ID_MPEG2VIDEO && !s->progressive_sequence)
         s->mb_height = (s->height + 31) / 32 * 2;
     else
         s->mb_height = (s->height + 15) / 16;
@@ -1426,7 +1426,7 @@ int ff_mpv_common_frame_size_change(MpegEncContext *s)
     s->current_picture_ptr      = NULL;
 
     // init
-    if (s->codec_id == AV_CODEC_ID_MPEG2VIDEO && !s->progressive_sequence)
+    if (s->avctx->codec_id == AV_CODEC_ID_MPEG2VIDEO && !s->progressive_sequence)
         s->mb_height = (s->height + 31) / 32 * 2;
     else
         s->mb_height = (s->height + 15) / 16;
@@ -1728,8 +1728,8 @@ int ff_mpv_frame_start(MpegEncContext *s, AVCodecContext *avctx)
     s->current_picture_ptr = pic;
     // FIXME use only the vars from current_pic
     s->current_picture_ptr->f->top_field_first = s->top_field_first;
-    if (s->codec_id == AV_CODEC_ID_MPEG1VIDEO ||
-        s->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
+    if (s->avctx->codec_id == AV_CODEC_ID_MPEG1VIDEO ||
+        s->avctx->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
         if (s->picture_structure != PICT_FRAME)
             s->current_picture_ptr->f->top_field_first =
                 (s->picture_structure == PICT_TOP_FIELD) == s->first_field;
@@ -1861,7 +1861,7 @@ int ff_mpv_frame_start(MpegEncContext *s, AVCodecContext *avctx)
     /* set dequantizer, we can't do it during init as
      * it might change for mpeg4 and we can't do it in the header
      * decode as init is not called for mpeg4 there yet */
-    if (s->mpeg_quant || s->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
+    if (s->mpeg_quant || s->avctx->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
         s->dct_unquantize_intra = s->dct_unquantize_mpeg2_intra;
         s->dct_unquantize_inter = s->dct_unquantize_mpeg2_inter;
     } else if (s->out_format == FMT_H263 || s->out_format == FMT_H261) {
@@ -2237,8 +2237,11 @@ FF_ENABLE_DEPRECATION_WARNINGS
             }
 
             /* add dct residue */
-            if(s->encoding || !(   s->msmpeg4_version || s->codec_id==AV_CODEC_ID_MPEG1VIDEO || s->codec_id==AV_CODEC_ID_MPEG2VIDEO
-                                || (s->codec_id==AV_CODEC_ID_MPEG4 && !s->mpeg_quant))){
+            if(s->encoding || !(s->msmpeg4_version ||
+                                s->avctx->codec_id == AV_CODEC_ID_MPEG1VIDEO ||
+                                s->avctx->codec_id == AV_CODEC_ID_MPEG2VIDEO ||
+                                (s->avctx->codec_id == AV_CODEC_ID_MPEG4 &&
+                                 !s->mpeg_quant))) {
                 add_dequant_dct(s, block[0], 0, dest_y                          , dct_linesize, s->qscale);
                 add_dequant_dct(s, block[1], 1, dest_y              + block_size, dct_linesize, s->qscale);
                 add_dequant_dct(s, block[2], 2, dest_y + dct_offset             , dct_linesize, s->qscale);
@@ -2257,7 +2260,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
                         add_dequant_dct(s, block[7], 7, dest_cr + dct_offset, dct_linesize, s->chroma_qscale);
                     }
                 }
-            } else if(is_mpeg12 || (s->codec_id != AV_CODEC_ID_WMV2)){
+            } else if (is_mpeg12 || (s->avctx->codec_id != AV_CODEC_ID_WMV2)){
                 add_dct(s, block[0], 0, dest_y                          , dct_linesize);
                 add_dct(s, block[1], 1, dest_y              + block_size, dct_linesize);
                 add_dct(s, block[2], 2, dest_y + dct_offset             , dct_linesize);
@@ -2290,7 +2293,8 @@ FF_ENABLE_DEPRECATION_WARNINGS
             }
         } else {
             /* dct only in intra block */
-            if(s->encoding || !(s->codec_id==AV_CODEC_ID_MPEG1VIDEO || s->codec_id==AV_CODEC_ID_MPEG2VIDEO)){
+            if(s->encoding || !(s->avctx->codec_id == AV_CODEC_ID_MPEG1VIDEO ||
+                                s->avctx->codec_id == AV_CODEC_ID_MPEG2VIDEO)){
                 put_dct(s, block[0], 0, dest_y                          , dct_linesize, s->qscale);
                 put_dct(s, block[1], 1, dest_y              + block_size, dct_linesize, s->qscale);
                 put_dct(s, block[2], 2, dest_y + dct_offset             , dct_linesize, s->qscale);

@@ -1607,7 +1607,7 @@ intra:
 
 end:
     /* per-MB end of slice check */
-    if (s->codec_id == AV_CODEC_ID_MPEG4) {
+    if (s->avctx->codec_id == AV_CODEC_ID_MPEG4) {
         if (mpeg4_is_resync(s)) {
             const int delta = s->mb_x + 1 == s->mb_width ? 2 : 1;
 
