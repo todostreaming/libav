@@ -89,7 +89,7 @@ static int vaapi_mpeg4_start_frame(AVCodecContext *avctx, av_unused const uint8_
     pic_param->vop_fcode_forward                        = s->f_code;
     pic_param->vop_fcode_backward                       = s->b_code;
     pic_param->vop_time_increment_resolution            = avctx->time_base.den;
-    pic_param->num_macroblocks_in_gob                   = s->mb_width * ff_h263_get_gob_height(s);
+    pic_param->num_macroblocks_in_gob                   = s->mb_width * ff_h263_get_gob_height(s->avctx);
     pic_param->num_gobs_in_vop                          = (s->mb_width * s->mb_height) / pic_param->num_macroblocks_in_gob;
     pic_param->TRB                                      = s->pb_time;
     pic_param->TRD                                      = s->pp_time;

@@ -372,10 +372,11 @@ int16_t *ff_h263_pred_motion(MpegEncContext * s, int block, int dir,
 /**
  * Get the GOB height based on picture height.
  */
-int ff_h263_get_gob_height(MpegEncContext *s){
-    if (s->height <= 400)
+int ff_h263_get_gob_height(AVCodecContext *avctx)
+{
+    if (avctx->height <= 400)
         return 1;
-    else if (s->height <= 800)
+    else if (avctx->height <= 800)
         return  2;
     else
         return 4;
