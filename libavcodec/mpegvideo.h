@@ -629,12 +629,6 @@ void ff_mpv_motion(MpegEncContext *s,
  */
 int ff_alloc_picture(MpegEncContext *s, Picture *pic, int shared);
 
-/**
- * permute block according to permuatation.
- * @param last last non zero element in scantable order
- */
-void ff_block_permute(int16_t *block, uint8_t *permutation, const uint8_t *scantable, int last);
-
 static inline void ff_update_block_index(MpegEncContext *s){
     const int block_size = 8;
 
