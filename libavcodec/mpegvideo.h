@@ -43,6 +43,7 @@
 #include "put_bits.h"
 #include "ratecontrol.h"
 #include "parser.h"
+#include "mpegpicture.h"
 #include "mpeg12data.h"
 #include "qpeldsp.h"
 #include "thread.h"
@@ -63,8 +64,6 @@ enum OutputFormat {
 #define MAX_MV 2048
 
 #define MAX_THREADS 16
-
-#define MAX_PICTURE_COUNT 32
 
 #define MAX_B_FRAMES 16
 
@@ -87,55 +86,6 @@ enum OutputFormat {
 #define USER_START_CODE         0x000001b2
 
 struct MpegEncContext;
-
-/**
- * Picture.
- */
-typedef struct Picture{
-    struct AVFrame *f;
-    ThreadFrame tf;
-
-    AVBufferRef *qscale_table_buf;
-    int8_t *qscale_table;
-
-    AVBufferRef *motion_val_buf[2];
-    int16_t (*motion_val[2])[2];
-
-    AVBufferRef *mb_type_buf;
-    uint32_t *mb_type;          ///< types and macros are defined in mpegutils.h
-
-    AVBufferRef *mbskip_table_buf;
-    uint8_t *mbskip_table;
-
-    AVBufferRef *ref_index_buf[2];
-    int8_t *ref_index[2];
-
-    AVBufferRef *mb_var_buf;
-    uint16_t *mb_var;           ///< Table for MB variances
-
-    AVBufferRef *mc_mb_var_buf;
-    uint16_t *mc_mb_var;        ///< Table for motion compensated MB variances
-
-    AVBufferRef *mb_mean_buf;
-    uint8_t *mb_mean;           ///< Table for MB luminance
-
-    AVBufferRef *hwaccel_priv_buf;
-    /**
-     * hardware accelerator private data
-     */
-    void *hwaccel_picture_private;
-
-    int field_picture;          ///< whether or not the picture was encoded in separate fields
-
-    int mb_var_sum;             ///< sum of MB variance for current frame
-    int mc_mb_var_sum;          ///< motion compensated MB variance for current frame
-
-    int b_frame_score;          /* */
-    int needs_realloc;          ///< Picture needs to be reallocated (eg due to a frame size change)
-
-    int reference;
-    int shared;
-} Picture;
 
 /**
  * Motion estimation context.
@@ -712,7 +662,6 @@ void ff_mpeg_draw_horiz_band(MpegEncContext *s, int y, int h);
 void ff_mpeg_flush(AVCodecContext *avctx);
 void ff_print_debug_info(MpegEncContext *s, Picture *p);
 void ff_write_quant_matrix(PutBitContext *pb, uint16_t *matrix);
-int ff_find_unused_picture(AVCodecContext *avctx, Picture *picture, int shared);
 void ff_denoise_dct(MpegEncContext *s, int16_t *block);
 int ff_update_duplicate_context(MpegEncContext *dst, MpegEncContext *src);
 int ff_mpeg_update_thread_context(AVCodecContext *dst, const AVCodecContext *src);
@@ -799,9 +748,5 @@ extern const uint8_t ff_h263_chroma_qscale_table[32];
 void ff_rv10_encode_picture_header(MpegEncContext *s, int picture_number);
 int ff_rv_decode_dc(MpegEncContext *s, int n);
 void ff_rv20_encode_picture_header(MpegEncContext *s, int picture_number);
-
-int ff_mpeg_ref_picture(AVCodecContext *avctx, Picture *dst, Picture *src);
-void ff_mpeg_unref_picture(AVCodecContext *avctx, Picture *picture);
-void ff_free_picture_tables(Picture *pic);
 
 #endif /* AVCODEC_MPEGVIDEO_H */
