@@ -33,6 +33,7 @@
 
 #include "avcodec.h"
 #include "mathops.h"
+#include "motion_est.h"
 #include "mpegutils.h"
 #include "mpegvideo.h"
 
