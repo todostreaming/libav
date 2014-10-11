@@ -345,20 +345,70 @@ fail:
 /**
  * Allocate a frame buffer
  */
-static int alloc_frame_buffer(MpegEncContext *s, Picture *pic)
+
+
+static int alloc_frame_buffer_encoder(MpegEncContext *s, Picture *pic)
 {
-    int edges_needed = av_codec_is_encoder(s->avctx->codec);
+    int i, r, ret;
+
+    pic->tf.f = pic->f;
+
+    pic->f->width  = s->avctx->width  + 2 * EDGE_WIDTH;
+    pic->f->height = s->avctx->height + 2 * EDGE_WIDTH;
+
+    r = ff_thread_get_buffer(s->avctx, &pic->tf,
+                             pic->reference ? AV_GET_BUFFER_FLAG_REF : 0);
+
+    if (r < 0 || !pic->f->buf[0]) {
+        av_log(s->avctx, AV_LOG_ERROR, "get_buffer() failed (%d %p)\n",
+               r, pic->f->data[0]);
+        return -1;
+    }
+
+    for (i = 0; pic->f->data[i]; i++) {
+        int offset = (EDGE_WIDTH >> (i ? s->chroma_y_shift : 0)) *
+                     pic->f->linesize[i] +
+                     (EDGE_WIDTH >> (i ? s->chroma_x_shift : 0));
+        pic->f->data[i] += offset;
+    }
+
+    pic->f->width  = s->avctx->width;
+    pic->f->height = s->avctx->height;
+
+    if (s->linesize && (s->linesize   != pic->f->linesize[0] ||
+                        s->uvlinesize != pic->f->linesize[1])) {
+        av_log(s->avctx, AV_LOG_ERROR,
+               "get_buffer() failed (stride changed)\n");
+        ff_mpeg_unref_picture(s->avctx, pic);
+        return -1;
+    }
+
+    if (pic->f->linesize[1] != pic->f->linesize[2]) {
+        av_log(s->avctx, AV_LOG_ERROR,
+               "get_buffer() failed (uv stride mismatch)\n");
+        ff_mpeg_unref_picture(s->avctx, pic);
+        return -1;
+    }
+
+    if (!s->edge_emu_buffer &&
+        (ret = frame_size_alloc(s, pic->f->linesize[0])) < 0) {
+        av_log(s->avctx, AV_LOG_ERROR,
+               "get_buffer() failed to allocate context scratch buffers.\n");
+        ff_mpeg_unref_picture(s->avctx, pic);
+        return ret;
+    }
+
+    return 0;
+}
+
+static int alloc_frame_buffer_decoder(MpegEncContext *s, Picture *pic)
+{
     int r, ret;
 
     pic->tf.f = pic->f;
     if (s->avctx->codec_id != AV_CODEC_ID_WMV3IMAGE &&
         s->avctx->codec_id != AV_CODEC_ID_VC1IMAGE  &&
         s->avctx->codec_id != AV_CODEC_ID_MSS2) {
-        if (edges_needed) {
-            pic->f->width  = s->avctx->width  + 2 * EDGE_WIDTH;
-            pic->f->height = s->avctx->height + 2 * EDGE_WIDTH;
-        }
-
         r = ff_thread_get_buffer(s->avctx, &pic->tf,
                                  pic->reference ? AV_GET_BUFFER_FLAG_REF : 0);
     } else {
@@ -372,18 +422,6 @@ static int alloc_frame_buffer(MpegEncContext *s, Picture *pic)
         av_log(s->avctx, AV_LOG_ERROR, "get_buffer() failed (%d %p)\n",
                r, pic->f->data[0]);
         return -1;
-    }
-
-    if (edges_needed) {
-        int i;
-        for (i = 0; pic->f->data[i]; i++) {
-            int offset = (EDGE_WIDTH >> (i ? s->chroma_y_shift : 0)) *
-                         pic->f->linesize[i] +
-                         (EDGE_WIDTH >> (i ? s->chroma_x_shift : 0));
-            pic->f->data[i] += offset;
-        }
-        pic->f->width  = s->avctx->width;
-        pic->f->height = s->avctx->height;
     }
 
     if (s->avctx->hwaccel) {
@@ -422,6 +460,14 @@ static int alloc_frame_buffer(MpegEncContext *s, Picture *pic)
     }
 
     return 0;
+}
+
+static int alloc_frame_buffer(MpegEncContext *s, Picture *pic)
+{
+    if (s->encoding)
+        return alloc_frame_buffer_encoder(s, pic);
+
+    return alloc_frame_buffer_decoder(s, pic);
 }
 
 static int alloc_picture_tables(MpegEncContext *s, Picture *pic)
