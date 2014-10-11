@@ -298,6 +298,7 @@ static av_cold int dct_init(MpegEncContext *s)
     return 0;
 }
 
+// decoding and encoding
 av_cold void ff_mpv_idct_init(MpegEncContext *s)
 {
     ff_idctdsp_init(&s->idsp, s->avctx);
@@ -489,6 +490,7 @@ do {\
 /**
  * Allocate a Picture.
  * The pixels are allocated/set by calling get_buffer() if shared = 0
+ * decoding and encoding
  */
 int ff_alloc_picture(MpegEncContext *s, Picture *pic, int shared)
 {
@@ -638,6 +640,7 @@ static void backup_duplicate_context(MpegEncContext *bak, MpegEncContext *src)
 #undef COPY
 }
 
+// decoding and encoding
 int ff_update_duplicate_context(MpegEncContext *dst, MpegEncContext *src)
 {
     MpegEncContext bak;
@@ -668,6 +671,7 @@ int ff_update_duplicate_context(MpegEncContext *dst, MpegEncContext *src)
     return 0;
 }
 
+// decoding only
 int ff_mpeg_update_thread_context(AVCodecContext *dst,
                                   const AVCodecContext *src)
 {
@@ -1134,6 +1138,7 @@ static int free_context_frame(MpegEncContext *s)
     return 0;
 }
 
+// decoding only
 int ff_mpv_common_frame_size_change(MpegEncContext *s)
 {
     int i, err = 0;
@@ -1271,6 +1276,7 @@ static void release_unused_pictures(AVCodecContext *avctx, Picture *picture)
 /**
  * generic function called after decoding
  * the header and before a frame is decoded.
+ * decoding only
  */
 int ff_mpv_frame_start(MpegEncContext *s, AVCodecContext *avctx)
 {
@@ -1482,6 +1488,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
 }
 
 /* called after a frame has been decoded. */
+// decoding only
 void ff_mpv_frame_end(MpegEncContext *s)
 {
 #if FF_API_XVMC
@@ -1502,6 +1509,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
 
 /**
  * Print debugging info for the given picture.
+ * decoding only
  */
 void ff_print_debug_info(MpegEncContext *s, Picture *p)
 {
@@ -1667,6 +1675,7 @@ static inline void add_dequant_dct(MpegEncContext *s,
 
 /**
  * Clean dc, ac, coded_block for the current non-intra MB.
+ * decoding and encoding
  */
 void ff_clean_intra_table_entries(MpegEncContext *s)
 {
@@ -1950,6 +1959,7 @@ skip_idct:
     }
 }
 
+// decoding and encoding (!)
 void ff_mpv_decode_mb(MpegEncContext *s, int16_t block[12][64])
 {
 #if !CONFIG_SMALL
@@ -1960,6 +1970,7 @@ void ff_mpv_decode_mb(MpegEncContext *s, int16_t block[12][64])
         mpv_decode_mb_internal(s, block, 0);
 }
 
+// decoding only
 void ff_mpeg_draw_horiz_band(MpegEncContext *s, int y, int h)
 {
     ff_draw_horiz_band(s->avctx, s->current_picture.f,
@@ -1967,6 +1978,7 @@ void ff_mpeg_draw_horiz_band(MpegEncContext *s, int y, int h)
                        s->first_field, s->low_delay);
 }
 
+// decoding and encoding
 void ff_init_block_index(MpegEncContext *s){ //FIXME maybe rename
     const int linesize   = s->current_picture.f->linesize[0]; //not s->linesize as this would be wrong for field pics
     const int uvlinesize = s->current_picture.f->linesize[1];
@@ -1999,6 +2011,7 @@ void ff_init_block_index(MpegEncContext *s){ //FIXME maybe rename
     }
 }
 
+// decoding only
 void ff_mpeg_flush(AVCodecContext *avctx){
     int i;
     MpegEncContext *s = avctx->priv_data;
@@ -2028,6 +2041,7 @@ void ff_mpeg_flush(AVCodecContext *avctx){
 
 /**
  * set qscale and update qscale dependent variables.
+ * decoding and encoding
  */
 void ff_set_qscale(MpegEncContext * s, int qscale)
 {
