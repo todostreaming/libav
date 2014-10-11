@@ -57,7 +57,12 @@ void ff_rv10_encode_picture_header(MpegEncContext *s, int picture_number)
     put_bits(&s->pb, 3, 0);     /* ignored */
 }
 
-FF_MPV_GENERIC_CLASS(rv10)
+static const AVClass rv10_class = {
+    .class_name = "rv10 encoder",
+    .item_name  = av_default_item_name,
+    .option     = ff_mpv_generic_options,
+    .version    = LIBAVUTIL_VERSION_INT,
+};
 
 AVCodec ff_rv10_encoder = {
     .name           = "rv10",
