@@ -39,6 +39,7 @@
 #include "msmpeg4.h"
 #include "qpeldsp.h"
 #include "thread.h"
+#include "wmv2.h"
 
 av_cold int ff_h263_decode_init(AVCodecContext *avctx)
 {
