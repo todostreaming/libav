@@ -222,7 +222,13 @@ static int tls_open(URLContext *h, const char *uri, int flags)
     gnutls_credentials_set(c->session, GNUTLS_CRD_CERTIFICATE, c->cred);
     gnutls_transport_set_ptr(c->session, (gnutls_transport_ptr_t)
                                          (intptr_t) c->fd);
-    gnutls_priority_set_direct(c->session, "NORMAL", NULL);
+
+    if (!c->listen) {
+        gnutls_priority_set_direct(c->session, "NORMAL", NULL);
+    } else if (!c->cert_file && !c->key_file) {
+        gnutls_priority_set_direct(c->session, "NORMAL:+ANON-ECDH:+ANON-DH", NULL);
+    }
+
     while (1) {
         ret = gnutls_handshake(c->session);
         if (ret == 0)
