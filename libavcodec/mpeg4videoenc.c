@@ -573,9 +573,9 @@ void ff_mpeg4_encode_mb(MpegEncContext *s, int16_t block[6][64],
             } else
                 s->qscale -= s->dquant;
 
-            if (!s->progressive_sequence) {
+            if (!s->mpeg2_specific.progressive_sequence) {
                 if (cbp)
-                    put_bits(&s->pb, 1, s->interlaced_dct);
+                    put_bits(&s->pb, 1, s->mpeg2_specific.interlaced_dct);
                 if (mb_type)                  // not direct mode
                     put_bits(&s->pb, 1, s->mv_type == MV_TYPE_FIELD);
             }
@@ -727,9 +727,9 @@ void ff_mpeg4_encode_mb(MpegEncContext *s, int16_t block[6][64],
                 if (s->dquant)
                     put_bits(pb2, 2, dquant_code[s->dquant + 2]);
 
-                if (!s->progressive_sequence) {
+                if (!s->mpeg2_specific.progressive_sequence) {
                     if (cbp)
-                        put_bits(pb2, 1, s->interlaced_dct);
+                        put_bits(pb2, 1, s->mpeg2_specific.interlaced_dct);
                     put_bits(pb2, 1, 0);
                 }
 
@@ -754,9 +754,9 @@ void ff_mpeg4_encode_mb(MpegEncContext *s, int16_t block[6][64],
                 if (s->dquant)
                     put_bits(pb2, 2, dquant_code[s->dquant + 2]);
 
-                assert(!s->progressive_sequence);
+                assert(!s->mpeg2_specific.progressive_sequence);
                 if (cbp)
-                    put_bits(pb2, 1, s->interlaced_dct);
+                    put_bits(pb2, 1, s->mpeg2_specific.interlaced_dct);
                 put_bits(pb2, 1, 1);
 
                 if (interleaved_stats)
@@ -784,8 +784,8 @@ void ff_mpeg4_encode_mb(MpegEncContext *s, int16_t block[6][64],
                          ff_h263_inter_MCBPC_code[cbpc + 16]);
                 put_bits(pb2, ff_h263_cbpy_tab[cbpy][1], ff_h263_cbpy_tab[cbpy][0]);
 
-                if (!s->progressive_sequence && cbp)
-                    put_bits(pb2, 1, s->interlaced_dct);
+                if (!s->mpeg2_specific.progressive_sequence && cbp)
+                    put_bits(pb2, 1, s->mpeg2_specific.interlaced_dct);
 
                 if (interleaved_stats)
                     s->misc_bits += get_bits_diff(s);
@@ -856,8 +856,8 @@ void ff_mpeg4_encode_mb(MpegEncContext *s, int16_t block[6][64],
         if (s->dquant)
             put_bits(dc_pb, 2, dquant_code[s->dquant + 2]);
 
-        if (!s->progressive_sequence)
-            put_bits(dc_pb, 1, s->interlaced_dct);
+        if (!s->mpeg2_specific.progressive_sequence)
+            put_bits(dc_pb, 1, s->mpeg2_specific.interlaced_dct);
 
         if (interleaved_stats)
             s->misc_bits += get_bits_diff(s);
@@ -1037,7 +1037,7 @@ static void mpeg4_encode_vol_header(MpegEncContext *s,
     put_bits(&s->pb, 1, 1);             /* marker bit */
     put_bits(&s->pb, 13, s->height);    /* vol height */
     put_bits(&s->pb, 1, 1);             /* marker bit */
-    put_bits(&s->pb, 1, s->progressive_sequence ? 0 : 1);
+    put_bits(&s->pb, 1, s->mpeg2_specific.progressive_sequence ? 0 : 1);
     put_bits(&s->pb, 1, 1);             /* obmc disable */
     if (vo_ver_id == 1)
         put_bits(&s->pb, 1, 0);       /* sprite enable */
@@ -1117,9 +1117,9 @@ void ff_mpeg4_encode_picture_header(MpegEncContext *s, int picture_number)
         put_bits(&s->pb, 1, s->no_rounding);    /* rounding type */
     }
     put_bits(&s->pb, 3, 0);     /* intra dc VLC threshold */
-    if (!s->progressive_sequence) {
+    if (!s->mpeg2_specific.progressive_sequence) {
         put_bits(&s->pb, 1, s->current_picture_ptr->f->top_field_first);
-        put_bits(&s->pb, 1, s->alternate_scan);
+        put_bits(&s->pb, 1, s->mpeg2_specific.alternate_scan);
     }
     // FIXME sprite stuff
 
@@ -1382,7 +1382,7 @@ void ff_mpeg4_encode_video_packet_header(MpegEncContext *s)
 #define VE AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_ENCODING_PARAM
 static const AVOption options[] = {
     { "data_partitioning", "Use data partitioning.",      OFFSET(data_partitioning), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, 1, VE },
-    { "alternate_scan",    "Enable alternate scantable.", OFFSET(alternate_scan),    AV_OPT_TYPE_INT, { .i64 = 0 }, 0, 1, VE },
+    { "alternate_scan",    "Enable alternate scantable.", OFFSET(mpeg2_specific.alternate_scan),    AV_OPT_TYPE_INT, { .i64 = 0 }, 0, 1, VE },
     FF_MPV_COMMON_OPTS
     { NULL },
 };

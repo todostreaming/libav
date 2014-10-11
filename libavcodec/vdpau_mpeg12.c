@@ -53,23 +53,23 @@ static int vdpau_mpeg_start_frame(AVCodecContext *avctx,
     }
 
     info->slice_count                = 0;
-    info->picture_structure          = s->picture_structure;
+    info->picture_structure          = s->mpeg2_specific.picture_structure;
     info->picture_coding_type        = s->pict_type;
-    info->intra_dc_precision         = s->intra_dc_precision;
-    info->frame_pred_frame_dct       = s->frame_pred_frame_dct;
-    info->concealment_motion_vectors = s->concealment_motion_vectors;
-    info->intra_vlc_format           = s->intra_vlc_format;
-    info->alternate_scan             = s->alternate_scan;
-    info->q_scale_type               = s->q_scale_type;
-    info->top_field_first            = s->top_field_first;
+    info->intra_dc_precision         = s->mpeg2_specific.intra_dc_precision;
+    info->frame_pred_frame_dct       = s->mpeg2_specific.frame_pred_frame_dct;
+    info->concealment_motion_vectors = s->mpeg2_specific.concealment_motion_vectors;
+    info->intra_vlc_format           = s->mpeg2_specific.intra_vlc_format;
+    info->alternate_scan             = s->mpeg2_specific.alternate_scan;
+    info->q_scale_type               = s->mpeg2_specific.q_scale_type;
+    info->top_field_first            = s->mpeg2_specific.top_field_first;
     // Both for MPEG-1 only, zero for MPEG-2:
-    info->full_pel_forward_vector    = s->full_pel[0];
-    info->full_pel_backward_vector   = s->full_pel[1];
+    info->full_pel_forward_vector    = s->mpeg2_specific.full_pel[0];
+    info->full_pel_backward_vector   = s->mpeg2_specific.full_pel[1];
     // For MPEG-1 fill both horizontal & vertical:
-    info->f_code[0][0]               = s->mpeg_f_code[0][0];
-    info->f_code[0][1]               = s->mpeg_f_code[0][1];
-    info->f_code[1][0]               = s->mpeg_f_code[1][0];
-    info->f_code[1][1]               = s->mpeg_f_code[1][1];
+    info->f_code[0][0]               = s->mpeg2_specific.mpeg_f_code[0][0];
+    info->f_code[0][1]               = s->mpeg2_specific.mpeg_f_code[0][1];
+    info->f_code[1][0]               = s->mpeg2_specific.mpeg_f_code[1][0];
+    info->f_code[1][1]               = s->mpeg2_specific.mpeg_f_code[1][1];
     for (i = 0; i < 64; ++i) {
         info->intra_quantizer_matrix[i]     = s->intra_matrix[i];
         info->non_intra_quantizer_matrix[i] = s->inter_matrix[i];

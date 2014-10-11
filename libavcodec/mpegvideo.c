@@ -116,7 +116,7 @@ static void dct_unquantize_mpeg2_intra_c(MpegEncContext *s,
     int i, level, nCoeffs;
     const uint16_t *quant_matrix;
 
-    if(s->alternate_scan) nCoeffs= 63;
+    if(s->mpeg2_specific.alternate_scan) nCoeffs= 63;
     else nCoeffs= s->block_last_index[n];
 
     if (n < 4)
@@ -147,7 +147,7 @@ static void dct_unquantize_mpeg2_intra_bitexact(MpegEncContext *s,
     const uint16_t *quant_matrix;
     int sum=-1;
 
-    if(s->alternate_scan) nCoeffs= 63;
+    if(s->mpeg2_specific.alternate_scan) nCoeffs= 63;
     else nCoeffs= s->block_last_index[n];
 
     if (n < 4)
@@ -180,7 +180,7 @@ static void dct_unquantize_mpeg2_inter_c(MpegEncContext *s,
     const uint16_t *quant_matrix;
     int sum=-1;
 
-    if(s->alternate_scan) nCoeffs= 63;
+    if(s->mpeg2_specific.alternate_scan) nCoeffs= 63;
     else nCoeffs= s->block_last_index[n];
 
     quant_matrix = s->inter_matrix;
@@ -306,7 +306,7 @@ av_cold void ff_mpv_idct_init(MpegEncContext *s)
     /* load & permutate scantables
      * note: only wmv uses different ones
      */
-    if (s->alternate_scan) {
+    if (s->mpeg2_specific.alternate_scan) {
         ff_init_scantable(s->idsp.idct_permutation, &s->inter_scantable, ff_alternate_vertical_scan);
         ff_init_scantable(s->idsp.idct_permutation, &s->intra_scantable, ff_alternate_vertical_scan);
     } else {
@@ -366,9 +366,9 @@ static int alloc_frame_buffer_encoder(MpegEncContext *s, Picture *pic)
     }
 
     for (i = 0; pic->f->data[i]; i++) {
-        int offset = (EDGE_WIDTH >> (i ? s->chroma_y_shift : 0)) *
+        int offset = (EDGE_WIDTH >> (i ? s->mpeg2_specific.chroma_y_shift : 0)) *
                      pic->f->linesize[i] +
-                     (EDGE_WIDTH >> (i ? s->chroma_x_shift : 0));
+                     (EDGE_WIDTH >> (i ? s->mpeg2_specific.chroma_x_shift : 0));
         pic->f->data[i] += offset;
     }
 
@@ -833,10 +833,9 @@ do {\
         }
 
     // MPEG2/interlacing info
-    memcpy(&s->progressive_sequence, &s1->progressive_sequence,
-           (char *) &s1->rtp_mode - (char *) &s1->progressive_sequence);
+    s->mpeg2_specific = s1->mpeg2_specific;
 
-    if (!s1->first_field) {
+    if (!s1->mpeg2_specific.first_field) {
         s->last_pict_type = s1->pict_type;
         if (s1->current_picture_ptr)
             s->last_lambda_for[s1->pict_type] = s1->current_picture_ptr->f->quality;
@@ -856,9 +855,9 @@ void ff_mpv_common_defaults(MpegEncContext *s)
     s->y_dc_scale_table      =
     s->c_dc_scale_table      = ff_mpeg1_dc_scale_table;
     s->chroma_qscale_table   = ff_default_chroma_qscale_table;
-    s->progressive_frame     = 1;
-    s->progressive_sequence  = 1;
-    s->picture_structure     = PICT_FRAME;
+    s->mpeg2_specific.progressive_frame     = 1;
+    s->mpeg2_specific.progressive_sequence  = 1;
+    s->mpeg2_specific.picture_structure     = PICT_FRAME;
 
     s->coded_picture_number  = 0;
     s->picture_number        = 0;
@@ -1032,7 +1031,7 @@ av_cold int ff_mpv_common_init(MpegEncContext *s)
     if (s->encoding && s->avctx->slices)
         nb_slices = s->avctx->slices;
 
-    if (s->avctx->codec_id == AV_CODEC_ID_MPEG2VIDEO && !s->progressive_sequence)
+    if (s->avctx->codec_id == AV_CODEC_ID_MPEG2VIDEO && !s->mpeg2_specific.progressive_sequence)
         s->mb_height = (s->height + 31) / 32 * 2;
     else
         s->mb_height = (s->height + 15) / 16;
@@ -1062,8 +1061,8 @@ av_cold int ff_mpv_common_init(MpegEncContext *s)
 
     /* set chroma shifts */
     av_pix_fmt_get_chroma_sub_sample(s->avctx->pix_fmt,
-                                     &s->chroma_x_shift,
-                                     &s->chroma_y_shift);
+                                     &s->mpeg2_specific.chroma_x_shift,
+                                     &s->mpeg2_specific.chroma_y_shift);
 
     /* convert fourcc to upper case */
     s->codec_tag          = avpriv_toupper4(s->avctx->codec_tag);
@@ -1217,7 +1216,7 @@ int ff_mpv_common_frame_size_change(MpegEncContext *s)
     s->current_picture_ptr      = NULL;
 
     // init
-    if (s->avctx->codec_id == AV_CODEC_ID_MPEG2VIDEO && !s->progressive_sequence)
+    if (s->avctx->codec_id == AV_CODEC_ID_MPEG2VIDEO && !s->mpeg2_specific.progressive_sequence)
         s->mb_height = (s->height + 31) / 32 * 2;
     else
         s->mb_height = (s->height + 15) / 16;
@@ -1385,16 +1384,16 @@ int ff_mpv_frame_start(MpegEncContext *s, AVCodecContext *avctx)
 
     s->current_picture_ptr = pic;
     // FIXME use only the vars from current_pic
-    s->current_picture_ptr->f->top_field_first = s->top_field_first;
+    s->current_picture_ptr->f->top_field_first = s->mpeg2_specific.top_field_first;
     if (s->avctx->codec_id == AV_CODEC_ID_MPEG1VIDEO ||
         s->avctx->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
-        if (s->picture_structure != PICT_FRAME)
+        if (s->mpeg2_specific.picture_structure != PICT_FRAME)
             s->current_picture_ptr->f->top_field_first =
-                (s->picture_structure == PICT_TOP_FIELD) == s->first_field;
+                (s->mpeg2_specific.picture_structure == PICT_TOP_FIELD) == s->mpeg2_specific.first_field;
     }
-    s->current_picture_ptr->f->interlaced_frame = !s->progressive_frame &&
-                                                 !s->progressive_sequence;
-    s->current_picture_ptr->field_picture      =  s->picture_structure != PICT_FRAME;
+    s->current_picture_ptr->f->interlaced_frame = !s->mpeg2_specific.progressive_frame &&
+                                                 !s->mpeg2_specific.progressive_sequence;
+    s->current_picture_ptr->field_picture      =  s->mpeg2_specific.picture_structure != PICT_FRAME;
 
     s->current_picture_ptr->f->pict_type = s->pict_type;
     // if (s->avctx->flags && CODEC_FLAG_QSCALE)
@@ -1419,14 +1418,14 @@ int ff_mpv_frame_start(MpegEncContext *s, AVCodecContext *avctx)
 
     if ((!s->last_picture_ptr || !s->last_picture_ptr->f->buf[0]) &&
         (s->pict_type != AV_PICTURE_TYPE_I ||
-         s->picture_structure != PICT_FRAME)) {
+         s->mpeg2_specific.picture_structure != PICT_FRAME)) {
         int h_chroma_shift, v_chroma_shift;
         av_pix_fmt_get_chroma_sub_sample(s->avctx->pix_fmt,
                                          &h_chroma_shift, &v_chroma_shift);
         if (s->pict_type != AV_PICTURE_TYPE_I)
             av_log(avctx, AV_LOG_ERROR,
                    "warning: first frame is no keyframe\n");
-        else if (s->picture_structure != PICT_FRAME)
+        else if (s->mpeg2_specific.picture_structure != PICT_FRAME)
             av_log(avctx, AV_LOG_INFO,
                    "allocate dummy last picture for field based first keyframe\n");
 
@@ -1501,10 +1500,10 @@ int ff_mpv_frame_start(MpegEncContext *s, AVCodecContext *avctx)
         return AVERROR_INVALIDDATA;
     }
 
-    if (s->picture_structure!= PICT_FRAME) {
+    if (s->mpeg2_specific.picture_structure!= PICT_FRAME) {
         int i;
         for (i = 0; i < 4; i++) {
-            if (s->picture_structure == PICT_BOTTOM_FIELD) {
+            if (s->mpeg2_specific.picture_structure == PICT_BOTTOM_FIELD) {
                 s->current_picture.f->data[i] +=
                     s->current_picture.f->linesize[i];
             }
@@ -1667,7 +1666,7 @@ static int lowest_referenced_row(MpegEncContext *s, int dir)
     int my_max = INT_MIN, my_min = INT_MAX, qpel_shift = !s->quarter_sample;
     int my, off, i, mvs;
 
-    if (s->picture_structure != PICT_FRAME || s->mcsel)
+    if (s->mpeg2_specific.picture_structure != PICT_FRAME || s->mcsel)
         goto unhandled;
 
     switch (s->mv_type) {
@@ -1766,7 +1765,7 @@ void ff_clean_intra_table_entries(MpegEncContext *s)
    s->mv_dir   : motion vector direction
    s->mv_type  : motion vector type
    s->mv       : motion vector
-   s->interlaced_dct : true if interlaced dct used (mpeg2)
+   s->mpeg2_specific.interlaced_dct : true if interlaced dct used (mpeg2)
  */
 static av_always_inline
 void mpv_decode_mb_internal(MpegEncContext *s, int16_t block[12][64],
@@ -1806,7 +1805,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
         } else {
             s->last_dc[0] =
             s->last_dc[1] =
-            s->last_dc[2] = 128 << s->intra_dc_precision;
+            s->last_dc[2] = 128 << s->mpeg2_specific.intra_dc_precision;
         }
     }
     else if (!is_mpeg12 && (s->h263_pred || s->h263_aic))
@@ -1840,8 +1839,8 @@ FF_ENABLE_DEPRECATION_WARNINGS
             }
         }
 
-        dct_linesize = linesize << s->interlaced_dct;
-        dct_offset   = s->interlaced_dct ? linesize : linesize * block_size;
+        dct_linesize = linesize << s->mpeg2_specific.interlaced_dct;
+        dct_offset   = s->mpeg2_specific.interlaced_dct ? linesize : linesize * block_size;
 
         if(readable){
             dest_y=  s->dest[0];
@@ -1907,7 +1906,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
                 add_dequant_dct(s, block[3], 3, dest_y + dct_offset + block_size, dct_linesize, s->qscale);
 
                 if (!CONFIG_GRAY || !(s->avctx->flags & CODEC_FLAG_GRAY)) {
-                    if (s->chroma_y_shift){
+                    if (s->mpeg2_specific.chroma_y_shift){
                         add_dequant_dct(s, block[4], 4, dest_cb, uvlinesize, s->chroma_qscale);
                         add_dequant_dct(s, block[5], 5, dest_cr, uvlinesize, s->chroma_qscale);
                     }else{
@@ -1926,19 +1925,19 @@ FF_ENABLE_DEPRECATION_WARNINGS
                 add_dct(s, block[3], 3, dest_y + dct_offset + block_size, dct_linesize);
 
                 if (!CONFIG_GRAY || !(s->avctx->flags & CODEC_FLAG_GRAY)) {
-                    if(s->chroma_y_shift){//Chroma420
+                    if(s->mpeg2_specific.chroma_y_shift){//Chroma420
                         add_dct(s, block[4], 4, dest_cb, uvlinesize);
                         add_dct(s, block[5], 5, dest_cr, uvlinesize);
                     }else{
                         //chroma422
-                        dct_linesize = uvlinesize << s->interlaced_dct;
-                        dct_offset   = s->interlaced_dct ? uvlinesize : uvlinesize * 8;
+                        dct_linesize = uvlinesize << s->mpeg2_specific.interlaced_dct;
+                        dct_offset   = s->mpeg2_specific.interlaced_dct ? uvlinesize : uvlinesize * 8;
 
                         add_dct(s, block[4], 4, dest_cb, dct_linesize);
                         add_dct(s, block[5], 5, dest_cr, dct_linesize);
                         add_dct(s, block[6], 6, dest_cb+dct_offset, dct_linesize);
                         add_dct(s, block[7], 7, dest_cr+dct_offset, dct_linesize);
-                        if(!s->chroma_x_shift){//Chroma444
+                        if(!s->mpeg2_specific.chroma_x_shift){//Chroma444
                             add_dct(s, block[8], 8, dest_cb+8, dct_linesize);
                             add_dct(s, block[9], 9, dest_cr+8, dct_linesize);
                             add_dct(s, block[10], 10, dest_cb+8+dct_offset, dct_linesize);
@@ -1960,7 +1959,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
                 put_dct(s, block[3], 3, dest_y + dct_offset + block_size, dct_linesize, s->qscale);
 
                 if (!CONFIG_GRAY || !(s->avctx->flags & CODEC_FLAG_GRAY)) {
-                    if(s->chroma_y_shift){
+                    if(s->mpeg2_specific.chroma_y_shift){
                         put_dct(s, block[4], 4, dest_cb, uvlinesize, s->chroma_qscale);
                         put_dct(s, block[5], 5, dest_cr, uvlinesize, s->chroma_qscale);
                     }else{
@@ -1979,19 +1978,19 @@ FF_ENABLE_DEPRECATION_WARNINGS
                 s->idsp.idct_put(dest_y + dct_offset + block_size, dct_linesize, block[3]);
 
                 if (!CONFIG_GRAY || !(s->avctx->flags & CODEC_FLAG_GRAY)) {
-                    if(s->chroma_y_shift){
+                    if(s->mpeg2_specific.chroma_y_shift){
                         s->idsp.idct_put(dest_cb, uvlinesize, block[4]);
                         s->idsp.idct_put(dest_cr, uvlinesize, block[5]);
                     }else{
 
-                        dct_linesize = uvlinesize << s->interlaced_dct;
-                        dct_offset   = s->interlaced_dct ? uvlinesize : uvlinesize * 8;
+                        dct_linesize = uvlinesize << s->mpeg2_specific.interlaced_dct;
+                        dct_offset   = s->mpeg2_specific.interlaced_dct ? uvlinesize : uvlinesize * 8;
 
                         s->idsp.idct_put(dest_cb,              dct_linesize, block[4]);
                         s->idsp.idct_put(dest_cr,              dct_linesize, block[5]);
                         s->idsp.idct_put(dest_cb + dct_offset, dct_linesize, block[6]);
                         s->idsp.idct_put(dest_cr + dct_offset, dct_linesize, block[7]);
-                        if(!s->chroma_x_shift){//Chroma444
+                        if(!s->mpeg2_specific.chroma_x_shift){//Chroma444
                             s->idsp.idct_put(dest_cb + 8,              dct_linesize, block[8]);
                             s->idsp.idct_put(dest_cr + 8,              dct_linesize, block[9]);
                             s->idsp.idct_put(dest_cb + 8 + dct_offset, dct_linesize, block[10]);
@@ -2004,8 +2003,8 @@ FF_ENABLE_DEPRECATION_WARNINGS
 skip_idct:
         if(!readable){
             s->hdsp.put_pixels_tab[0][0](s->dest[0], dest_y ,   linesize,16);
-            s->hdsp.put_pixels_tab[s->chroma_x_shift][0](s->dest[1], dest_cb, uvlinesize,16 >> s->chroma_y_shift);
-            s->hdsp.put_pixels_tab[s->chroma_x_shift][0](s->dest[2], dest_cr, uvlinesize,16 >> s->chroma_y_shift);
+            s->hdsp.put_pixels_tab[s->mpeg2_specific.chroma_x_shift][0](s->dest[1], dest_cb, uvlinesize,16 >> s->mpeg2_specific.chroma_y_shift);
+            s->hdsp.put_pixels_tab[s->mpeg2_specific.chroma_x_shift][0](s->dest[2], dest_cr, uvlinesize,16 >> s->mpeg2_specific.chroma_y_shift);
         }
     }
 }
@@ -2025,8 +2024,8 @@ void ff_mpv_decode_mb(MpegEncContext *s, int16_t block[12][64])
 void ff_mpeg_draw_horiz_band(MpegEncContext *s, int y, int h)
 {
     ff_draw_horiz_band(s->avctx, s->current_picture.f,
-                       s->last_picture.f, y, h, s->picture_structure,
-                       s->first_field, s->low_delay);
+                       s->last_picture.f, y, h, s->mpeg2_specific.picture_structure,
+                       s->mpeg2_specific.first_field, s->low_delay);
 }
 
 // decoding and encoding
@@ -2044,20 +2043,20 @@ void ff_init_block_index(MpegEncContext *s){ //FIXME maybe rename
     //block_index is not used by mpeg2, so it is not affected by chroma_format
 
     s->dest[0] = s->current_picture.f->data[0] + ((s->mb_x - 1) <<  mb_size);
-    s->dest[1] = s->current_picture.f->data[1] + ((s->mb_x - 1) << (mb_size - s->chroma_x_shift));
-    s->dest[2] = s->current_picture.f->data[2] + ((s->mb_x - 1) << (mb_size - s->chroma_x_shift));
+    s->dest[1] = s->current_picture.f->data[1] + ((s->mb_x - 1) << (mb_size - s->mpeg2_specific.chroma_x_shift));
+    s->dest[2] = s->current_picture.f->data[2] + ((s->mb_x - 1) << (mb_size - s->mpeg2_specific.chroma_x_shift));
 
-    if(!(s->pict_type==AV_PICTURE_TYPE_B && s->avctx->draw_horiz_band && s->picture_structure==PICT_FRAME))
+    if(!(s->pict_type==AV_PICTURE_TYPE_B && s->avctx->draw_horiz_band && s->mpeg2_specific.picture_structure==PICT_FRAME))
     {
-        if(s->picture_structure==PICT_FRAME){
+        if(s->mpeg2_specific.picture_structure==PICT_FRAME){
         s->dest[0] += s->mb_y *   linesize << mb_size;
-        s->dest[1] += s->mb_y * uvlinesize << (mb_size - s->chroma_y_shift);
-        s->dest[2] += s->mb_y * uvlinesize << (mb_size - s->chroma_y_shift);
+        s->dest[1] += s->mb_y * uvlinesize << (mb_size - s->mpeg2_specific.chroma_y_shift);
+        s->dest[2] += s->mb_y * uvlinesize << (mb_size - s->mpeg2_specific.chroma_y_shift);
         }else{
             s->dest[0] += (s->mb_y>>1) *   linesize << mb_size;
-            s->dest[1] += (s->mb_y>>1) * uvlinesize << (mb_size - s->chroma_y_shift);
-            s->dest[2] += (s->mb_y>>1) * uvlinesize << (mb_size - s->chroma_y_shift);
-            assert((s->mb_y&1) == (s->picture_structure == PICT_BOTTOM_FIELD));
+            s->dest[1] += (s->mb_y>>1) * uvlinesize << (mb_size - s->mpeg2_specific.chroma_y_shift);
+            s->dest[2] += (s->mb_y>>1) * uvlinesize << (mb_size - s->mpeg2_specific.chroma_y_shift);
+            assert((s->mb_y&1) == (s->mpeg2_specific.picture_structure == PICT_BOTTOM_FIELD));
         }
     }
 }

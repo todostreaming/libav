@@ -66,7 +66,7 @@ static int vaapi_mpeg2_start_frame(AVCodecContext *avctx, av_unused const uint8_
     pic_param->picture_coding_extension.bits.concealment_motion_vectors = s->concealment_motion_vectors;
     pic_param->picture_coding_extension.bits.q_scale_type       = s->q_scale_type;
     pic_param->picture_coding_extension.bits.intra_vlc_format   = s->intra_vlc_format;
-    pic_param->picture_coding_extension.bits.alternate_scan     = s->alternate_scan;
+    pic_param->picture_coding_extension.bits.alternate_scan     = s->mpeg2_specific.alternate_scan;
     pic_param->picture_coding_extension.bits.repeat_first_field = s->repeat_first_field;
     pic_param->picture_coding_extension.bits.progressive_frame  = s->progressive_frame;
     pic_param->picture_coding_extension.bits.is_first_field     = mpeg2_get_is_frame_start(s);

@@ -308,7 +308,7 @@ static void dct_unquantize_mpeg2_intra_mmx(MpegEncContext *s,
 
     assert(s->block_last_index[n]>=0);
 
-    if(s->alternate_scan) nCoeffs= 63; //FIXME
+    if(s->mpeg2_specific.alternate_scan) nCoeffs= 63; //FIXME
     else nCoeffs= s->intra_scantable.raster_end[ s->block_last_index[n] ];
 
     if (n < 4)
@@ -373,7 +373,7 @@ static void dct_unquantize_mpeg2_inter_mmx(MpegEncContext *s,
 
     assert(s->block_last_index[n]>=0);
 
-    if(s->alternate_scan) nCoeffs= 63; //FIXME
+    if(s->mpeg2_specific.alternate_scan) nCoeffs= 63; //FIXME
     else nCoeffs= s->intra_scantable.raster_end[ s->block_last_index[n] ];
 
         quant_matrix = s->inter_matrix;

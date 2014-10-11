@@ -152,7 +152,7 @@ static av_cold int encode_init(AVCodecContext *avctx)
             return -1;
         }
         /* Main or 4:2:2 */
-        avctx->profile = s->chroma_format == CHROMA_420 ? 4 : 0;
+        avctx->profile = s->mpeg2_specific.chroma_format == CHROMA_420 ? 4 : 0;
     }
 
     if (avctx->level == FF_LEVEL_UNKNOWN) {
@@ -162,7 +162,7 @@ static av_cold int encode_init(AVCodecContext *avctx)
             else
                 avctx->level = 2;                   /* High */
         } else {
-            if (avctx->profile != 1 && s->chroma_format != CHROMA_420) {
+            if (avctx->profile != 1 && s->mpeg2_specific.chroma_format != CHROMA_420) {
                 av_log(avctx, AV_LOG_ERROR,
                        "Only High(1) and 4:2:2(0) profiles support 4:2:2 color sampling\n");
                 return -1;
@@ -277,8 +277,8 @@ static void mpeg1_encode_sequence_header(MpegEncContext *s)
             put_bits(&s->pb, 3, s->avctx->profile); // profile
             put_bits(&s->pb, 4, s->avctx->level);   // level
 
-            put_bits(&s->pb, 1, s->progressive_sequence);
-            put_bits(&s->pb, 2, s->chroma_format);
+            put_bits(&s->pb, 1, s->mpeg2_specific.progressive_sequence);
+            put_bits(&s->pb, 2, s->mpeg2_specific.chroma_format);
             put_bits(&s->pb, 2, s->width  >> 12);
             put_bits(&s->pb, 2, s->height >> 12);
             put_bits(&s->pb, 12, v >> 18);          // bitrate ext
@@ -341,7 +341,7 @@ static inline void encode_mb_skip_run(MpegEncContext *s, int run)
 
 static av_always_inline void put_qscale(MpegEncContext *s)
 {
-    if (s->q_scale_type) {
+    if (s->mpeg2_specific.q_scale_type) {
         assert(s->qscale >= 1 && s->qscale <= 12);
         put_bits(&s->pb, 5, inv_non_linear_qscale[s->qscale]);
     } else {
@@ -401,7 +401,7 @@ void ff_mpeg1_encode_picture_header(MpegEncContext *s, int picture_number)
 
     put_bits(&s->pb, 1, 0);                     /* extra bit picture */
 
-    s->frame_pred_frame_dct = 1;
+    s->mpeg2_specific.frame_pred_frame_dct = 1;
     if (s->avctx->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
         put_header(s, EXT_START_CODE);
         put_bits(&s->pb, 4, 8);                 /* pic ext */
@@ -418,28 +418,28 @@ void ff_mpeg1_encode_picture_header(MpegEncContext *s, int picture_number)
         } else {
             put_bits(&s->pb, 8, 255);
         }
-        put_bits(&s->pb, 2, s->intra_dc_precision);
+        put_bits(&s->pb, 2, s->mpeg2_specific.intra_dc_precision);
 
-        assert(s->picture_structure == PICT_FRAME);
-        put_bits(&s->pb, 2, s->picture_structure);
-        if (s->progressive_sequence)
+        assert(s->mpeg2_specific.picture_structure == PICT_FRAME);
+        put_bits(&s->pb, 2, s->mpeg2_specific.picture_structure);
+        if (s->mpeg2_specific.progressive_sequence)
             put_bits(&s->pb, 1, 0);             /* no repeat */
         else
             put_bits(&s->pb, 1, s->current_picture_ptr->f->top_field_first);
         /* XXX: optimize the generation of this flag with entropy measures */
-        s->frame_pred_frame_dct = s->progressive_sequence;
+        s->mpeg2_specific.frame_pred_frame_dct = s->mpeg2_specific.progressive_sequence;
 
-        put_bits(&s->pb, 1, s->frame_pred_frame_dct);
-        put_bits(&s->pb, 1, s->concealment_motion_vectors);
-        put_bits(&s->pb, 1, s->q_scale_type);
-        put_bits(&s->pb, 1, s->intra_vlc_format);
-        put_bits(&s->pb, 1, s->alternate_scan);
-        put_bits(&s->pb, 1, s->repeat_first_field);
-        s->progressive_frame = s->progressive_sequence;
-        /* chroma_420_type */
-        put_bits(&s->pb, 1, s->chroma_format ==
-                            CHROMA_420 ? s->progressive_frame : 0);
-        put_bits(&s->pb, 1, s->progressive_frame);
+        put_bits(&s->pb, 1, s->mpeg2_specific.frame_pred_frame_dct);
+        put_bits(&s->pb, 1, s->mpeg2_specific.concealment_motion_vectors);
+        put_bits(&s->pb, 1, s->mpeg2_specific.q_scale_type);
+        put_bits(&s->pb, 1, s->mpeg2_specific.intra_vlc_format);
+        put_bits(&s->pb, 1, s->mpeg2_specific.alternate_scan);
+        put_bits(&s->pb, 1, s->mpeg2_specific.repeat_first_field);
+        s->mpeg2_specific.progressive_frame = s->mpeg2_specific.progressive_sequence;
+        /* mpeg2_specific.chroma_420_type */
+        put_bits(&s->pb, 1, s->mpeg2_specific.chroma_format ==
+                            CHROMA_420 ? s->mpeg2_specific.progressive_frame : 0);
+        put_bits(&s->pb, 1, s->mpeg2_specific.progressive_frame);
         put_bits(&s->pb, 1, 0);                 /* composite_display_flag */
     }
     if (s->scan_offset) {
@@ -496,11 +496,11 @@ static inline void put_mb_modes(MpegEncContext *s, int n, int bits,
                                 int has_mv, int field_motion)
 {
     put_bits(&s->pb, n, bits);
-    if (!s->frame_pred_frame_dct) {
+    if (!s->mpeg2_specific.frame_pred_frame_dct) {
         if (has_mv)
             /* motion_type: frame/field */
             put_bits(&s->pb, 2, 2 - field_motion);
-        put_bits(&s->pb, 1, s->interlaced_dct);
+        put_bits(&s->pb, 1, s->mpeg2_specific.interlaced_dct);
     }
 }
 
@@ -593,7 +593,7 @@ static void mpeg1_encode_block(MpegEncContext *s, int16_t *block, int n)
         encode_dc(s, diff, component);
         s->last_dc[component] = dc;
         i = 1;
-        if (s->intra_vlc_format)
+        if (s->mpeg2_specific.intra_vlc_format)
             table_vlc = ff_rl_mpeg2.table_vlc;
     } else {
         /* encode the first coefficient: needs to be done here because
@@ -758,7 +758,7 @@ static av_always_inline void mpeg1_encode_mb_internal(MpegEncContext *s,
                     }
                 } else {
                     put_bits(&s->pb, 3, 1);         /* motion only */
-                    if (!s->frame_pred_frame_dct)
+                    if (!s->mpeg2_specific.frame_pred_frame_dct)
                         put_bits(&s->pb, 2, 2);     /* motion_type: frame */
                     s->misc_bits += get_bits_diff(s);
                     // RAL: f_code parameter added
@@ -775,7 +775,7 @@ static av_always_inline void mpeg1_encode_mb_internal(MpegEncContext *s,
                 s->last_mv[0][1][0] = s->last_mv[0][0][0] = motion_x;
                 s->last_mv[0][1][1] = s->last_mv[0][0][1] = motion_y;
             } else {
-                assert(!s->frame_pred_frame_dct && s->mv_type == MV_TYPE_FIELD);
+                assert(!s->mpeg2_specific.frame_pred_frame_dct && s->mv_type == MV_TYPE_FIELD);
 
                 if (cbp) {
                     if (s->dquant) {
@@ -804,7 +804,7 @@ static av_always_inline void mpeg1_encode_mb_internal(MpegEncContext *s,
                 s->mv_bits += get_bits_diff(s);
             }
             if (cbp) {
-                if (s->chroma_y_shift) {
+                if (s->mpeg2_specific.chroma_y_shift) {
                     put_bits(&s->pb,
                              ff_mpeg12_mbPatTable[cbp][1],
                              ff_mpeg12_mbPatTable[cbp][0]);
@@ -830,7 +830,7 @@ static av_always_inline void mpeg1_encode_mb_internal(MpegEncContext *s,
                     }
                 } else {                        // No coded bloc pattern
                     put_bits(&s->pb, 5 - s->mv_dir, 2);
-                    if (!s->frame_pred_frame_dct)
+                    if (!s->mpeg2_specific.frame_pred_frame_dct)
                         put_bits(&s->pb, 2, 2); /* motion_type: frame */
                     s->qscale -= s->dquant;
                 }
@@ -863,7 +863,7 @@ static av_always_inline void mpeg1_encode_mb_internal(MpegEncContext *s,
                 }
             } else {
                 assert(s->mv_type == MV_TYPE_FIELD);
-                assert(!s->frame_pred_frame_dct);
+                assert(!s->mpeg2_specific.frame_pred_frame_dct);
                 if (cbp) {                      // With coded bloc pattern
                     if (s->dquant) {
                         if (s->mv_dir == MV_DIR_FORWARD)
@@ -911,7 +911,7 @@ static av_always_inline void mpeg1_encode_mb_internal(MpegEncContext *s,
             }
             s->mv_bits += get_bits_diff(s);
             if (cbp) {
-                if (s->chroma_y_shift) {
+                if (s->mpeg2_specific.chroma_y_shift) {
                     put_bits(&s->pb,
                              ff_mpeg12_mbPatTable[cbp][1],
                              ff_mpeg12_mbPatTable[cbp][0]);
@@ -937,7 +937,7 @@ static av_always_inline void mpeg1_encode_mb_internal(MpegEncContext *s,
 void ff_mpeg1_encode_mb(MpegEncContext *s, int16_t block[6][64],
                         int motion_x, int motion_y)
 {
-    if (s->chroma_format == CHROMA_420)
+    if (s->mpeg2_specific.chroma_format == CHROMA_420)
         mpeg1_encode_mb_internal(s, block, motion_x, motion_y, 6);
     else
         mpeg1_encode_mb_internal(s, block, motion_x, motion_y, 8);
@@ -964,7 +964,7 @@ av_cold void ff_mpeg1_encode_init(MpegEncContext *s)
         }
 
         init_uni_ac_vlc(&ff_rl_mpeg1, uni_mpeg1_ac_vlc_len);
-        if (s->intra_vlc_format)
+        if (s->mpeg2_specific.intra_vlc_format)
             init_uni_ac_vlc(&ff_rl_mpeg2, uni_mpeg2_ac_vlc_len);
 
         /* build unified dc encoding tables */
@@ -1030,7 +1030,7 @@ av_cold void ff_mpeg1_encode_init(MpegEncContext *s)
         s->min_qcoeff = -2047;
         s->max_qcoeff = 2047;
     }
-    if (s->intra_vlc_format) {
+    if (s->mpeg2_specific.intra_vlc_format) {
         s->intra_ac_vlc_length      =
         s->intra_ac_vlc_last_length = uni_mpeg2_ac_vlc_len;
     } else {
@@ -1042,10 +1042,11 @@ av_cold void ff_mpeg1_encode_init(MpegEncContext *s)
 }
 
 #define OFFSET(x) offsetof(MpegEncContext, x)
+#define OFFSET(x) offsetof(MpegEncContext, x)
 #define VE AV_OPT_FLAG_ENCODING_PARAM | AV_OPT_FLAG_VIDEO_PARAM
 #define COMMON_OPTS                                                           \
     { "intra_vlc",           "Use MPEG-2 intra VLC table.",                   \
-      OFFSET(intra_vlc_format),    AV_OPT_TYPE_INT, { .i64 = 0 }, 0, 1, VE }, \
+      OFFSET(mpeg2_specific.intra_vlc_format),    AV_OPT_TYPE_INT, { .i64 = 0 }, 0, 1, VE }, \
     { "drop_frame_timecode", "Timecode is in drop frame format.",             \
       OFFSET(drop_frame_timecode), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, 1, VE }, \
     { "scan_offset",         "Reserve space for SVCD scan offset user data.", \
@@ -1059,8 +1060,8 @@ static const AVOption mpeg1_options[] = {
 
 static const AVOption mpeg2_options[] = {
     COMMON_OPTS
-    { "non_linear_quant", "Use nonlinear quantizer.",    OFFSET(q_scale_type),   AV_OPT_TYPE_INT, { .i64 = 0 }, 0, 1, VE },
-    { "alternate_scan",   "Enable alternate scantable.", OFFSET(alternate_scan), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, 1, VE },
+    { "non_linear_quant", "Use nonlinear quantizer.",    OFFSET(mpeg2_specific.q_scale_type),   AV_OPT_TYPE_INT, { .i64 = 0 }, 0, 1, VE },
+    { "alternate_scan",   "Enable alternate scantable.", OFFSET(mpeg2_specific.alternate_scan), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, 1, VE },
     FF_MPV_COMMON_OPTS
     { NULL },
 };

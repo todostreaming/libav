@@ -142,7 +142,7 @@ void ff_mjpeg_encode_mb(MpegEncContext *s, int16_t block[6][64])
     for(i=0;i<5;i++) {
         encode_block(s, block[i], i);
     }
-    if (s->chroma_format == CHROMA_420) {
+    if (s->mpeg2_specific.chroma_format == CHROMA_420) {
         encode_block(s, block[5], 5);
     } else {
         encode_block(s, block[6], 6);

@@ -81,11 +81,11 @@ static void mpeg_er_decode_mb(void *opaque, int ref, int mv_dir,
                  s->mb_y * 16 * s->linesize +
                  s->mb_x * 16;
     s->dest[1] = s->current_picture.f->data[1] +
-                 s->mb_y * (16 >> s->chroma_y_shift) * s->uvlinesize +
-                 s->mb_x * (16 >> s->chroma_x_shift);
+                 s->mb_y * (16 >> s->mpeg2_specific.chroma_y_shift) * s->uvlinesize +
+                 s->mb_x * (16 >> s->mpeg2_specific.chroma_x_shift);
     s->dest[2] = s->current_picture.f->data[2] +
-                 s->mb_y * (16 >> s->chroma_y_shift) * s->uvlinesize +
-                 s->mb_x * (16 >> s->chroma_x_shift);
+                 s->mb_y * (16 >> s->mpeg2_specific.chroma_y_shift) * s->uvlinesize +
+                 s->mb_x * (16 >> s->mpeg2_specific.chroma_x_shift);
 
     assert(ref == 0);
     ff_mpv_decode_mb(s, s->block);

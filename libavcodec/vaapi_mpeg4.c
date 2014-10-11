@@ -85,7 +85,7 @@ static int vaapi_mpeg4_start_frame(AVCodecContext *avctx, av_unused const uint8_
     pic_param->vop_fields.bits.vop_rounding_type        = s->no_rounding;
     pic_param->vop_fields.bits.intra_dc_vlc_thr         = mpeg4_get_intra_dc_vlc_thr(ctx);
     pic_param->vop_fields.bits.top_field_first          = s->top_field_first;
-    pic_param->vop_fields.bits.alternate_vertical_scan_flag = s->alternate_scan;
+    pic_param->vop_fields.bits.alternate_vertical_scan_flag = s->mpeg2_specific.alternate_scan;
     pic_param->vop_fcode_forward                        = s->f_code;
     pic_param->vop_fcode_backward                       = s->b_code;
     pic_param->vop_time_increment_resolution            = avctx->time_base.den;

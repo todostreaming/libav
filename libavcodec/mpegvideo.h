@@ -446,33 +446,36 @@ typedef struct MpegEncContext {
     uint8_t *vbv_delay_ptr;  ///< pointer to vbv_delay in the bitstream
 
     /* MPEG-2-specific - I wished not to have to support this mess. */
-    int progressive_sequence;
-    int mpeg_f_code[2][2];
+    struct {
+        int progressive_sequence;
+        int mpeg_f_code[2][2];
 
-    // picture structure defines are loaded from mpegutils.h
-    int picture_structure;
+        // picture structure defines are loaded from mpegutils.h
+        int picture_structure;
 
-    int intra_dc_precision;
-    int frame_pred_frame_dct;
-    int top_field_first;
-    int concealment_motion_vectors;
-    int q_scale_type;
-    int intra_vlc_format;
-    int alternate_scan;
-    int repeat_first_field;
-    int chroma_420_type;
-    int chroma_format;
-#define CHROMA_420 1
-#define CHROMA_422 2
-    int chroma_x_shift;//depend on pix_format, that depend on chroma_format
-    int chroma_y_shift;
+        int intra_dc_precision;
+        int frame_pred_frame_dct;
+        int top_field_first;    /// Decoding only?
+        int concealment_motion_vectors;
+        int q_scale_type;
+        int intra_vlc_format;
+        int alternate_scan;
+        int repeat_first_field;
+        int chroma_420_type;    /// Decoding only?
+        int chroma_format;
+    #define CHROMA_420 1
+    #define CHROMA_422 2
+        int chroma_x_shift;//depend on pix_format, that depend on chroma_format
+        int chroma_y_shift;
 
-    int progressive_frame;
-    int full_pel[2];
-    int interlaced_dct;
-    int first_field;         ///< is 1 for the first field of a field picture 0 otherwise
-    int drop_frame_timecode; ///< timecode is in drop frame format.
-    int scan_offset;         ///< reserve space for SVCD scan offset user data.
+        int progressive_frame;
+        int full_pel[2];        /// Decoding only?
+        int interlaced_dct;
+        int first_field;         ///< is 1 for the first field of a field picture 0 otherwise
+    } mpeg2_specific;
+
+    int drop_frame_timecode; ///< timecode is in drop frame format. AVOption encoder-only
+    int scan_offset;         ///< reserve space for SVCD scan offset user data. AVOption encoder-only
 
     /* RTP specific */
     int rtp_mode;

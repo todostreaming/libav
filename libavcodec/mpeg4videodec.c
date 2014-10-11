@@ -1324,9 +1324,9 @@ static int mpeg4_decode_mb(MpegEncContext *s, int16_t block[6][64])
         cbp = (cbpc & 3) | (cbpy << 2);
         if (dquant)
             ff_set_qscale(s, s->qscale + quant_tab[get_bits(&s->gb, 2)]);
-        if ((!s->progressive_sequence) &&
+        if ((!s->mpeg2_specific.progressive_sequence) &&
             (cbp || (s->workaround_bugs & FF_BUG_XVID_ILACE)))
-            s->interlaced_dct = get_bits1(&s->gb);
+            s->mpeg2_specific.interlaced_dct = get_bits1(&s->gb);
 
         s->mv_dir = MV_DIR_FORWARD;
         if ((cbpc & 16) == 0) {
@@ -1340,7 +1340,7 @@ static int mpeg4_decode_mb(MpegEncContext *s, int16_t block[6][64])
                 my             = get_amv(ctx, 1);
                 s->mv[0][0][0] = mx;
                 s->mv[0][0][1] = my;
-            } else if ((!s->progressive_sequence) && get_bits1(&s->gb)) {
+            } else if ((!s->mpeg2_specific.progressive_sequence) && get_bits1(&s->gb)) {
                 s->current_picture.mb_type[xy] = MB_TYPE_16x8 |
                                                  MB_TYPE_L0   |
                                                  MB_TYPE_INTERLACED;
@@ -1463,9 +1463,9 @@ static int mpeg4_decode_mb(MpegEncContext *s, int16_t block[6][64])
                     ff_set_qscale(s, s->qscale + get_bits1(&s->gb) * 4 - 2);
             }
 
-            if (!s->progressive_sequence) {
+            if (!s->mpeg2_specific.progressive_sequence) {
                 if (cbp)
-                    s->interlaced_dct = get_bits1(&s->gb);
+                    s->mpeg2_specific.interlaced_dct = get_bits1(&s->gb);
 
                 if (!IS_DIRECT(mb_type) && get_bits1(&s->gb)) {
                     mb_type |= MB_TYPE_16x8 | MB_TYPE_INTERLACED;
@@ -1586,8 +1586,8 @@ intra:
         if (dquant)
             ff_set_qscale(s, s->qscale + quant_tab[get_bits(&s->gb, 2)]);
 
-        if (!s->progressive_sequence)
-            s->interlaced_dct = get_bits1(&s->gb);
+        if (!s->mpeg2_specific.progressive_sequence)
+            s->mpeg2_specific.interlaced_dct = get_bits1(&s->gb);
 
         s->bdsp.clear_blocks(s->block[0]);
         /* decode each block */
@@ -1760,9 +1760,9 @@ static int decode_vol_header(Mpeg4DecContext *ctx, GetBitContext *gb)
             }
         }
 
-        s->progressive_sequence  =
-        s->progressive_frame     = get_bits1(gb) ^ 1;
-        s->interlaced_dct        = 0;
+        s->mpeg2_specific.progressive_sequence  =
+        s->mpeg2_specific.progressive_frame     = get_bits1(gb) ^ 1;
+        s->mpeg2_specific.interlaced_dct        = 0;
         if (!get_bits1(gb) && (s->avctx->debug & FF_DEBUG_PICT_INFO))
             av_log(s->avctx, AV_LOG_INFO,           /* OBMC Disable */
                    "MPEG4 OBMC not supported (very likely buggy encoder)\n");
@@ -2157,7 +2157,7 @@ static int decode_vop_header(Mpeg4DecContext *ctx, GetBitContext *gb)
                             ROUNDED_DIV(s->last_non_b_time - s->pp_time, ctx->t_frame)) * 2;
         s->pb_field_time = (ROUNDED_DIV(s->time, ctx->t_frame) -
                             ROUNDED_DIV(s->last_non_b_time - s->pp_time, ctx->t_frame)) * 2;
-        if (!s->progressive_sequence) {
+        if (!s->mpeg2_specific.progressive_sequence) {
             if (s->pp_field_time <= s->pb_field_time || s->pb_field_time <= 1)
                 return FRAME_SKIPPED;
         }
@@ -2208,14 +2208,14 @@ static int decode_vop_header(Mpeg4DecContext *ctx, GetBitContext *gb)
             skip_bits_long(gb, ctx->cplx_estimation_trash_b);
 
         ctx->intra_dc_threshold = ff_mpeg4_dc_threshold[get_bits(gb, 3)];
-        if (!s->progressive_sequence) {
-            s->top_field_first = get_bits1(gb);
-            s->alternate_scan  = get_bits1(gb);
+        if (!s->mpeg2_specific.progressive_sequence) {
+            s->mpeg2_specific.top_field_first = get_bits1(gb);
+            s->mpeg2_specific.alternate_scan  = get_bits1(gb);
         } else
-            s->alternate_scan = 0;
+            s->mpeg2_specific.alternate_scan = 0;
     }
 
-    if (s->alternate_scan) {
+    if (s->mpeg2_specific.alternate_scan) {
         ff_init_scantable(s->idsp.idct_permutation, &s->inter_scantable,   ff_alternate_vertical_scan);
         ff_init_scantable(s->idsp.idct_permutation, &s->intra_scantable,   ff_alternate_vertical_scan);
         ff_init_scantable(s->idsp.idct_permutation, &s->intra_h_scantable, ff_alternate_vertical_scan);
@@ -2267,8 +2267,8 @@ static int decode_vop_header(Mpeg4DecContext *ctx, GetBitContext *gb)
                    "qp:%d fc:%d,%d %s size:%d pro:%d alt:%d top:%d %spel part:%d resync:%d w:%d a:%d rnd:%d vot:%d%s dc:%d ce:%d/%d/%d\n",
                    s->qscale, s->f_code, s->b_code,
                    s->pict_type == AV_PICTURE_TYPE_I ? "I" : (s->pict_type == AV_PICTURE_TYPE_P ? "P" : (s->pict_type == AV_PICTURE_TYPE_B ? "B" : "S")),
-                   gb->size_in_bits, s->progressive_sequence, s->alternate_scan,
-                   s->top_field_first, s->quarter_sample ? "q" : "h",
+                   gb->size_in_bits, s->mpeg2_specific.progressive_sequence, s->mpeg2_specific.alternate_scan,
+                   s->mpeg2_specific.top_field_first, s->quarter_sample ? "q" : "h",
                    s->data_partitioning, ctx->resync_marker,
                    ctx->num_sprite_warping_points, s->sprite_warping_accuracy,
                    1 - s->no_rounding, s->vo_type,

@@ -69,7 +69,7 @@ static void fill_picture_parameters(AVCodecContext *avctx,
     pp->bMVprecisionAndChromaRelation= 0; /* FIXME */
     pp->bChromaFormat                = s->chroma_format;
     pp->bPicScanFixed                = 1;
-    pp->bPicScanMethod               = s->alternate_scan ? 1 : 0;
+    pp->bPicScanMethod               = s->mpeg2_specific.alternate_scan ? 1 : 0;
     pp->bPicReadbackRequests         = 0;
     pp->bRcontrol                    = 0;
     pp->bPicSpatialResid8            = 0;
@@ -93,7 +93,7 @@ static void fill_picture_parameters(AVCodecContext *avctx,
                                        (s->concealment_motion_vectors <<  9) |
                                        (s->q_scale_type               <<  8) |
                                        (s->intra_vlc_format           <<  7) |
-                                       (s->alternate_scan             <<  6) |
+                                       (s->mpeg2_specific.alternate_scan             <<  6) |
                                        (s->repeat_first_field         <<  5) |
                                        (s->chroma_420_type            <<  4) |
                                        (s->progressive_frame          <<  3);

@@ -146,7 +146,7 @@ int ff_mpeg4_set_direct_mv(MpegEncContext *s, int mx, int my)
             int field_select = s->next_picture.ref_index[0][4 * mb_index + 2 * i];
             s->field_select[0][i] = field_select;
             s->field_select[1][i] = i;
-            if (s->top_field_first) {
+            if (s->mpeg2_specific.top_field_first) {
                 time_pp = s->pp_field_time - field_select + i;
                 time_pb = s->pb_field_time - field_select + i;
             } else {

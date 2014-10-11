@@ -65,13 +65,13 @@ static int vdpau_mpeg4_start_frame(AVCodecContext *avctx,
     info->vop_fcode_forward                 = s->f_code;
     info->vop_fcode_backward                = s->b_code;
     info->resync_marker_disable             = !ctx->resync_marker;
-    info->interlaced                        = !s->progressive_sequence;
+    info->interlaced                        = !s->mpeg2_specific.progressive_sequence;
     info->quant_type                        = s->mpeg_quant;
     info->quarter_sample                    = s->quarter_sample;
     info->short_video_header                = avctx->codec->id == AV_CODEC_ID_H263;
     info->rounding_control                  = s->no_rounding;
-    info->alternate_vertical_scan_flag      = s->alternate_scan;
-    info->top_field_first                   = s->top_field_first;
+    info->alternate_vertical_scan_flag      = s->mpeg2_specific.alternate_scan;
+    info->top_field_first                   = s->mpeg2_specific.top_field_first;
     for (i = 0; i < 64; ++i) {
         info->intra_quantizer_matrix[i]     = s->intra_matrix[i];
         info->non_intra_quantizer_matrix[i] = s->inter_matrix[i];

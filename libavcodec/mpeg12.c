@@ -110,13 +110,13 @@ av_cold void ff_mpeg12_common_init(MpegEncContext *s)
 {
 
     s->y_dc_scale_table =
-    s->c_dc_scale_table = ff_mpeg2_dc_scale_table[s->intra_dc_precision];
+    s->c_dc_scale_table = ff_mpeg2_dc_scale_table[s->mpeg2_specific.intra_dc_precision];
 
 }
 
 void ff_mpeg1_clean_buffers(MpegEncContext *s)
 {
-    s->last_dc[0] = 1 << (7 + s->intra_dc_precision);
+    s->last_dc[0] = 1 << (7 + s->mpeg2_specific.intra_dc_precision);
     s->last_dc[1] = s->last_dc[0];
     s->last_dc[2] = s->last_dc[0];
     memset(s->last_mv, 0, sizeof(s->last_mv));

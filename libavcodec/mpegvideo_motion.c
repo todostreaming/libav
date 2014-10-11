@@ -282,14 +282,14 @@ void mpeg_motion_internal(MpegEncContext *s,
         uvsrc_x = s->mb_x * 8 + mx;
         uvsrc_y = mb_y * 8 + my;
     } else {
-        if (s->chroma_y_shift) {
+        if (s->mpeg2_specific.chroma_y_shift) {
             mx      = motion_x / 2;
             my      = motion_y / 2;
             uvdxy   = ((my & 1) << 1) | (mx & 1);
             uvsrc_x = s->mb_x * 8 + (mx >> 1);
             uvsrc_y = (mb_y << (3 - field_based)) + (my >> 1);
         } else {
-            if (s->chroma_x_shift) {
+            if (s->mpeg2_specific.chroma_x_shift) {
                 // Chroma422
                 mx      = motion_x / 2;
                 uvdxy   = ((motion_y & 1) << 1) | (mx & 1);
@@ -358,10 +358,10 @@ void mpeg_motion_internal(MpegEncContext *s,
     pix_op[0][dxy](dest_y, ptr_y, linesize, h);
 
     if (!CONFIG_GRAY || !(s->avctx->flags & CODEC_FLAG_GRAY)) {
-        pix_op[s->chroma_x_shift][uvdxy]
-            (dest_cb, ptr_cb, uvlinesize, h >> s->chroma_y_shift);
-        pix_op[s->chroma_x_shift][uvdxy]
-            (dest_cr, ptr_cr, uvlinesize, h >> s->chroma_y_shift);
+        pix_op[s->mpeg2_specific.chroma_x_shift][uvdxy]
+            (dest_cb, ptr_cb, uvlinesize, h >> s->mpeg2_specific.chroma_y_shift);
+        pix_op[s->mpeg2_specific.chroma_x_shift][uvdxy]
+            (dest_cr, ptr_cr, uvlinesize, h >> s->mpeg2_specific.chroma_y_shift);
     }
     if (!is_mpeg12 && (CONFIG_H261_ENCODER || CONFIG_H261_DECODER) &&
         s->out_format == FMT_H261) {
@@ -879,7 +879,7 @@ static av_always_inline void mpv_motion_internal(MpegEncContext *s,
                       dir, ref_picture, qpix_op, pix_op);
         break;
     case MV_TYPE_FIELD:
-        if (s->picture_structure == PICT_FRAME) {
+        if (s->mpeg2_specific.picture_structure == PICT_FRAME) {
             if (!is_mpeg12 && s->quarter_sample) {
                 for (i = 0; i < 2; i++)
                     qpel_motion(s, dest_y, dest_cb, dest_cr,
@@ -899,8 +899,8 @@ static av_always_inline void mpv_motion_internal(MpegEncContext *s,
                                   s->mv[dir][1][0], s->mv[dir][1][1], 8, mb_y);
             }
         } else {
-            if (s->picture_structure != s->field_select[dir][0] + 1 &&
-                s->pict_type != AV_PICTURE_TYPE_B && !s->first_field) {
+            if (s->mpeg2_specific.picture_structure != s->field_select[dir][0] + 1 &&
+                s->pict_type != AV_PICTURE_TYPE_B && !s->mpeg2_specific.first_field) {
                 ref_picture = s->current_picture_ptr->f->data;
             }
 
@@ -914,8 +914,8 @@ static av_always_inline void mpv_motion_internal(MpegEncContext *s,
         for (i = 0; i < 2; i++) {
             uint8_t **ref2picture;
 
-            if (s->picture_structure == s->field_select[dir][i] + 1
-                || s->pict_type == AV_PICTURE_TYPE_B || s->first_field) {
+            if (s->mpeg2_specific.picture_structure == s->field_select[dir][i] + 1
+                || s->pict_type == AV_PICTURE_TYPE_B || s->mpeg2_specific.first_field) {
                 ref2picture = ref_picture;
             } else {
                 ref2picture = s->current_picture_ptr->f->data;
@@ -928,12 +928,12 @@ static av_always_inline void mpv_motion_internal(MpegEncContext *s,
                         8, mb_y >> 1);
 
             dest_y  += 16 * s->linesize;
-            dest_cb += (16 >> s->chroma_y_shift) * s->uvlinesize;
-            dest_cr += (16 >> s->chroma_y_shift) * s->uvlinesize;
+            dest_cb += (16 >> s->mpeg2_specific.chroma_y_shift) * s->uvlinesize;
+            dest_cr += (16 >> s->mpeg2_specific.chroma_y_shift) * s->uvlinesize;
         }
         break;
     case MV_TYPE_DMV:
-        if (s->picture_structure == PICT_FRAME) {
+        if (s->mpeg2_specific.picture_structure == PICT_FRAME) {
             for (i = 0; i < 2; i++) {
                 int j;
                 for (j = 0; j < 2; j++)
@@ -946,7 +946,7 @@ static av_always_inline void mpv_motion_internal(MpegEncContext *s,
         } else {
             for (i = 0; i < 2; i++) {
                 mpeg_motion(s, dest_y, dest_cb, dest_cr,
-                            s->picture_structure != i + 1,
+                            s->mpeg2_specific.picture_structure != i + 1,
                             ref_picture, pix_op,
                             s->mv[dir][2 * i][0], s->mv[dir][2 * i][1],
                             16, mb_y >> 1);
@@ -956,7 +956,7 @@ static av_always_inline void mpv_motion_internal(MpegEncContext *s,
 
                 /* opposite parity is always in the same frame if this is
                  * second field */
-                if (!s->first_field) {
+                if (!s->mpeg2_specific.first_field) {
                     ref_picture = s->current_picture_ptr->f->data;
                 }
             }
