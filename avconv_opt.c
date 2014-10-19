@@ -1366,7 +1366,7 @@ static int configure_complex_filters(void)
 
 static int open_output_file(OptionsContext *o, const char *filename)
 {
-    AVFormatContext *oc;
+    AVFormatContext *oc = NULL;
     int i, j, err;
     AVOutputFormat *file_oformat;
     OutputFile *of;
@@ -1396,15 +1396,6 @@ static int open_output_file(OptionsContext *o, const char *filename)
     if (!strcmp(filename, "-"))
         filename = "pipe:";
 
-    oc = avformat_alloc_context();
-    if (!oc) {
-        print_error(filename, AVERROR(ENOMEM));
-        exit_program(1);
-    }
-    of->ctx = oc;
-    if (o->recording_time != INT64_MAX)
-        oc->duration = o->recording_time;
-
     if (o->format) {
         file_oformat = av_guess_format(o->format, NULL, NULL);
         if (!file_oformat) {
@@ -1419,6 +1410,28 @@ static int open_output_file(OptionsContext *o, const char *filename)
             exit_program(1);
         }
     }
+    if (!(file_oformat->flags & AVFMT_NOFILE))
+        /* test if it already exists to avoid losing precious files */
+        assert_file_overwrite(filename);
+
+    err = avformat_open_output(&oc, filename, file_oformat, &of->opts);
+    if (err < 0) {
+        print_error(filename, err);
+        exit_program(1);
+    }
+
+    /* check filename in case of an image number is expected */
+    if (oc->oformat->flags & AVFMT_NEEDNUMBER) {
+        if (!av_filename_number_test(oc->filename)) {
+            print_error(oc->filename, AVERROR(EINVAL));
+            exit_program(1);
+        }
+    }
+
+    of->ctx = oc;
+    if (o->recording_time != INT64_MAX)
+        oc->duration = o->recording_time;
+
 
     oc->oformat = file_oformat;
     oc->interrupt_callback = int_cb;
@@ -1611,27 +1624,6 @@ loop_end:
                option->help ? option->help : "", nb_output_files - 1, filename);
     }
     av_dict_free(&unused_opts);
-
-    /* check filename in case of an image number is expected */
-    if (oc->oformat->flags & AVFMT_NEEDNUMBER) {
-        if (!av_filename_number_test(oc->filename)) {
-            print_error(oc->filename, AVERROR(EINVAL));
-            exit_program(1);
-        }
-    }
-
-    if (!(oc->oformat->flags & AVFMT_NOFILE)) {
-        /* test if it already exists to avoid losing precious files */
-        assert_file_overwrite(filename);
-
-        /* open the file */
-        if ((err = avio_open2(&oc->pb, filename, AVIO_FLAG_WRITE,
-                              &oc->interrupt_callback,
-                              &of->opts)) < 0) {
-            print_error(filename, err);
-            exit_program(1);
-        }
-    }
 
     if (o->mux_preload) {
         uint8_t buf[64];
