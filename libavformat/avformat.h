@@ -1613,6 +1613,36 @@ void avformat_close_input(AVFormatContext **s);
  * @addtogroup lavf_encoding
  * @{
  */
+
+/**
+ * Open prepare an output AVFormatContext so it can be passed to
+ * avformat_write_header(). Internally avformat_alloc_context() and
+ * avio_open2() will be called.
+ *
+ * @param ps       Pointer to user-supplied AVFormatContext allocated by
+ *                 avformat_alloc_context().
+ *                 May be a pointer to NULL, in which case an AVFormatContext
+ *                 is allocated by this function and written into ps.
+ *                 @note The user-supplied AVFormatContext will be freed
+ *                 on failure. If the supplied context provides the
+ *                 AVIOContext, it will be freed as well.
+ * @param filename Name of the file to create or open.
+ * @param fmt      If non-NULL, this parameter forces a specific input
+ *                 format, otherwise the format is autodetected.
+ * @param options  An AVDictionary filled with AVIOContext and protocol-private
+ *                 options.
+ *                 On return this parameter will be destroyed and replaced
+ *                 with a dict containing options that were not found.
+ *                 May be NULL.
+ *
+ * @return 0 on success, negative AVERROR on failure.
+ *
+ * @see av_opt_find, av_dict_set, avio_open2, avformat_write_header()
+ */
+
+int avformat_open_output(AVFormatContext **ps, const char *filename,
+                         AVOutputFormat *fmt, AVDictionary **options);
+
 /**
  * Allocate the stream private data and write the stream header to
  * an output media file.

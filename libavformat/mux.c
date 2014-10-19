@@ -235,6 +235,70 @@ fail:
     return ret;
 }
 
+int avformat_open_output(AVFormatContext **ps, const char *filename,
+                         AVOutputFormat *fmt,
+                         AVDictionary **options)
+{
+    AVFormatContext *s = *ps;
+    int ret = 0;
+    AVDictionary *tmp = NULL;
+
+    if (!s && !(s = avformat_alloc_context()))
+        return AVERROR(ENOMEM);
+
+    if (fmt)
+        s->oformat = fmt;
+    else
+        s->oformat = av_guess_format(NULL, filename, NULL);
+
+    if (!s->oformat) {
+        av_log(s, AV_LOG_ERROR,
+               "Unable to find a suitable output format for %s\n",
+               filename);
+        ret = AVERROR(EINVAL);
+        goto fail;
+    }
+
+    if (s->oformat->flags & AVFMT_NEEDNUMBER) {
+        if (!av_filename_number_test(filename)) {
+            ret = AVERROR(EINVAL);
+            goto fail;
+        }
+    }
+
+    av_strlcpy(s->filename, filename, sizeof(s->filename));
+
+    if (options)
+        av_dict_copy(&tmp, *options, 0);
+
+    if ((ret = av_opt_set_dict(s, &tmp)) < 0)
+        goto fail;
+
+    if (!(s->oformat->flags & AVFMT_NOFILE) && !s->pb) {
+        if ((ret = avio_open2(&s->pb, filename, AVIO_FLAG_WRITE,
+                              &s->interrupt_callback,
+                              &tmp)) < 0) {
+            goto fail;
+        }
+    }
+
+    if (options) {
+        av_dict_free(options);
+        *options = tmp;
+    }
+
+    *ps = s;
+
+    return 0;
+
+fail:
+    av_dict_free(&tmp);
+    avio_close(s->pb);
+    avformat_free_context(s);
+    *ps = NULL;
+    return ret;
+}
+
 int avformat_write_header(AVFormatContext *s, AVDictionary **options)
 {
     int ret = 0;
