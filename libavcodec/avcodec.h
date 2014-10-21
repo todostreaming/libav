@@ -917,6 +917,12 @@ enum AVPacketSideDataType {
      * Stereoscopic 3D information in form of the AVStereo3D struct.
      */
     AV_PKT_DATA_STEREO3D,
+
+    /**
+     * This side data contains the PCI and SDI packets from a DVD
+     * NAV Pack.
+     */
+    AV_PKT_DATA_NAV_PACK,
 };
 
 typedef struct AVPacketSideData {
@@ -3499,6 +3505,16 @@ int av_packet_copy_props(AVPacket *dst, const AVPacket *src);
  *               converted
  */
 void av_packet_rescale_ts(AVPacket *pkt, AVRational tb_src, AVRational tb_dst);
+
+
+/**
+ * Provide a textual representation of the AVPacket data
+ *
+ * @param buf      Output buffer
+ * @param buf_size Output buffer size
+ * @param pkt      AVPacket to inspect
+ */
+void av_packet_string(char *buf, int buf_size, AVPacket *pkt);
 
 /**
  * @}

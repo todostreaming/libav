@@ -883,6 +883,13 @@ static int read_frame_internal(AVFormatContext *s, AVPacket *pkt)
 
         /* read next packet */
         ret = ff_read_packet(s, &cur_pkt);
+        {
+            char buf[1024];
+
+            av_packet_string(buf, sizeof(buf), &cur_pkt);
+            av_log(s, AV_LOG_ERROR|AV_LOG_C(123), "%s\n", buf);
+        }
+
         if (ret < 0) {
             if (ret == AVERROR(EAGAIN))
                 return ret;

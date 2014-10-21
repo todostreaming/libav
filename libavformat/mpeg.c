@@ -114,10 +114,17 @@ static int mpegps_probe(AVProbeData *p)
     return score;
 }
 
+#define NAV_PCI_SIZE 980
+#define NAV_DSI_SIZE 1018
+
+#define NAV_PACK_SIZE NAV_PCI_SIZE + NAV_DSI_SIZE
+
 typedef struct MpegDemuxContext {
     int32_t header_state;
     unsigned char psm_es_type[256];
     int sofdec;
+    int nav_pack_found;
+    uint8_t nav_pack[NAV_PACK_SIZE];
 } MpegDemuxContext;
 
 static int mpegps_read_header(AVFormatContext *s)
@@ -215,6 +222,24 @@ static long mpegps_psm_parse(MpegDemuxContext *m, AVIOContext *pb)
     return 2 + psm_length;
 }
 
+static void parse_nav_pack(AVFormatContext *s)
+{
+    MpegDemuxContext *m = s->priv_data;
+    int size, startcode, len;
+    avio_read(s->pb, m->nav_pack, NAV_PCI_SIZE);
+    startcode = find_next_start_code(s->pb, &size, &m->header_state);
+    len = avio_rb16(s->pb);
+    if (startcode != PRIVATE_STREAM_2 ||
+        size != NAV_DSI_SIZE + 2 ||
+        len != NAV_DSI_SIZE) {
+        avio_skip(s->pb, size - 2);
+        return;
+    }
+    avio_read(s->pb, m->nav_pack + NAV_PCI_SIZE, NAV_DSI_SIZE);
+
+    m->nav_pack_found = 1;
+}
+
 /* read the next PES header. Return its position in ppos
  * (if not NULL), and its start code, pts and dts.
  */
@@ -252,20 +277,27 @@ redo:
         goto redo;
     }
     if (startcode == PRIVATE_STREAM_2) {
-        len = avio_rb16(s->pb);
+        int64_t cur_pos = avio_tell(s->pb);
+        int sofdec_len = avio_rb16(s->pb);
         if (!m->sofdec) {
-            while (len-- >= 6) {
+            while (sofdec_len-- >= 6) {
                 if (avio_r8(s->pb) == 'S') {
                     uint8_t buf[5];
                     avio_read(s->pb, buf, sizeof(buf));
                     m->sofdec = !memcmp(buf, "ofdec", 5);
-                    len -= sizeof(buf);
+                    sofdec_len -= sizeof(buf);
                     break;
                 }
             }
             m->sofdec -= !m->sofdec;
         }
-        avio_skip(s->pb, len);
+
+        if (m->sofdec > 0 || len != NAV_PCI_SIZE) {
+            avio_skip(s->pb, sofdec_len);
+        } else {
+            avio_seek(s->pb, cur_pos + 2, SEEK_SET);
+            parse_nav_pack(s);
+        }
         goto redo;
     }
     if (startcode == PROGRAM_STREAM_MAP) {
@@ -530,6 +562,15 @@ found:
     pkt->dts          = dts;
     pkt->pos          = dummy_pos;
     pkt->stream_index = st->index;
+
+    if (st->codec->codec_type == AVMEDIA_TYPE_VIDEO && m->nav_pack_found) {
+        uint8_t *data = av_packet_new_side_data(pkt, AV_PKT_DATA_NAV_PACK,
+                                                NAV_PACK_SIZE);
+        if (data)
+            memcpy(data, m->nav_pack, NAV_PACK_SIZE);
+        m->nav_pack_found = 0;
+    }
+
     av_dlog(s, "%d: pts=%0.3f dts=%0.3f size=%d\n",
             pkt->stream_index, pkt->pts / 90000.0, pkt->dts / 90000.0,
             pkt->size);

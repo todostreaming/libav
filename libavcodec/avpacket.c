@@ -393,3 +393,16 @@ void av_packet_rescale_ts(AVPacket *pkt, AVRational src_tb, AVRational dst_tb)
     if (pkt->convergence_duration > 0)
         pkt->convergence_duration = av_rescale_q(pkt->convergence_duration, src_tb, dst_tb);
 }
+
+void av_packet_string(char *buf, int buf_size, AVPacket *pkt)
+{
+    snprintf(buf, buf_size,
+             "Packet pts %"PRId64" dts %"PRId64" position %"PRId64" "
+             "duration %d convergence_duration %d "
+             "flags %s stream_index %d "
+             "side_data_elems %d",
+             pkt->pts, pkt->dts, pkt->pos,
+             pkt->duration, pkt->convergence_duration,
+             pkt->flags, pkt->stream_index,
+             pkt->side_data_elems);
+}
