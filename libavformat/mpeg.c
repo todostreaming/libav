@@ -281,7 +281,7 @@ static void mpegps_ps2_parse(MpegDemuxContext *m, AVIOContext *pb)
     if (m->sofdec > 0 || len != NAV_PCI_SIZE) {
         avio_skip(pb, sofdec_len);
     } else {
-        avio_seek(pb, cur_pos, SEEK_SET);
+        avio_seek(pb, cur_pos + 2, SEEK_SET);
         parse_nav_pack(m, pb);
     }
 }
