@@ -222,22 +222,47 @@ static long mpegps_psm_parse(MpegDemuxContext *m, AVIOContext *pb)
     return 2 + psm_length;
 }
 
-static void parse_nav_pack(AVFormatContext *s)
+static void parse_nav_pack(MpegDemuxContext *m, AVIOContext *pb)
 {
-    MpegDemuxContext *m = s->priv_data;
     int size, startcode, len;
-    avio_read(s->pb, m->nav_pack, NAV_PCI_SIZE);
-    startcode = find_next_start_code(s->pb, &size, &m->header_state);
-    len = avio_rb16(s->pb);
+    avio_read(pb, m->nav_pack, NAV_PCI_SIZE);
+    startcode = find_next_start_code(pb, &size, &m->header_state);
+    len = avio_rb16(pb);
     if (startcode != PRIVATE_STREAM_2 ||
-        size != NAV_DSI_SIZE + 2 ||
+    //    size != NAV_DSI_SIZE + 2 ||
         len != NAV_DSI_SIZE) {
-        avio_skip(s->pb, size - 2);
+        avio_skip(pb, size - 2);
         return;
     }
-    avio_read(s->pb, m->nav_pack + NAV_PCI_SIZE, NAV_DSI_SIZE);
+    avio_read(pb, m->nav_pack + NAV_PCI_SIZE, NAV_DSI_SIZE);
 
     m->nav_pack_found = 1;
+}
+
+static void mpegps_ps2_parse(MpegDemuxContext *m, AVIOContext *pb)
+{
+    int64_t cur_pos = avio_tell(pb);
+    int len;
+    int sofdec_len = len = avio_rb16(pb);
+    if (!m->sofdec) {
+        while (sofdec_len-- >= 6) {
+            if (avio_r8(pb) == 'S') {
+                uint8_t buf[5];
+                avio_read(pb, buf, sizeof(buf));
+                m->sofdec = !memcmp(buf, "ofdec", 5);
+                sofdec_len -= sizeof(buf);
+                break;
+            }
+        }
+        m->sofdec -= !m->sofdec;
+    }
+
+    if (m->sofdec > 0 || len != NAV_PCI_SIZE) {
+        avio_skip(pb, sofdec_len);
+    } else {
+        avio_seek(pb, cur_pos, SEEK_SET);
+        parse_nav_pack(m, pb);
+    }
 }
 
 /* read the next PES header. Return its position in ppos
@@ -277,27 +302,7 @@ redo:
         goto redo;
     }
     if (startcode == PRIVATE_STREAM_2) {
-        int64_t cur_pos = avio_tell(s->pb);
-        int sofdec_len = avio_rb16(s->pb);
-        if (!m->sofdec) {
-            while (sofdec_len-- >= 6) {
-                if (avio_r8(s->pb) == 'S') {
-                    uint8_t buf[5];
-                    avio_read(s->pb, buf, sizeof(buf));
-                    m->sofdec = !memcmp(buf, "ofdec", 5);
-                    sofdec_len -= sizeof(buf);
-                    break;
-                }
-            }
-            m->sofdec -= !m->sofdec;
-        }
-
-        if (m->sofdec > 0 || len != NAV_PCI_SIZE) {
-            avio_skip(s->pb, sofdec_len);
-        } else {
-            avio_seek(s->pb, cur_pos + 2, SEEK_SET);
-            parse_nav_pack(s);
-        }
+        mpegps_ps2_parse(m, s->pb);
         goto redo;
     }
     if (startcode == PROGRAM_STREAM_MAP) {
