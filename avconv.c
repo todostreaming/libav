@@ -1070,6 +1070,8 @@ static void do_streamcopy(InputStream *ist, OutputStream *ost, const AVPacket *p
 
     av_init_packet(&opkt);
 
+    av_packet_copy_props(&opkt, pkt);
+
     if ((!ost->frame_number && !(pkt->flags & AV_PKT_FLAG_KEY)) &&
         !ost->copy_initial_nonkeyframes)
         return;

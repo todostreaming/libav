@@ -44,6 +44,7 @@ typedef struct PacketDesc {
     int size;
     int unwritten_size;
     int flags;
+    AVPacket pkt;
     struct PacketDesc *next;
 } PacketDesc;
 
@@ -90,6 +91,25 @@ extern AVOutputFormat ff_mpeg1vcd_muxer;
 extern AVOutputFormat ff_mpeg2dvd_muxer;
 extern AVOutputFormat ff_mpeg2svcd_muxer;
 extern AVOutputFormat ff_mpeg2vob_muxer;
+
+static void printPCI(uint8_t *ps2buf) {
+    /* PCI structure? */
+    uint32_t startpts = AV_RB32(ps2buf + 0x0d);
+    uint32_t endpts = AV_RB32(ps2buf + 0x11);
+    uint8_t hours = ((ps2buf[0x19] >> 4) * 10) + (ps2buf[0x19] & 0x0f);
+    uint8_t mins  = ((ps2buf[0x1a] >> 4) * 10) + (ps2buf[0x1a] & 0x0f);
+    uint8_t secs  = ((ps2buf[0x1b] >> 4) * 10) + (ps2buf[0x1b] & 0x0f);
+
+    av_log(NULL, AV_LOG_WARNING, "PCI MPEG: startpts %d | endpts %d | %d:%d:%d\n", startpts, endpts, hours, mins, secs);
+}
+
+static void printDSI(uint8_t *ps2buf) {
+    /* DSI structure? */
+    uint8_t hours = ((ps2buf[0x1d] >> 4) * 10) + (ps2buf[0x1d] & 0x0f);
+    uint8_t mins  = ((ps2buf[0x1e] >> 4) * 10) + (ps2buf[0x1e] & 0x0f);
+    uint8_t secs  = ((ps2buf[0x1f] >> 4) * 10) + (ps2buf[0x1f] & 0x0f);
+    av_log(NULL, AV_LOG_WARNING, "DSI MPEG: %d:%d:%d\n", hours, mins, secs);
+}
 
 static int put_pack_header(AVFormatContext *ctx, uint8_t *buf,
                            int64_t timestamp)
@@ -569,7 +589,7 @@ static int get_nb_frames(AVFormatContext *ctx, StreamInfo *stream, int len)
 }
 
 /* flush the packet on stream stream_index */
-static int flush_packet(AVFormatContext *ctx, int stream_index,
+static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
                         int64_t pts, int64_t dts, int64_t scr, int trailer_size)
 {
     MpegMuxContext *s  = ctx->priv_data;
@@ -608,16 +628,21 @@ static int flush_packet(AVFormatContext *ctx, int stream_index,
             }
         } else if (s->is_dvd) {
             if (stream->align_iframe || s->packet_number == 0) {
-                int PES_bytes_to_fill = s->packet_size - size - 10;
-
-                if (pts != AV_NOPTS_VALUE) {
-                    if (dts != pts)
-                        PES_bytes_to_fill -= 5 + 5;
-                    else
-                        PES_bytes_to_fill -= 5;
+                if (pkt && pkt->side_data) {
+                    av_log(NULL, AV_LOG_INFO, "flushing side_data: align_iframe %d | packet_number %d | bytes_to_iframe %d\n", stream->align_iframe, s->packet_number, stream->bytes_to_iframe);
                 }
+                if (pkt && pkt->side_data) {
+                    int PES_bytes_to_fill = s->packet_size - size - 10;
 
-                if (stream->bytes_to_iframe == 0 || s->packet_number == 0) {
+                    if (pts != AV_NOPTS_VALUE) {
+                        if (dts != pts)
+                            PES_bytes_to_fill -= 5 + 5;
+                        else
+                            PES_bytes_to_fill -= 5;
+                    }
+
+                    av_log(NULL, AV_LOG_INFO, "flush_packet with side_data\n");
+
                     size     = put_system_header(ctx, buf_ptr, 0);
                     buf_ptr += size;
                     size     = buf_ptr - buffer;
@@ -625,30 +650,51 @@ static int flush_packet(AVFormatContext *ctx, int stream_index,
 
                     avio_wb32(ctx->pb, PRIVATE_STREAM_2);
                     avio_wb16(ctx->pb, 0x03d4);     // length
-                    avio_w8(ctx->pb, 0x00);         // substream ID, 00=PCI
-                    for (i = 0; i < 979; i++)
-                        avio_w8(ctx->pb, 0x00);
+                    avio_write(ctx->pb, pkt->side_data[0].data, 980);
+                    printPCI(pkt->side_data[0].data);
 
                     avio_wb32(ctx->pb, PRIVATE_STREAM_2);
-                    avio_wb16(ctx->pb, 0x03fa);     // length
-                    avio_w8(ctx->pb, 0x01);         // substream ID, 01=DSI
-                    for (i = 0; i < 1017; i++)
-                        avio_w8(ctx->pb, 0x00);
+                    avio_wb16(ctx->pb, 1018);     // length
+                    avio_write(ctx->pb, pkt->side_data[0].data + 980, 1018);
+                    printDSI(pkt->side_data[0].data + 980);
 
                     memset(buffer, 0, 128);
                     buf_ptr = buffer;
                     s->packet_number++;
-                    stream->align_iframe = 0;
-                    // FIXME: rounding and first few bytes of each packet
-                    scr        += s->packet_size * 90000LL /
-                                  (s->mux_rate * 50LL);
-                    size        = put_pack_header(ctx, buf_ptr, scr);
-                    s->last_scr = scr;
-                    buf_ptr    += size;
-                    /* GOP Start */
-                } else if (stream->bytes_to_iframe < PES_bytes_to_fill) {
-                    pad_packet_bytes = PES_bytes_to_fill -
-                                       stream->bytes_to_iframe;
+
+                    //if (stream->bytes_to_iframe == 0 || s->packet_number == 0) {
+                    //    size     = put_system_header(ctx, buf_ptr, 0);
+                    //    buf_ptr += size;
+                    //    size     = buf_ptr - buffer;
+                    //    avio_write(ctx->pb, buffer, size);
+
+                    //    avio_wb32(ctx->pb, PRIVATE_STREAM_2);
+                    //    avio_wb16(ctx->pb, 0x03d4);     // length
+                    //    avio_w8(ctx->pb, 0x00);         // substream ID, 00=PCI
+                    //    for (i = 0; i < 979; i++)
+                    //        avio_w8(ctx->pb, 0x00);
+
+                    //    avio_wb32(ctx->pb, PRIVATE_STREAM_2);
+                    //    avio_wb16(ctx->pb, 0x03fa);     // length
+                    //    avio_w8(ctx->pb, 0x01);         // substream ID, 01=DSI
+                    //    for (i = 0; i < 1017; i++)
+                    //        avio_w8(ctx->pb, 0x00);
+
+                    //    memset(buffer, 0, 128);
+                    //    buf_ptr = buffer;
+                    //    s->packet_number++;
+                    //    stream->align_iframe = 0;
+                    //    // FIXME: rounding and first few bytes of each packet
+                    //    scr        += s->packet_size * 90000LL /
+                    //                  (s->mux_rate * 50LL);
+                    //    size        = put_pack_header(ctx, buf_ptr, scr);
+                    //    s->last_scr = scr;
+                    //    buf_ptr    += size;
+                    //    /* GOP Start */
+                    //} else if (stream->bytes_to_iframe < PES_bytes_to_fill) {
+                    //    pad_packet_bytes = PES_bytes_to_fill -
+                    //                       stream->bytes_to_iframe;
+                    //}
                 }
             }
         } else {
@@ -927,6 +973,7 @@ static int remove_decoded_packets(AVFormatContext *ctx, int64_t scr)
             }
             stream->buffer_index    -= pkt_desc->size;
             stream->predecode_packet = pkt_desc->next;
+            av_packet_unref(&pkt_desc->pkt);
             av_freep(&pkt_desc);
         }
     }
@@ -1027,11 +1074,13 @@ retry:
                 timestamp_packet->dts / 90000.0,
                 timestamp_packet->pts / 90000.0,
                 scr / 90000.0, best_i);
-        es_size = flush_packet(ctx, best_i, timestamp_packet->pts,
+        if (timestamp_packet->pkt.side_data)
+            av_log(NULL, AV_LOG_INFO, "side data\n");
+        es_size = flush_packet(ctx, best_i, &timestamp_packet->pkt, timestamp_packet->pts,
                                timestamp_packet->dts, scr, trailer_size);
     } else {
         assert(av_fifo_size(stream->fifo) == trailer_size);
-        es_size = flush_packet(ctx, best_i, AV_NOPTS_VALUE, AV_NOPTS_VALUE, scr,
+        es_size = flush_packet(ctx, best_i, NULL, AV_NOPTS_VALUE, AV_NOPTS_VALUE, scr,
                                trailer_size);
     }
 
@@ -1104,6 +1153,8 @@ static int mpeg_mux_write_packet(AVFormatContext *ctx, AVPacket *pkt)
     pkt_desc->dts            = dts;
     pkt_desc->unwritten_size =
     pkt_desc->size           = size;
+    if (st->codec->codec_type == AVMEDIA_TYPE_VIDEO)
+        av_packet_ref(&pkt_desc->pkt, pkt);
     if (!stream->predecode_packet)
         stream->predecode_packet = pkt_desc;
     stream->next_packet = &pkt_desc->next;
@@ -1113,9 +1164,7 @@ static int mpeg_mux_write_packet(AVFormatContext *ctx, AVPacket *pkt)
 
     if (s->is_dvd) {
         // min VOBU length 0.4 seconds (mpucoder)
-        if (is_iframe &&
-            (s->packet_number == 0 ||
-             (pts - stream->vobu_start_pts >= 36000))) {
+        if (pkt->side_data) {
             stream->bytes_to_iframe = av_fifo_size(stream->fifo);
             stream->align_iframe    = 1;
             stream->vobu_start_pts  = pts;
