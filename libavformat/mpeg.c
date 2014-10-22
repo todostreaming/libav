@@ -31,6 +31,25 @@
 
 #define MAX_SYNC_SIZE 100000
 
+static void printPCI(uint8_t *ps2buf) {
+    /* PCI structure? */
+    uint32_t startpts = AV_RB32(ps2buf + 0x0d);
+    uint32_t endpts = AV_RB32(ps2buf + 0x11);
+    uint8_t hours = ((ps2buf[0x19] >> 4) * 10) + (ps2buf[0x19] & 0x0f);
+    uint8_t mins  = ((ps2buf[0x1a] >> 4) * 10) + (ps2buf[0x1a] & 0x0f);
+    uint8_t secs  = ((ps2buf[0x1b] >> 4) * 10) + (ps2buf[0x1b] & 0x0f);
+
+    av_log(NULL, AV_LOG_WARNING, "PCI MPEG: startpts %d | endpts %d | %d:%d:%d\n", startpts, endpts, hours, mins, secs);
+}
+
+static void printDSI(uint8_t *ps2buf) {
+    /* DSI structure? */
+    uint8_t hours = ((ps2buf[0x1d] >> 4) * 10) + (ps2buf[0x1d] & 0x0f);
+    uint8_t mins  = ((ps2buf[0x1e] >> 4) * 10) + (ps2buf[0x1e] & 0x0f);
+    uint8_t secs  = ((ps2buf[0x1f] >> 4) * 10) + (ps2buf[0x1f] & 0x0f);
+    av_log(NULL, AV_LOG_WARNING, "DSI MPEG: %d:%d:%d\n", hours, mins, secs);
+}
+
 static int check_pes(uint8_t *p, uint8_t *end)
 {
     int pes1;
@@ -226,6 +245,7 @@ static void parse_nav_pack(MpegDemuxContext *m, AVIOContext *pb)
 {
     int size, startcode, len;
     avio_read(pb, m->nav_pack, NAV_PCI_SIZE);
+    printPCI(m->nav_pack);
     startcode = find_next_start_code(pb, &size, &m->header_state);
     len = avio_rb16(pb);
     if (startcode != PRIVATE_STREAM_2 ||
@@ -235,6 +255,7 @@ static void parse_nav_pack(MpegDemuxContext *m, AVIOContext *pb)
         return;
     }
     avio_read(pb, m->nav_pack + NAV_PCI_SIZE, NAV_DSI_SIZE);
+    printDSI(m->nav_pack + NAV_PCI_SIZE);
 
     m->nav_pack_found = 1;
 }
@@ -573,6 +594,8 @@ found:
                                                 NAV_PACK_SIZE);
         if (data)
             memcpy(data, m->nav_pack, NAV_PACK_SIZE);
+
+        pkt->flags = AV_PKT_FLAG_KEY;
         m->nav_pack_found = 0;
     }
 

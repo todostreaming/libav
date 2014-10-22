@@ -887,7 +887,7 @@ static int read_frame_internal(AVFormatContext *s, AVPacket *pkt)
             char buf[1024];
 
             av_packet_string(buf, sizeof(buf), &cur_pkt);
-            av_log(s, AV_LOG_ERROR|AV_LOG_C(123), "%s\n", buf);
+            //av_log(s, AV_LOG_ERROR|AV_LOG_C(123), "%s\n", buf);
         }
 
         if (ret < 0) {
