@@ -398,8 +398,8 @@ void av_packet_string(char *buf, int buf_size, AVPacket *pkt)
 {
     snprintf(buf, buf_size,
              "Packet pts %"PRId64" dts %"PRId64" position %"PRId64" "
-             "duration %d convergence_duration %d "
-             "flags %s stream_index %d "
+             "duration %d convergence_duration %"PRId64" "
+             "flags %d stream_index %d "
              "side_data_elems %d",
              pkt->pts, pkt->dts, pkt->pos,
              pkt->duration, pkt->convergence_duration,
