@@ -39,7 +39,7 @@ static void printPCI(uint8_t *ps2buf) {
     uint8_t mins  = ((ps2buf[0x1a] >> 4) * 10) + (ps2buf[0x1a] & 0x0f);
     uint8_t secs  = ((ps2buf[0x1b] >> 4) * 10) + (ps2buf[0x1b] & 0x0f);
 
-    av_log(NULL, AV_LOG_WARNING, "PCI MPEG: startpts %d | endpts %d | %d:%d:%d\n", startpts, endpts, hours, mins, secs);
+    av_log(NULL, AV_LOG_WARNING, "PCI MPEG: startpts %u | endpts %u | %d:%d:%d\n", startpts, endpts, hours, mins, secs);
 }
 
 static void printDSI(uint8_t *ps2buf) {
