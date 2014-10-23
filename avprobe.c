@@ -28,6 +28,7 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/dict.h"
 #include "libavutil/libm.h"
+#include "libavutil/intreadwrite.h"
 #include "libavdevice/avdevice.h"
 #include "cmdutils.h"
 
@@ -526,6 +527,31 @@ static char *tag_string(char *buf, int buf_size, int tag)
     return buf;
 }
 
+static void print_side_data(uint8_t *ps2buf)
+{
+    uint32_t startpts = AV_RB32(ps2buf + 0x0d);
+    uint32_t endpts = AV_RB32(ps2buf + 0x11);
+    uint8_t hours = ((ps2buf[0x19] >> 4) * 10) + (ps2buf[0x19] & 0x0f);
+    uint8_t mins  = ((ps2buf[0x1a] >> 4) * 10) + (ps2buf[0x1a] & 0x0f);
+    uint8_t secs  = ((ps2buf[0x1b] >> 4) * 10) + (ps2buf[0x1b] & 0x0f);
+
+    char buf[1024];
+
+    snprintf(buf, sizeof(buf), "startpts %u | endpts %u | %d:%d:%d\n", startpts, endpts, hours, mins, secs);
+
+    probe_str("side_data_pci", buf);
+
+    ps2buf += 980;
+
+    hours = ((ps2buf[0x1d] >> 4) * 10) + (ps2buf[0x1d] & 0x0f);
+    mins  = ((ps2buf[0x1e] >> 4) * 10) + (ps2buf[0x1e] & 0x0f);
+    secs  = ((ps2buf[0x1f] >> 4) * 10) + (ps2buf[0x1f] & 0x0f);
+
+     snprintf(buf, sizeof(buf), "%d:%d:%d\n", hours, mins, secs);
+
+    probe_str("side_data_dsi", buf);
+}
+
 static void show_packet(AVFormatContext *fmt_ctx, AVPacket *pkt)
 {
     char val_str[128];
@@ -550,6 +576,10 @@ static void show_packet(AVFormatContext *fmt_ctx, AVPacket *pkt)
     probe_int("pos", pkt->pos);
     probe_str("flags", pkt->flags & AV_PKT_FLAG_KEY ? "K" : "_");
     probe_str("side_data", pkt->side_data ? "Yes" : "No");
+
+    if (pkt->side_data)
+        print_side_data(pkt->side_data[0].data);
+
     probe_object_footer("packet");
 }
 
