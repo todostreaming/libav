@@ -783,14 +783,23 @@ static int parse_packet(AVFormatContext *s, AVPacket *pkt, int stream_index)
 
         got_output = !!out_pkt.size;
 
+        if (pkt->side_data) {
+            av_log(s, AV_LOG_ERROR, "Adding side data from %"PRId64"\n", pkt->pts);
+            st->parser->side_data       = pkt->side_data;
+            st->parser->side_data_elems = pkt->side_data_elems;
+            pkt->side_data          = NULL;
+            pkt->side_data_elems    = 0;
+        }
+
         if (!out_pkt.size)
             continue;
 
-        if (pkt->side_data) {
-            out_pkt.side_data       = pkt->side_data;
-            out_pkt.side_data_elems = pkt->side_data_elems;
-            pkt->side_data          = NULL;
-            pkt->side_data_elems    = 0;
+        if (st->parser->side_data) {
+            av_log(s, AV_LOG_ERROR, "Setting side data from %"PRId64"\n", out_pkt.pts);
+            out_pkt.side_data       = st->parser->side_data;
+            out_pkt.side_data_elems = st->parser->side_data_elems;
+            st->parser->side_data          = NULL;
+            st->parser->side_data_elems    = 0;
         }
 
         /* set the duration */

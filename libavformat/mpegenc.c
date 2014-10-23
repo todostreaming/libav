@@ -607,7 +607,7 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
 
     id = stream->id;
 
-    av_dlog(ctx, "packet ID=%2x PTS=%0.3f\n", id, pts / 90000.0);
+    av_log(ctx, AV_LOG_INFO|AV_LOG_C(144), "packet ID=%2x %d PTS=%0.3f\n", id, stream_index, pts / 90000.0);
 
     buf_ptr = buffer;
 
@@ -1075,7 +1075,12 @@ retry:
                 timestamp_packet->pts / 90000.0,
                 scr / 90000.0, best_i);
         if (timestamp_packet->pkt.side_data)
-            av_log(NULL, AV_LOG_INFO, "side data\n");
+            av_log(NULL, AV_LOG_INFO|AV_LOG_C(100), "side data");
+        else
+            av_log(NULL, AV_LOG_INFO|AV_LOG_C(111), "no side data");
+
+        av_log(NULL, AV_LOG_INFO, "Packet %"PRId64", %d\n",
+                   timestamp_packet->pts, timestamp_packet->pkt.stream_index);
         es_size = flush_packet(ctx, best_i, &timestamp_packet->pkt, timestamp_packet->pts,
                                timestamp_packet->dts, scr, trailer_size);
     } else {

@@ -3868,6 +3868,9 @@ typedef struct AVCodecParserContext {
      * For example, this corresponds to H.264 PicOrderCnt.
      */
     int output_picture_number;
+
+    AVPacketSideData *side_data;
+    int side_data_elems;
 } AVCodecParserContext;
 
 typedef struct AVCodecParser {
