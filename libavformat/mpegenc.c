@@ -105,10 +105,13 @@ static void printPCI(uint8_t *ps2buf) {
 
 static void printDSI(uint8_t *ps2buf) {
     /* DSI structure? */
+    uint16_t vob_idn  = AV_RB16(&ps2buf[6 * 4]);
+    uint8_t vob_c_idn = ps2buf[6 * 4 + 2];
     uint8_t hours = ((ps2buf[0x1d] >> 4) * 10) + (ps2buf[0x1d] & 0x0f);
     uint8_t mins  = ((ps2buf[0x1e] >> 4) * 10) + (ps2buf[0x1e] & 0x0f);
     uint8_t secs  = ((ps2buf[0x1f] >> 4) * 10) + (ps2buf[0x1f] & 0x0f);
-    av_log(NULL, AV_LOG_WARNING, "DSI MPEGENC: %d:%d:%d\n", hours, mins, secs);
+    av_log(NULL, AV_LOG_WARNING, "DSI MPEGENC: vob idn %d c_idn %d %d:%d:%d\n",
+           vob_idn, vob_c_idn, hours, mins, secs);
 }
 
 static int put_pack_header(AVFormatContext *ctx, uint8_t *buf,
@@ -607,7 +610,7 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
 
     id = stream->id;
 
-    av_log(ctx, AV_LOG_INFO|AV_LOG_C(144), "packet ID=%2x %d PTS=%0.3f\n", id, stream_index, pts / 90000.0);
+//    av_log(ctx, AV_LOG_INFO|AV_LOG_C(144), "packet ID=%2x %d PTS=%0.3f\n", id, stream_index, pts / 90000.0);
 
     buf_ptr = buffer;
 
@@ -649,7 +652,7 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
                     avio_write(ctx->pb, buffer, size);
 
                     avio_wb32(ctx->pb, PRIVATE_STREAM_2);
-                    avio_wb16(ctx->pb, 0x03d4);     // length
+                    avio_wb16(ctx->pb, 980);     // length
                     avio_write(ctx->pb, pkt->side_data[0].data, 980);
                     printPCI(pkt->side_data[0].data);
 
