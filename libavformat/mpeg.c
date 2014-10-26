@@ -44,10 +44,13 @@ static void printPCI(uint8_t *ps2buf) {
 
 static void printDSI(uint8_t *ps2buf) {
     /* DSI structure? */
+    uint16_t vob_idn  = ps2buf[6 * 4] << 8 | ps2buf[6 * 4 + 1];
+    uint8_t vob_c_idn = ps2buf[6 * 4 + 2];
     uint8_t hours = ((ps2buf[0x1d] >> 4) * 10) + (ps2buf[0x1d] & 0x0f);
     uint8_t mins  = ((ps2buf[0x1e] >> 4) * 10) + (ps2buf[0x1e] & 0x0f);
     uint8_t secs  = ((ps2buf[0x1f] >> 4) * 10) + (ps2buf[0x1f] & 0x0f);
-    av_log(NULL, AV_LOG_WARNING, "DSI MPEG: %d:%d:%d\n", hours, mins, secs);
+    av_log(NULL, AV_LOG_WARNING, "DSI MPEG: vob idn %d c_idn %d %d:%d:%d\n",
+           vob_idn, vob_c_idn, hours, mins, secs);
 }
 
 static int check_pes(uint8_t *p, uint8_t *end)
@@ -245,7 +248,6 @@ static void parse_nav_pack(MpegDemuxContext *m, AVIOContext *pb)
 {
     int size, startcode, len;
     avio_read(pb, m->nav_pack, NAV_PCI_SIZE);
-    printPCI(m->nav_pack);
     startcode = find_next_start_code(pb, &size, &m->header_state);
     len = avio_rb16(pb);
     if (startcode != PRIVATE_STREAM_2 ||
@@ -255,7 +257,6 @@ static void parse_nav_pack(MpegDemuxContext *m, AVIOContext *pb)
         return;
     }
     avio_read(pb, m->nav_pack + NAV_PCI_SIZE, NAV_DSI_SIZE);
-    printDSI(m->nav_pack + NAV_PCI_SIZE);
 
     m->nav_pack_found = 1;
 }
@@ -281,6 +282,8 @@ static void mpegps_ps2_parse(MpegDemuxContext *m, AVIOContext *pb)
     if (m->sofdec > 0 || len != NAV_PCI_SIZE) {
         avio_skip(pb, sofdec_len);
     } else {
+        av_log(NULL, AV_LOG_INFO|AV_LOG_C(222), "Sector 0x%"PRIx64"\n",
+               (cur_pos - 42) / 2048);
         avio_seek(pb, cur_pos + 2, SEEK_SET);
         parse_nav_pack(m, pb);
     }
@@ -592,8 +595,11 @@ found:
     if (st->codec->codec_type == AVMEDIA_TYPE_VIDEO && m->nav_pack_found) {
         uint8_t *data = av_packet_new_side_data(pkt, AV_PKT_DATA_NAV_PACK,
                                                 NAV_PACK_SIZE);
-        if (data)
+        if (data) {
             memcpy(data, m->nav_pack, NAV_PACK_SIZE);
+            printPCI(data);
+            printDSI(data + 980);
+        }
 
         pkt->flags = AV_PKT_FLAG_KEY;
         m->nav_pack_found = 0;
