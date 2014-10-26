@@ -466,11 +466,10 @@ int read_yesno(void);
  *
  * @param filename file to read from
  * @param bufptr location where pointer to buffer is returned
- * @param size   location where size of buffer is returned
  * @return 0 in case of success, a negative value corresponding to an
  * AVERROR error code in case of failure.
  */
-int cmdutils_read_file(const char *filename, char **bufptr, size_t *size);
+int cmdutils_read_file(const char *filename, char **bufptr);
 
 typedef struct PtsCorrectionContext {
     int64_t num_faulty_pts; /// Number of incorrect PTS values so far

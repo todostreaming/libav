@@ -1387,40 +1387,49 @@ int read_yesno(void)
     return yesno;
 }
 
-int cmdutils_read_file(const char *filename, char **bufptr, size_t *size)
+int cmdutils_read_file(const char *filename, char **bufptr)
 {
-    int ret;
-    FILE *f = fopen(filename, "rb");
+    AVIOContext *pb = NULL;
+    int ret         = avio_open(&pb, filename, AVIO_FLAG_READ);
+    int64_t size;
 
-    if (!f) {
-        av_log(NULL, AV_LOG_ERROR, "Cannot read file '%s': %s\n", filename,
-               strerror(errno));
-        return AVERROR(errno);
+    if (ret < 0)
+        return ret;
+
+    size = avio_tell(pb);
+    if (size < 0) {
+        ret = size;
+        goto fail;
     }
-    fseek(f, 0, SEEK_END);
-    *size = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    *bufptr = av_malloc(*size + 1);
+
+    if (size > SIZE_MAX - 1) {
+        ret = AVERROR(ENOMEM);
+        goto fail;
+    }
+
+    *bufptr = av_malloc(size + 1);
     if (!*bufptr) {
         av_log(NULL, AV_LOG_ERROR, "Could not allocate file buffer\n");
-        fclose(f);
-        return AVERROR(ENOMEM);
-    }
-    ret = fread(*bufptr, 1, *size, f);
-    if (ret < *size) {
-        av_free(*bufptr);
-        if (ferror(f)) {
-            av_log(NULL, AV_LOG_ERROR, "Error while reading file '%s': %s\n",
-                   filename, strerror(errno));
-            ret = AVERROR(errno);
-        } else
-            ret = AVERROR_EOF;
-    } else {
-        ret = 0;
-        (*bufptr)[(*size)++] = '\0';
+        ret = AVERROR(ENOMEM);
+        goto fail;
     }
 
-    fclose(f);
+    ret = avio_read(pb, *bufptr, size);
+    if (ret < size) {
+        char buf[128];
+        ret = pb->error? pb->error : AVERROR_EOF;
+        av_strerror(ret, buf, sizeof(buf));
+        av_log(NULL, AV_LOG_ERROR, "Error while reading file '%s': %s\n",
+               filename, buf);
+        av_free(*bufptr);
+        goto fail;
+    }
+
+    ret = 0;
+    (*bufptr)[size] = '\0';
+
+fail:
+    avio_close(pb);
     return ret;
 }
 
