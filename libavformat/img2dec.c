@@ -33,6 +33,7 @@ typedef struct {
     int img_first;
     int img_last;
     int img_number;
+    int img_step;
     int img_count;
     int is_pipe;
     char path[1024];
@@ -284,7 +285,7 @@ static int img_read_packet(AVFormatContext *s1, AVPacket *pkt)
         return AVERROR(EIO); /* signal EOF */
     } else {
         s->img_count++;
-        s->img_number++;
+        s->img_number += s->img_step;
         return 0;
     }
 }
@@ -297,6 +298,7 @@ static const AVOption options[] = {
     { "framerate",    "",                             OFFSET(framerate),    AV_OPT_TYPE_STRING, { .str = "25" }, 0, 0,       DEC },
     { "loop",         "",                             OFFSET(loop),         AV_OPT_TYPE_INT,    { .i64 = 0    }, 0, 1,       DEC },
     { "start_number", "first number in the sequence", OFFSET(start_number), AV_OPT_TYPE_INT,    { .i64 = 1    }, 1, INT_MAX, DEC },
+    { "step",         "sequence steps",               OFFSET(img_step),     AV_OPT_TYPE_INT,    { .i64 = 1    }, 1, INT_MAX, DEC },
     { NULL },
 };
 
