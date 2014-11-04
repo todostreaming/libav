@@ -246,14 +246,14 @@ static long mpegps_psm_parse(MpegDemuxContext *m, AVIOContext *pb)
 
 static void parse_nav_pack(MpegDemuxContext *m, AVIOContext *pb)
 {
-    int size, startcode, len;
+    int size = MAX_SYNC_SIZE;
+    int startcode, len;
     avio_read(pb, m->nav_pack, NAV_PCI_SIZE);
     startcode = find_next_start_code(pb, &size, &m->header_state);
     len = avio_rb16(pb);
     if (startcode != PRIVATE_STREAM_2 ||
-    //    size != NAV_DSI_SIZE + 2 ||
         len != NAV_DSI_SIZE) {
-        avio_skip(pb, size - 2);
+        avio_skip(pb, len);
         return;
     }
     avio_read(pb, m->nav_pack + NAV_PCI_SIZE, NAV_DSI_SIZE);
