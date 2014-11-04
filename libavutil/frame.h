@@ -87,6 +87,11 @@ enum AVFrameSideDataType {
      * in ETSI TS 101 154 using enum AVActiveFormatDescription.
      */
     AV_FRAME_DATA_AFD,
+    /**
+     * This side data contains the PCI and SDI packets from a DVD
+     * NAV Pack.
+     */
+    AV_FRAME_DATA_NAV_PACK,
 };
 
 enum AVActiveFormatDescription {

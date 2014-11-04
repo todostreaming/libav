@@ -568,6 +568,7 @@ int ff_decode_frame_props(AVCodecContext *avctx, AVFrame *frame)
         { AV_PKT_DATA_REPLAYGAIN ,   AV_FRAME_DATA_REPLAYGAIN },
         { AV_PKT_DATA_DISPLAYMATRIX, AV_FRAME_DATA_DISPLAYMATRIX },
         { AV_PKT_DATA_STEREO3D,      AV_FRAME_DATA_STEREO3D },
+        { AV_PKT_DATA_NAV_PACK,      AV_FRAME_DATA_NAV_PACK },
     };
 
     frame->color_primaries = avctx->color_primaries;

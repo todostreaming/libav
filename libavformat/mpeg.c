@@ -282,7 +282,7 @@ static void mpegps_ps2_parse(MpegDemuxContext *m, AVIOContext *pb)
     if (m->sofdec > 0 || len != NAV_PCI_SIZE) {
         avio_skip(pb, sofdec_len);
     } else {
-        av_log(NULL, AV_LOG_INFO|AV_LOG_C(222), "Sector 0x%"PRIx64"\n",
+        av_log(NULL, AV_LOG_INFO|AV_LOG_C(222), "Sector: 0x%08"PRIx64"\n",
                (cur_pos - 42) / 2048);
         avio_seek(pb, cur_pos + 2, SEEK_SET);
         parse_nav_pack(m, pb);

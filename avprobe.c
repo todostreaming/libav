@@ -537,7 +537,7 @@ static void print_side_data(uint8_t *ps2buf)
 
     char buf[1024];
 
-    snprintf(buf, sizeof(buf), "startpts %u | endpts %u | %d:%d:%d\n", startpts, endpts, hours, mins, secs);
+    snprintf(buf, sizeof(buf), "startpts %u endpts %u %d %d %d", startpts, endpts, hours, mins, secs);
 
     probe_str("side_data_pci", buf);
 
