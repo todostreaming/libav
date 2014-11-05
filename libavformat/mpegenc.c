@@ -1145,7 +1145,7 @@ static int mpeg_mux_write_packet(AVFormatContext *ctx, AVPacket *pkt)
         dts += 2 * preload;
     }
 
-    av_dlog(ctx, "dts:%f pts:%f flags:%d stream:%d nopts:%d\n",
+    av_log(ctx, AV_LOG_INFO|AV_LOG_C(222), "dts:%f pts:%f flags:%d stream:%d nopts:%d\n",
             dts / 90000.0, pts / 90000.0, pkt->flags,
             pkt->stream_index, pts != AV_NOPTS_VALUE);
     if (!stream->premux_packet)
