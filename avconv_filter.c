@@ -281,7 +281,7 @@ static int configure_output_video_filter(FilterGraph *fg, OutputFilter *ofilter,
         pad_idx     = 0;
     }
 
-    if (ost->frame_rate.num) {
+    if (0 && ost->frame_rate.num) {
         AVFilterContext *fps;
         char args[255];
 

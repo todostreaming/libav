@@ -502,6 +502,30 @@ static void do_subtitle_out(AVFormatContext *s,
     }
 }
 
+static void print_side_data(uint8_t *ps2buf, const char *tag)
+{
+    uint32_t startpts = AV_RB32(ps2buf + 0x0d);
+    uint32_t endpts = AV_RB32(ps2buf + 0x11);
+    uint8_t hours = ((ps2buf[0x19] >> 4) * 10) + (ps2buf[0x19] & 0x0f);
+    uint8_t mins  = ((ps2buf[0x1a] >> 4) * 10) + (ps2buf[0x1a] & 0x0f);
+    uint8_t secs  = ((ps2buf[0x1b] >> 4) * 10) + (ps2buf[0x1b] & 0x0f);
+
+    char buf[1024];
+
+    snprintf(buf, sizeof(buf), "startpts %u endpts %u %d %d %d", startpts, endpts, hours, mins, secs);
+
+    av_log(NULL, AV_LOG_INFO, "%s %s", tag, buf);
+
+    ps2buf += 980;
+
+    hours = ((ps2buf[0x1d] >> 4) * 10) + (ps2buf[0x1d] & 0x0f);
+    mins  = ((ps2buf[0x1e] >> 4) * 10) + (ps2buf[0x1e] & 0x0f);
+    secs  = ((ps2buf[0x1f] >> 4) * 10) + (ps2buf[0x1f] & 0x0f);
+
+     snprintf(buf, sizeof(buf), "%d:%d:%d\n", hours, mins, secs);
+
+    av_log(NULL, AV_LOG_INFO, "%s %s", tag, buf);
+}
 static void do_video_out(AVFormatContext *s,
                          OutputStream *ost,
                          AVFrame *in_picture,
@@ -558,6 +582,7 @@ static void do_video_out(AVFormatContext *s,
         write_frame(s, &pkt, ost);
     } else {
         int got_packet;
+        AVFrameSideData *side_data;
 
         if (enc->flags & (CODEC_FLAG_INTERLACED_DCT|CODEC_FLAG_INTERLACED_ME) &&
             ost->top_field_first >= 0)
@@ -572,6 +597,14 @@ static void do_video_out(AVFormatContext *s,
         }
 
         ost->frames_encoded++;
+
+        if ((side_data = av_frame_get_side_data(in_picture, AV_FRAME_DATA_NAV_PACK))) {
+            av_log(NULL, AV_LOG_INFO, "%"PRId64" %"PRId64"%"PRId64" ",
+                   in_picture->pts, in_picture->pkt_pts, in_picture->pkt_dts);
+            print_side_data(side_data->data, "ENCODE");
+        }
+
+
 
         ret = avcodec_encode_video2(enc, &pkt, in_picture, &got_packet);
         if (ret < 0) {
@@ -1246,32 +1279,6 @@ static int decode_audio(InputStream *ist, AVPacket *pkt, int *got_output)
     return err < 0 ? err : ret;
 }
 
-static void print_side_data(uint8_t *ps2buf, const char *tag)
-{
-    uint32_t startpts = AV_RB32(ps2buf + 0x0d);
-    uint32_t endpts = AV_RB32(ps2buf + 0x11);
-    uint8_t hours = ((ps2buf[0x19] >> 4) * 10) + (ps2buf[0x19] & 0x0f);
-    uint8_t mins  = ((ps2buf[0x1a] >> 4) * 10) + (ps2buf[0x1a] & 0x0f);
-    uint8_t secs  = ((ps2buf[0x1b] >> 4) * 10) + (ps2buf[0x1b] & 0x0f);
-
-    char buf[1024];
-
-    snprintf(buf, sizeof(buf), "startpts %u endpts %u %d %d %d", startpts, endpts, hours, mins, secs);
-
-    av_log(NULL, AV_LOG_INFO, "%s %s", tag, buf);
-
-    ps2buf += 980;
-
-    hours = ((ps2buf[0x1d] >> 4) * 10) + (ps2buf[0x1d] & 0x0f);
-    mins  = ((ps2buf[0x1e] >> 4) * 10) + (ps2buf[0x1e] & 0x0f);
-    secs  = ((ps2buf[0x1f] >> 4) * 10) + (ps2buf[0x1f] & 0x0f);
-
-     snprintf(buf, sizeof(buf), "%d:%d:%d\n", hours, mins, secs);
-
-    av_log(NULL, AV_LOG_INFO, "%s %s", tag, buf);
-}
-
-
 static int decode_video(InputStream *ist, AVPacket *pkt, int *got_output)
 {
     AVFrame *decoded_frame, *f;
@@ -1286,7 +1293,10 @@ static int decode_video(InputStream *ist, AVPacket *pkt, int *got_output)
     decoded_frame = ist->decoded_frame;
 
     if ((buf = av_packet_get_side_data(pkt, AV_PKT_DATA_NAV_PACK, &_))) {
+        av_log(NULL, AV_LOG_INFO, "%"PRId64" %"PRId64" ",
+               pkt->pts, pkt->dts);
         print_side_data(buf, "PACKET");
+
     }
 
     ret = avcodec_decode_video2(ist->dec_ctx,
@@ -1297,10 +1307,6 @@ static int decode_video(InputStream *ist, AVPacket *pkt, int *got_output)
                 av_buffersrc_add_frame(ist->filters[i]->filter, NULL);
         }
         return ret;
-    }
-
-    if ((side_data = av_frame_get_side_data(decoded_frame, AV_FRAME_DATA_NAV_PACK))) {
-        print_side_data(side_data->data, "DECODE");
     }
 
     ist->frames_decoded++;
@@ -1314,6 +1320,13 @@ static int decode_video(InputStream *ist, AVPacket *pkt, int *got_output)
 
     decoded_frame->pts = guess_correct_pts(&ist->pts_ctx, decoded_frame->pkt_pts,
                                            decoded_frame->pkt_dts);
+
+    if ((side_data = av_frame_get_side_data(decoded_frame, AV_FRAME_DATA_NAV_PACK))) {
+        av_log(NULL, AV_LOG_INFO, "%"PRId64" %"PRId64"%"PRId64" ",
+               decoded_frame->pts, decoded_frame->pkt_pts, decoded_frame->pkt_dts);
+        print_side_data(side_data->data, "DECODE");
+    }
+
     pkt->size = 0;
 
     if (ist->st->sample_aspect_ratio.num)

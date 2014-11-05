@@ -147,6 +147,8 @@ typedef struct MpegDemuxContext {
     int sofdec;
     int nav_pack_found;
     uint8_t nav_pack[NAV_PACK_SIZE];
+    int64_t pts[10];
+    int64_t dts[10];
 } MpegDemuxContext;
 
 static int mpegps_read_header(AVFormatContext *s)
@@ -166,6 +168,10 @@ static int mpegps_read_header(AVFormatContext *s)
     } while (v == sofdec[i] && i++ < 6);
 
     m->sofdec = (m->sofdec == 6) ? 1 : 0;
+
+    for (i = 0; i < 10; i++) {
+        m->pts[i] = m->dts[i] = AV_NOPTS_VALUE;
+    }
 
     /* no need to do more */
     return 0;
@@ -591,12 +597,25 @@ found:
     pkt->dts          = dts;
     pkt->pos          = dummy_pos;
     pkt->stream_index = st->index;
-
+/*
+    if (st->codec->codec_type == AVMEDIA_TYPE_VIDEO &&
+        pkt->pts != AV_NOPTS_VALUE) {
+        if (m->pts[st->index] != AV_NOPTS_VALUE &&
+            m->pts[st->index] == pkt->pts) {
+            av_log(NULL, AV_LOG_INFO, "BOGUS PTS %"PRId64"\n",
+                   m->pts[st->index]);
+            pkt->pts += 1;
+        }
+        m->pts[st->index] = pkt->pts;
+    }
+*/
     if (st->codec->codec_type == AVMEDIA_TYPE_VIDEO && m->nav_pack_found) {
         uint8_t *data = av_packet_new_side_data(pkt, AV_PKT_DATA_NAV_PACK,
                                                 NAV_PACK_SIZE);
         if (data) {
             memcpy(data, m->nav_pack, NAV_PACK_SIZE);
+            av_log(NULL, AV_LOG_INFO, "PTS %"PRId64" DTS %"PRId64" ",
+                   pkt->pts, pkt->dts);
             printPCI(data);
             printDSI(data + 980);
         }
