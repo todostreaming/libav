@@ -22,6 +22,7 @@
 #include "libavutil/internal.h"
 #include "libavutil/opt.h"
 #include "libavutil/mem.h"
+#include "libavutil/intreadwrite.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/stereo3d.h"
 #include "avcodec.h"
@@ -128,13 +129,40 @@ static int encode_nals(AVCodecContext *ctx, AVPacket *pkt,
     return 1;
 }
 
+static void print_side_data(uint8_t *ps2buf, const char *tag)
+{
+    uint32_t startpts = AV_RB32(ps2buf + 0x0d);
+    uint32_t endpts = AV_RB32(ps2buf + 0x11);
+    uint8_t hours = ((ps2buf[0x19] >> 4) * 10) + (ps2buf[0x19] & 0x0f);
+    uint8_t mins  = ((ps2buf[0x1a] >> 4) * 10) + (ps2buf[0x1a] & 0x0f);
+    uint8_t secs  = ((ps2buf[0x1b] >> 4) * 10) + (ps2buf[0x1b] & 0x0f);
+
+    char buf[1024];
+
+    snprintf(buf, sizeof(buf), "startpts %u endpts %u %d %d %d", startpts, endpts, hours, mins, secs);
+
+    av_log(NULL, AV_LOG_INFO, "%s %s", tag, buf);
+
+    ps2buf += 980;
+
+    hours = ((ps2buf[0x1d] >> 4) * 10) + (ps2buf[0x1d] & 0x0f);
+    mins  = ((ps2buf[0x1e] >> 4) * 10) + (ps2buf[0x1e] & 0x0f);
+    secs  = ((ps2buf[0x1f] >> 4) * 10) + (ps2buf[0x1f] & 0x0f);
+
+     snprintf(buf, sizeof(buf), "%d:%d:%d\n", hours, mins, secs);
+
+    av_log(NULL, AV_LOG_INFO, "%s %s", tag, buf);
+}
+
+
+
 static int X264_frame(AVCodecContext *ctx, AVPacket *pkt, const AVFrame *frame,
                       int *got_packet)
 {
     X264Context *x4 = ctx->priv_data;
     x264_nal_t *nal;
     int nnal, i, ret;
-    x264_picture_t pic_out;
+    x264_picture_t pic_out = { 0 };
     AVFrameSideData *side_data;
 
     x264_picture_init( &x4->pic );
@@ -232,9 +260,22 @@ static int X264_frame(AVCodecContext *ctx, AVPacket *pkt, const AVFrame *frame,
                 x264_encoder_reconfig(x4->enc, &x4->params);
             }
         }
+
+        if ((side_data = av_frame_get_side_data(frame, AV_FRAME_DATA_NAV_PACK))) {
+            av_log(NULL, AV_LOG_INFO, "Side Data in %"PRId64" %"PRId64"\n",
+                   x4->pic.i_pts, x4->pic.i_dts);
+            print_side_data(side_data->data, "IN");
+            x4->pic.opaque = av_frame_alloc();
+            av_frame_ref(x4->pic.opaque, frame);
+        } else {
+            x4->pic.opaque = NULL;
+        }
     }
     do {
-        if (x264_encoder_encode(x4->enc, &nal, &nnal, frame? &x4->pic: NULL, &pic_out) < 0)
+        ret = x264_encoder_encode(x4->enc, &nal,
+                                  &nnal, frame? &x4->pic: NULL, &pic_out);
+        x4->pic.opaque = 0;
+        if (ret < 0)
             return -1;
 
         ret = encode_nals(ctx, pkt, nal, nnal);
@@ -244,6 +285,26 @@ static int X264_frame(AVCodecContext *ctx, AVPacket *pkt, const AVFrame *frame,
 
     pkt->pts = pic_out.i_pts;
     pkt->dts = pic_out.i_dts;
+
+    if (pic_out.opaque) {
+        AVFrame *f = pic_out.opaque;
+        uint8_t *data;
+
+        av_log(NULL, AV_LOG_INFO, "Got %p Side Data in %"PRId64" %"PRId64"\n",
+               pic_out.opaque,
+               pic_out.i_pts,
+               pic_out.i_dts);
+
+
+        side_data = av_frame_get_side_data(f, AV_FRAME_DATA_NAV_PACK);
+
+        data = av_packet_new_side_data(pkt, AV_PKT_DATA_NAV_PACK,
+                                       side_data->size);
+        memcpy(data, side_data->data, side_data->size);
+        print_side_data(data, "OUT");
+
+        av_frame_free(&f);
+    }
 
     switch (pic_out.i_type) {
     case X264_TYPE_IDR:
