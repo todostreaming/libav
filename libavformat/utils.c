@@ -749,6 +749,32 @@ static void free_packet_buffer(AVPacketList **pkt_buf, AVPacketList **pkt_buf_en
     *pkt_buf_end = NULL;
 }
 
+
+static void print_side_data(uint8_t *ps2buf, const char *tag)
+{
+    uint32_t startpts = AV_RB32(ps2buf + 0x0d);
+    uint32_t endpts = AV_RB32(ps2buf + 0x11);
+    uint8_t hours = ((ps2buf[0x19] >> 4) * 10) + (ps2buf[0x19] & 0x0f);
+    uint8_t mins  = ((ps2buf[0x1a] >> 4) * 10) + (ps2buf[0x1a] & 0x0f);
+    uint8_t secs  = ((ps2buf[0x1b] >> 4) * 10) + (ps2buf[0x1b] & 0x0f);
+
+    char buf[1024];
+
+    snprintf(buf, sizeof(buf), "startpts %u endpts %u %d %d %d", startpts, endpts, hours, mins, secs);
+
+    av_log(NULL, AV_LOG_INFO, "%s %s", tag, buf);
+
+    ps2buf += 980;
+
+    hours = ((ps2buf[0x1d] >> 4) * 10) + (ps2buf[0x1d] & 0x0f);
+    mins  = ((ps2buf[0x1e] >> 4) * 10) + (ps2buf[0x1e] & 0x0f);
+    secs  = ((ps2buf[0x1f] >> 4) * 10) + (ps2buf[0x1f] & 0x0f);
+
+     snprintf(buf, sizeof(buf), "%d:%d:%d\n", hours, mins, secs);
+
+    av_log(NULL, AV_LOG_INFO, "%s %s", tag, buf);
+}
+
 /**
  * Parse a packet, add all split parts to parse_queue.
  *
@@ -784,7 +810,8 @@ static int parse_packet(AVFormatContext *s, AVPacket *pkt, int stream_index)
         got_output = !!out_pkt.size;
 
         if (pkt->side_data) {
-            av_log(s, AV_LOG_ERROR, "Adding side data from %"PRId64"\n", pkt->pts);
+            print_side_data(pkt->side_data[0].data, "p IN");
+
             st->parser->side_data       = pkt->side_data;
             st->parser->side_data_elems = pkt->side_data_elems;
             pkt->side_data          = NULL;
@@ -795,7 +822,7 @@ static int parse_packet(AVFormatContext *s, AVPacket *pkt, int stream_index)
             continue;
 
         if (st->parser->side_data) {
-            av_log(s, AV_LOG_ERROR, "Setting side data from %"PRId64"\n", out_pkt.pts);
+            print_side_data(st->parser->side_data[0].data, "p OUT");
             out_pkt.side_data       = st->parser->side_data;
             out_pkt.side_data_elems = st->parser->side_data_elems;
             st->parser->side_data          = NULL;

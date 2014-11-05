@@ -1246,16 +1246,48 @@ static int decode_audio(InputStream *ist, AVPacket *pkt, int *got_output)
     return err < 0 ? err : ret;
 }
 
+static void print_side_data(uint8_t *ps2buf, const char *tag)
+{
+    uint32_t startpts = AV_RB32(ps2buf + 0x0d);
+    uint32_t endpts = AV_RB32(ps2buf + 0x11);
+    uint8_t hours = ((ps2buf[0x19] >> 4) * 10) + (ps2buf[0x19] & 0x0f);
+    uint8_t mins  = ((ps2buf[0x1a] >> 4) * 10) + (ps2buf[0x1a] & 0x0f);
+    uint8_t secs  = ((ps2buf[0x1b] >> 4) * 10) + (ps2buf[0x1b] & 0x0f);
+
+    char buf[1024];
+
+    snprintf(buf, sizeof(buf), "startpts %u endpts %u %d %d %d", startpts, endpts, hours, mins, secs);
+
+    av_log(NULL, AV_LOG_INFO, "%s %s", tag, buf);
+
+    ps2buf += 980;
+
+    hours = ((ps2buf[0x1d] >> 4) * 10) + (ps2buf[0x1d] & 0x0f);
+    mins  = ((ps2buf[0x1e] >> 4) * 10) + (ps2buf[0x1e] & 0x0f);
+    secs  = ((ps2buf[0x1f] >> 4) * 10) + (ps2buf[0x1f] & 0x0f);
+
+     snprintf(buf, sizeof(buf), "%d:%d:%d\n", hours, mins, secs);
+
+    av_log(NULL, AV_LOG_INFO, "%s %s", tag, buf);
+}
+
+
 static int decode_video(InputStream *ist, AVPacket *pkt, int *got_output)
 {
     AVFrame *decoded_frame, *f;
-    int i, ret = 0, err = 0, resample_changed;
+    int i, ret = 0, err = 0, resample_changed, _;
+    AVFrameSideData *side_data;
+    uint8_t *buf;
 
     if (!ist->decoded_frame && !(ist->decoded_frame = av_frame_alloc()))
         return AVERROR(ENOMEM);
     if (!ist->filter_frame && !(ist->filter_frame = av_frame_alloc()))
         return AVERROR(ENOMEM);
     decoded_frame = ist->decoded_frame;
+
+    if ((buf = av_packet_get_side_data(pkt, AV_PKT_DATA_NAV_PACK, &_))) {
+        print_side_data(buf, "PACKET");
+    }
 
     ret = avcodec_decode_video2(ist->dec_ctx,
                                 decoded_frame, got_output, pkt);
@@ -1265,6 +1297,10 @@ static int decode_video(InputStream *ist, AVPacket *pkt, int *got_output)
                 av_buffersrc_add_frame(ist->filters[i]->filter, NULL);
         }
         return ret;
+    }
+
+    if ((side_data = av_frame_get_side_data(decoded_frame, AV_FRAME_DATA_NAV_PACK))) {
+        print_side_data(side_data->data, "DECODE");
     }
 
     ist->frames_decoded++;

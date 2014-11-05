@@ -557,6 +557,31 @@ static void compat_release_buffer(void *opaque, uint8_t *data)
 FF_ENABLE_DEPRECATION_WARNINGS
 #endif
 
+static void print_side_data(uint8_t *ps2buf, const char *tag)
+{
+    uint32_t startpts = AV_RB32(ps2buf + 0x0d);
+    uint32_t endpts = AV_RB32(ps2buf + 0x11);
+    uint8_t hours = ((ps2buf[0x19] >> 4) * 10) + (ps2buf[0x19] & 0x0f);
+    uint8_t mins  = ((ps2buf[0x1a] >> 4) * 10) + (ps2buf[0x1a] & 0x0f);
+    uint8_t secs  = ((ps2buf[0x1b] >> 4) * 10) + (ps2buf[0x1b] & 0x0f);
+
+    char buf[1024];
+
+    snprintf(buf, sizeof(buf), "startpts %u endpts %u %d %d %d", startpts, endpts, hours, mins, secs);
+
+    av_log(NULL, AV_LOG_INFO, "%s %s", tag, buf);
+
+    ps2buf += 980;
+
+    hours = ((ps2buf[0x1d] >> 4) * 10) + (ps2buf[0x1d] & 0x0f);
+    mins  = ((ps2buf[0x1e] >> 4) * 10) + (ps2buf[0x1e] & 0x0f);
+    secs  = ((ps2buf[0x1f] >> 4) * 10) + (ps2buf[0x1f] & 0x0f);
+
+     snprintf(buf, sizeof(buf), "%d:%d:%d\n", hours, mins, secs);
+
+    av_log(NULL, AV_LOG_INFO, "%s %s", tag, buf);
+}
+
 int ff_decode_frame_props(AVCodecContext *avctx, AVFrame *frame)
 {
     AVPacket *pkt = avctx->internal->pkt;
@@ -588,6 +613,10 @@ int ff_decode_frame_props(AVCodecContext *avctx, AVFrame *frame)
     for (i = 0; i < FF_ARRAY_ELEMS(sd); i++) {
         int size;
         uint8_t *packet_sd = av_packet_get_side_data(pkt, sd[i].packet, &size);
+
+        if (sd[i].packet == AV_PKT_DATA_NAV_PACK && packet_sd) {
+            print_side_data(packet_sd, "COPY");
+        }
         if (packet_sd) {
             AVFrameSideData *frame_sd = av_frame_new_side_data(frame,
                                                                sd[i].frame,
