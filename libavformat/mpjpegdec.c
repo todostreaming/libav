@@ -171,6 +171,10 @@ static int mpjpeg_read_packet(AVFormatContext *s, AVPacket *pkt)
     size = parse_content_length(line);
     if (size < 0)
         return size;
+    // Consume empty line
+    ret = get_line(s->pb, line, sizeof(line));
+    if (ret < 0)
+        goto fail;
 
     ret = av_new_packet(pkt, size);
     if (ret < 0)
@@ -181,6 +185,9 @@ static int mpjpeg_read_packet(AVFormatContext *s, AVPacket *pkt)
         goto fail;
 
     // Consume the boundary marker
+    ret = get_line(s->pb, line, sizeof(line));
+    if (ret < 0)
+        goto fail;
     ret = get_line(s->pb, line, sizeof(line));
     if (ret < 0)
         goto fail;
