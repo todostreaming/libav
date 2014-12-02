@@ -92,7 +92,7 @@ extern AVOutputFormat ff_mpeg2dvd_muxer;
 extern AVOutputFormat ff_mpeg2svcd_muxer;
 extern AVOutputFormat ff_mpeg2vob_muxer;
 
-static void printPCI(uint8_t *ps2buf) {
+static void printPCI(const char *label, uint8_t *ps2buf) {
     /* PCI structure? */
     uint32_t startpts = AV_RB32(ps2buf + 0x0d);
     uint32_t endpts = AV_RB32(ps2buf + 0x11);
@@ -100,7 +100,8 @@ static void printPCI(uint8_t *ps2buf) {
     uint8_t mins  = ((ps2buf[0x1a] >> 4) * 10) + (ps2buf[0x1a] & 0x0f);
     uint8_t secs  = ((ps2buf[0x1b] >> 4) * 10) + (ps2buf[0x1b] & 0x0f);
 
-    av_log(NULL, AV_LOG_WARNING, "PCI MPEGENC: startpts %u | endpts %u | %d:%d:%d\n", startpts, endpts, hours, mins, secs);
+    av_log(NULL, AV_LOG_WARNING, "%s: startpts %u endpts %u %d %d %d\n",
+           label, startpts, endpts, hours, mins, secs);
 }
 
 static void printDSI(uint8_t *ps2buf) {
@@ -643,8 +644,6 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
                             PES_bytes_to_fill -= 5;
                     }
 
-                    av_log(NULL, AV_LOG_INFO, "flush_packet with side_data\n");
-
                     size     = put_system_header(ctx, buf_ptr, 0);
                     buf_ptr += size;
                     size     = buf_ptr - buffer;
@@ -653,7 +652,7 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
                     avio_wb32(ctx->pb, PRIVATE_STREAM_2);
                     avio_wb16(ctx->pb, 0x03d4);     // length
                     avio_write(ctx->pb, pkt->side_data[0].data, 980);
-                    printPCI(pkt->side_data[0].data);
+                    printPCI("MPEGENC_OUT", pkt->side_data[0].data);
 
                     avio_wb32(ctx->pb, PRIVATE_STREAM_2);
                     avio_wb16(ctx->pb, 1018);     // length
@@ -979,8 +978,8 @@ retry:
 
         /* for subtitle, a single PES packet must be generated,
          * so we flush after every single subtitle packet */
-        if (s->packet_size > avail_data && !flush
-            && st->codec->codec_type != AVMEDIA_TYPE_SUBTITLE)
+        if (s->packet_size > avail_data && !flush &&
+            st->codec->codec_type != AVMEDIA_TYPE_SUBTITLE)
             return 0;
         if (avail_data == 0)
             continue;
@@ -1083,7 +1082,7 @@ retry:
         es_size              -= stream->premux_packet->unwritten_size;
         stream->premux_packet = stream->premux_packet->next;
     }
-    if (es_size)
+    if (es_size && stream->premux_packet)
         stream->premux_packet->unwritten_size -= es_size;
 
     if (remove_decoded_packets(ctx, s->last_scr) < 0)
@@ -1119,9 +1118,9 @@ static int mpeg_mux_write_packet(AVFormatContext *ctx, AVPacket *pkt)
         dts += 2 * preload;
     }
 
-    av_log(ctx, AV_LOG_INFO|AV_LOG_C(222), "dts:%f pts:%f flags:%d stream:%d nopts:%d\n",
-            dts / 90000.0, pts / 90000.0, pkt->flags,
-            pkt->stream_index, pts != AV_NOPTS_VALUE);
+//    av_log(ctx, AV_LOG_INFO|AV_LOG_C(222), "dts:%f pts:%f flags:%d stream:%d nopts:%d\n",
+//            dts / 90000.0, pts / 90000.0, pkt->flags,
+//            pkt->stream_index, pts != AV_NOPTS_VALUE);
     if (!stream->premux_packet)
         stream->next_packet = &stream->premux_packet;
     *stream->next_packet     =
@@ -1141,10 +1140,12 @@ static int mpeg_mux_write_packet(AVFormatContext *ctx, AVPacket *pkt)
 
     if (s->is_dvd) {
         int _;
-        if (av_packet_get_side_data(pkt, AV_PKT_DATA_NAV_PACK, &_)) {
+        uint8_t *data;
+        if ((data = av_packet_get_side_data(pkt, AV_PKT_DATA_NAV_PACK, &_))) {
             stream->bytes_to_iframe = av_fifo_size(stream->fifo);
             stream->align_iframe    = 1;
             stream->vobu_start_pts  = pts;
+            printPCI("MPEGENC IN", data);
         }
     }
 
