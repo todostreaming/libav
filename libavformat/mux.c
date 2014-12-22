@@ -136,11 +136,13 @@ FF_ENABLE_DEPRECATION_WARNINGS
 
         switch (codec->codec_type) {
         case AVMEDIA_TYPE_AUDIO:
+#if 0
             if (codec->sample_rate <= 0) {
                 av_log(s, AV_LOG_ERROR, "sample rate not set\n");
                 ret = AVERROR(EINVAL);
                 goto fail;
             }
+#endif
             if (!codec->block_align)
                 codec->block_align = codec->channels *
                                      av_get_bits_per_sample(codec->codec_id) >> 3;
