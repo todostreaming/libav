@@ -652,7 +652,7 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
                     avio_wb32(ctx->pb, PRIVATE_STREAM_2);
                     avio_wb16(ctx->pb, 0x03d4);     // length
                     avio_write(ctx->pb, pkt->side_data[0].data, 980);
-                    printPCI("MPEGENC_OUT", pkt->side_data[0].data);
+                    printPCI("MPEGENC OUT", pkt->side_data[0].data);
 
                     avio_wb32(ctx->pb, PRIVATE_STREAM_2);
                     avio_wb16(ctx->pb, 1018);     // length
@@ -946,10 +946,26 @@ static int remove_decoded_packets(AVFormatContext *ctx, int64_t scr)
             }
             stream->buffer_index    -= pkt_desc->size;
             stream->predecode_packet = pkt_desc->next;
+
+            {
+                int _;
+                uint8_t *data;
+                if ((data = av_packet_get_side_data(&pkt_desc->pkt,
+                                                    AV_PKT_DATA_NAV_PACK,
+                                                    &_))) {
+                    printPCI("MPEGENC DEL", data);
+                }
+            }
             av_packet_unref(&pkt_desc->pkt);
             av_freep(&pkt_desc);
         }
     }
+
+    return 0;
+}
+
+static int break_me_here(AVFormatContext *ctx)
+{
 
     return 0;
 }
@@ -975,6 +991,19 @@ retry:
         const int space = stream->max_buffer_size - stream->buffer_index;
         int rel_space = 1024 * space / stream->max_buffer_size;
         PacketDesc *next_pkt = stream->premux_packet;
+
+        if (st->codec->codec_type == AVMEDIA_TYPE_VIDEO &&
+            flush) {
+            break_me_here(ctx);
+            av_log(ctx, AV_LOG_INFO|AV_LOG_C(122),
+                   "Video pts %"PRId64" vobu_start_pts %"PRId64"\n",
+                    stream->vobu_start_pts);
+            if (next_pkt) {
+                av_log(ctx, AV_LOG_INFO, "Video %d pts  %"PRId64"\n",
+                       next_pkt->pkt.side_data_elems,
+                       next_pkt->pts);
+            }
+        }
 
         /* for subtitle, a single PES packet must be generated,
          * so we flush after every single subtitle packet */

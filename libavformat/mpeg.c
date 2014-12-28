@@ -42,15 +42,16 @@ static void printPCI(uint8_t *ps2buf) {
     av_log(NULL, AV_LOG_WARNING, "PCI MPEG: startpts %u | endpts %u | %d:%d:%d\n", startpts, endpts, hours, mins, secs);
 }
 
-static void printDSI(uint8_t *ps2buf) {
+static void printDSI(uint8_t *ps2buf, const char *tag) {
     /* DSI structure? */
-    uint16_t vob_idn  = ps2buf[6 * 4] << 8 | ps2buf[6 * 4 + 1];
+    uint32_t scr   = AV_RB32(ps2buf);
+    uint32_t start = AV_RB32(ps2buf + 4);
+    uint32_t len   = AV_RB32(ps2buf + 8);
+    uint16_t vob_idn  = AV_RB16(ps2buf + 6 * 4);
     uint8_t vob_c_idn = ps2buf[6 * 4 + 2];
-    uint8_t hours = ((ps2buf[0x1d] >> 4) * 10) + (ps2buf[0x1d] & 0x0f);
-    uint8_t mins  = ((ps2buf[0x1e] >> 4) * 10) + (ps2buf[0x1e] & 0x0f);
-    uint8_t secs  = ((ps2buf[0x1f] >> 4) * 10) + (ps2buf[0x1f] & 0x0f);
-    av_log(NULL, AV_LOG_WARNING, "DSI MPEG: vob idn %d c_idn %d %d:%d:%d\n",
-           vob_idn, vob_c_idn, hours, mins, secs);
+    av_log(NULL, AV_LOG_WARNING,
+           "DSI %s: scr %d start 0x%08x size %d vob idn %d c_idn %d\n",
+           tag, scr, start, len, vob_idn, vob_c_idn);
 }
 
 static int check_pes(uint8_t *p, uint8_t *end)
@@ -617,7 +618,7 @@ found:
             av_log(NULL, AV_LOG_INFO, "PTS %"PRId64" DTS %"PRId64" ",
                    pkt->pts, pkt->dts);
             printPCI(data);
-            printDSI(data + 980);
+            printDSI(data + 980 + 1, "MPEG");
         }
 
         pkt->flags = AV_PKT_FLAG_KEY;
