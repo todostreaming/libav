@@ -579,7 +579,7 @@ static int get_nb_frames(AVFormatContext *ctx, StreamInfo *stream, int len)
     int nb_frames        = 0;
     PacketDesc *pkt_desc = stream->premux_packet;
 
-    while (len > 0) {
+    while (len > 0 && pkt_desc) {
         if (pkt_desc->size == pkt_desc->unwritten_size)
             nb_frames++;
         len     -= pkt_desc->unwritten_size;
@@ -988,6 +988,10 @@ static int output_packet(AVFormatContext *ctx, int flush)
     PacketDesc *timestamp_packet;
     const int64_t max_delay = av_rescale(ctx->max_delay, 90000, AV_TIME_BASE);
 
+
+    av_log(NULL, AV_LOG_INFO|AV_LOG_C(211), "output_packet scr %"PRId64"\n",
+           scr);
+
 retry:
     for (i = 0; i < ctx->nb_streams; i++) {
         AVStream *st = ctx->streams[i];
@@ -997,16 +1001,30 @@ retry:
         int rel_space = 1024 * space / stream->max_buffer_size;
         PacketDesc *next_pkt = stream->premux_packet;
 
+        if (flush) {
+            av_log(ctx, AV_LOG_INFO|AV_LOG_C(225),
+                   "Index %d \n",
+                   i);
+        }
+
         if (st->codec->codec_type == AVMEDIA_TYPE_VIDEO &&
             flush) {
             break_me_here(ctx);
             av_log(ctx, AV_LOG_INFO|AV_LOG_C(122),
-                   "Video pts %"PRId64" vobu_start_pts %"PRId64"\n",
-                    stream->vobu_start_pts);
+                   "Video pts %"PRId64" vobu_start_pts %"PRId64
+                   " delay %"PRId64" max_delay %"PRId64"\n"
+                   "buffer index %d max_buffer_size %d\n",
+                    next_pkt ? next_pkt->pts : -1,
+                    stream->vobu_start_pts,
+                    next_pkt ? next_pkt->dts - scr : -1,
+                    max_delay,
+                    stream->buffer_index,
+                    stream->max_buffer_size);
             if (next_pkt) {
-                av_log(ctx, AV_LOG_INFO, "Video %d pts  %"PRId64"\n",
+                av_log(ctx, AV_LOG_INFO, "Video %d pts  %"PRId64" %"PRId64"\n",
                        next_pkt->pkt.side_data_elems,
-                       next_pkt->pts);
+                       next_pkt->pts,
+                       max_delay);
             }
         }
 
@@ -1015,21 +1033,36 @@ retry:
         if (s->packet_size > avail_data && !flush &&
             st->codec->codec_type != AVMEDIA_TYPE_SUBTITLE)
             return 0;
-        if (avail_data == 0)
+        if (avail_data == 0) {
+            av_log(NULL, AV_LOG_INFO|AV_LOG_C(211), "no avail data %d\n", i);
             continue;
+        }
         assert(avail_data > 0);
 
-        if (space < s->packet_size && !ignore_constraints)
+        if (space < s->packet_size && !ignore_constraints && !flush) {
+            av_log(NULL, AV_LOG_INFO|AV_LOG_C(211), "no space %d vs %d %d\n",
+                   space, s->packet_size, i);
             continue;
+        }
 
-        if (next_pkt && next_pkt->dts - scr > max_delay)
+        if (next_pkt && next_pkt->dts - scr > max_delay) {
+            av_log(NULL, AV_LOG_INFO|AV_LOG_C(212),
+                   "Delay exceeded delay %"PRId64" max_delay %"PRId64"\n",
+                    next_pkt->dts - scr, max_delay);
             continue;
+        }
 
         if (rel_space > best_score) {
             best_score  = rel_space;
             best_i      = i;
             avail_space = space;
         }
+    }
+
+    if (flush) {
+        av_log(ctx, AV_LOG_INFO|AV_LOG_C(225),
+               "Picked %d \n",
+               best_i);
     }
 
     if (best_i < 0) {
@@ -1066,7 +1099,7 @@ retry:
 
     assert(av_fifo_size(stream->fifo) > 0);
 
-    assert(avail_space >= s->packet_size || ignore_constraints);
+    assert(avail_space >= s->packet_size || ignore_constraints || flush);
 
     timestamp_packet = stream->premux_packet;
     if (timestamp_packet->unwritten_size == timestamp_packet->size) {
