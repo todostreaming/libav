@@ -906,7 +906,7 @@ static void put_vcd_padding_sector(AVFormatContext *ctx)
     s->packet_number++;
 }
 
-static int remove_decoded_packets(AVFormatContext *ctx, int64_t scr)
+static void remove_decoded_packets(AVFormatContext *ctx, int64_t scr)
 {
     int i;
 
@@ -929,8 +929,6 @@ static int remove_decoded_packets(AVFormatContext *ctx, int64_t scr)
             av_freep(&pkt_desc);
         }
     }
-
-    return 0;
 }
 
 static int output_packet(AVFormatContext *ctx, int flush)
@@ -999,8 +997,9 @@ retry:
             ignore_constraints = 1;
         }
         scr = FFMAX(best_dts + 1, scr);
-        if (remove_decoded_packets(ctx, scr) < 0)
-            return -1;
+
+        remove_decoded_packets(ctx, scr);
+
         goto retry;
     }
 
@@ -1059,8 +1058,7 @@ retry:
     if (stream->premux_packet && es_size)
         stream->premux_packet->unwritten_size -= es_size;
 
-    if (remove_decoded_packets(ctx, s->last_scr) < 0)
-        return -1;
+    remove_decoded_packets(ctx, s->last_scr);
 
     return 1;
 }
