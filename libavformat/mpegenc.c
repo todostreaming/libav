@@ -931,20 +931,21 @@ static void remove_decoded_packets(AVFormatContext *ctx, int64_t scr)
     }
 }
 
-static int output_packet(AVFormatContext *ctx, int flush)
+static int find_best_stream(AVFormatContext *ctx,
+                            int flush,
+                            int ignore_constraints,
+                            int64_t scr,
+                            const int64_t max_delay,
+                            int *best_i,
+                            int *avail_space)
 {
     MpegMuxContext *s = ctx->priv_data;
-    AVStream *st;
-    StreamInfo *stream;
-    int i, avail_space = 0, es_size, trailer_size;
-    int best_i = -1;
-    int best_score = INT_MIN;
-    int ignore_constraints = 0;
-    int64_t scr = s->last_scr;
-    PacketDesc *timestamp_packet;
-    const int64_t max_delay = av_rescale(ctx->max_delay, 90000, AV_TIME_BASE);
+    int best_score    = INT_MIN;
+    int i;
 
-retry:
+    *best_i      = -1;
+    *avail_space = 0;
+
     for (i = 0; i < ctx->nb_streams; i++) {
         AVStream *st = ctx->streams[i];
         StreamInfo *stream = st->priv_data;
@@ -955,12 +956,11 @@ retry:
 
         /* for subtitle, a single PES packet must be generated,
          * so we flush after every single subtitle packet */
-        if (s->packet_size > avail_data && !flush
-            && st->codec->codec_type != AVMEDIA_TYPE_SUBTITLE)
-            return 0;
+        if (s->packet_size > avail_data && !flush &&
+            st->codec->codec_type != AVMEDIA_TYPE_SUBTITLE)
+            return AVERROR(EAGAIN);
         if (avail_data == 0)
             continue;
-        assert(avail_data > 0);
 
         if (space < s->packet_size && !ignore_constraints)
             continue;
@@ -969,41 +969,88 @@ retry:
             continue;
 
         if (rel_space > best_score) {
-            best_score  = rel_space;
-            best_i      = i;
-            avail_space = space;
+            best_score   = rel_space;
+            *best_i      = i;
+            *avail_space = space;
         }
     }
+
+    return 0;
+}
+
+static int update_scr(AVFormatContext *ctx,
+                      int64_t *scr, int *ignore_constraints)
+{
+    int64_t best_dts = INT64_MAX;
+    int i;
+
+    for (i = 0; i < ctx->nb_streams; i++) {
+        AVStream *st         = ctx->streams[i];
+        StreamInfo *stream   = st->priv_data;
+        PacketDesc *pkt_desc = stream->predecode_packet;
+
+        if (pkt_desc && pkt_desc->dts < best_dts)
+            best_dts = pkt_desc->dts;
+    }
+
+    av_dlog(ctx, "bumping scr, scr:%f, dts:%f\n",
+            *scr / 90000.0, best_dts / 90000.0);
+    if (best_dts == INT64_MAX)
+        return AVERROR(EAGAIN);
+
+    if (*scr >= best_dts + 1 && !*ignore_constraints) {
+        av_log(ctx, AV_LOG_ERROR,
+               "packet too large, ignoring buffer limits to mux it\n");
+        *ignore_constraints = 1;
+    }
+
+    *scr = FFMAX(best_dts + 1, *scr);
+
+    remove_decoded_packets(ctx, *scr);
+
+    return 0;
+}
+
+/* Write one or more padding sectors, if necessary, to reach
+ * the constant overall bitrate. */
+static void pad_vcd_packets(AVFormatContext *ctx, int64_t pts)
+{
+    MpegMuxContext *s = ctx->priv_data;
+    int pad_bytes;
+
+
+    // FIXME: pts cannot be correct here
+    while ((pad_bytes = get_vcd_padding_size(ctx, pts)) >= s->packet_size) {
+        put_vcd_padding_sector(ctx);
+        // FIXME: rounding and first few bytes of each packet
+        s->last_scr += s->packet_size * 90000LL / (s->mux_rate * 50LL);
+    }
+}
+
+static int output_packet(AVFormatContext *ctx, int flush)
+{
+    MpegMuxContext *s = ctx->priv_data;
+    AVStream *st;
+    StreamInfo *stream;
+    int es_size, trailer_size;
+    int ignore_constraints = 0;
+    int64_t scr = s->last_scr;
+    PacketDesc *timestamp_packet;
+    int best_i, avail_space, ret;
+    const int64_t max_delay = av_rescale(ctx->max_delay, 90000, AV_TIME_BASE);
+
+retry:
+    ret = find_best_stream(ctx, flush, ignore_constraints, scr, max_delay,
+                           &best_i, &avail_space);
+    if (ret == AVERROR(EAGAIN))
+        return 0;
 
     if (best_i < 0) {
-        int64_t best_dts = INT64_MAX;
-
-        for (i = 0; i < ctx->nb_streams; i++) {
-            AVStream *st = ctx->streams[i];
-            StreamInfo *stream = st->priv_data;
-            PacketDesc *pkt_desc = stream->predecode_packet;
-            if (pkt_desc && pkt_desc->dts < best_dts)
-                best_dts = pkt_desc->dts;
-        }
-
-        av_dlog(ctx, "bumping scr, scr:%f, dts:%f\n",
-                scr / 90000.0, best_dts / 90000.0);
-        if (best_dts == INT64_MAX)
+        ret = update_scr(ctx, &scr, &ignore_constraints);
+        if (ret == AVERROR(EAGAIN))
             return 0;
-
-        if (scr >= best_dts + 1 && !ignore_constraints) {
-            av_log(ctx, AV_LOG_ERROR,
-                   "packet too large, ignoring buffer limits to mux it\n");
-            ignore_constraints = 1;
-        }
-        scr = FFMAX(best_dts + 1, scr);
-
-        remove_decoded_packets(ctx, scr);
-
         goto retry;
     }
-
-    assert(best_i >= 0);
 
     st     = ctx->streams[best_i];
     stream = st->priv_data;
@@ -1033,18 +1080,8 @@ retry:
                                trailer_size);
     }
 
-    if (s->is_vcd) {
-        /* Write one or more padding sectors, if necessary, to reach
-         * the constant overall bitrate. */
-        int vcd_pad_bytes;
-
-        // FIXME: pts cannot be correct here
-        while ((vcd_pad_bytes = get_vcd_padding_size(ctx, stream->premux_packet->pts)) >= s->packet_size) {
-            put_vcd_padding_sector(ctx);
-            // FIXME: rounding and first few bytes of each packet
-            s->last_scr += s->packet_size * 90000LL / (s->mux_rate * 50LL);
-        }
-    }
+    if (s->is_vcd)
+        pad_vcd_packets(ctx, stream->premux_packet->pts);
 
     stream->buffer_index += es_size;
     // FIXME: rounding and first few bytes of each packet
