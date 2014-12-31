@@ -1145,12 +1145,16 @@ static int mpeg_mux_write_packet(AVFormatContext *ctx, AVPacket *pkt)
             pkt->stream_index, pts != AV_NOPTS_VALUE);
     if (!stream->premux_packet)
         stream->next_packet = &stream->premux_packet;
-    *stream->next_packet     =
-    pkt_desc                 = av_mallocz(sizeof(PacketDesc));
+    pkt_desc = av_mallocz(sizeof(PacketDesc));
+    if (!pkt_desc)
+        return AVERROR(ENOMEM);
+
     pkt_desc->pts            = pts;
     pkt_desc->dts            = dts;
     pkt_desc->unwritten_size =
     pkt_desc->size           = size;
+
+    *stream->next_packet = pkt_desc;
     if (!stream->predecode_packet)
         stream->predecode_packet = pkt_desc;
     stream->next_packet = &pkt_desc->next;
