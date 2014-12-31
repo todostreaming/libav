@@ -39,9 +39,9 @@
 #include <assert.h>
 
 typedef struct PacketDesc {
+    AVPacket pkt;
     int64_t pts;
     int64_t dts;
-    int size;
     int unwritten_size;
     struct PacketDesc *next;
 } PacketDesc;
@@ -571,7 +571,7 @@ static int get_nb_frames(AVFormatContext *ctx, StreamInfo *stream, int len)
     PacketDesc *pkt_desc = stream->premux_packet;
 
     while (len > 0) {
-        if (pkt_desc->size == pkt_desc->unwritten_size)
+        if (pkt_desc->pkt.size == pkt_desc->unwritten_size)
             nb_frames++;
         len     -= pkt_desc->unwritten_size;
         pkt_desc = pkt_desc->next;
@@ -930,15 +930,16 @@ static void remove_decoded_packets(AVFormatContext *ctx, int64_t scr)
 
         while ((pkt_desc = stream->predecode_packet) &&
                scr > pkt_desc->dts) { // FIXME: > vs >=
-            if (stream->buffer_index < pkt_desc->size ||
+            if (stream->buffer_index < pkt_desc->pkt.size ||
                 stream->predecode_packet == stream->premux_packet) {
                 av_log(ctx, AV_LOG_ERROR,
                        "buffer underflow i=%d bufi=%d size=%d\n",
-                       i, stream->buffer_index, pkt_desc->size);
+                       i, stream->buffer_index, pkt_desc->pkt.size);
                 break;
             }
-            stream->buffer_index    -= pkt_desc->size;
+            stream->buffer_index    -= pkt_desc->pkt.size;
             stream->predecode_packet = pkt_desc->next;
+            av_packet_unref(&pkt_desc->pkt);
             av_freep(&pkt_desc);
         }
     }
@@ -1073,7 +1074,7 @@ retry:
     assert(avail_space >= s->packet_size || ignore_constraints);
 
     timestamp_packet = stream->premux_packet;
-    if (timestamp_packet->unwritten_size == timestamp_packet->size) {
+    if (timestamp_packet->unwritten_size == timestamp_packet->pkt.size) {
         trailer_size = 0;
     } else {
         trailer_size     = timestamp_packet->unwritten_size;
@@ -1148,11 +1149,11 @@ static int mpeg_mux_write_packet(AVFormatContext *ctx, AVPacket *pkt)
     pkt_desc = av_mallocz(sizeof(PacketDesc));
     if (!pkt_desc)
         return AVERROR(ENOMEM);
-
     pkt_desc->pts            = pts;
     pkt_desc->dts            = dts;
-    pkt_desc->unwritten_size =
-    pkt_desc->size           = size;
+    pkt_desc->unwritten_size = size;
+    av_packet_ref(&pkt_desc->pkt, pkt);
+
 
     *stream->next_packet = pkt_desc;
     if (!stream->predecode_packet)
