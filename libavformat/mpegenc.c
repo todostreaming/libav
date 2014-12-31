@@ -124,11 +124,98 @@ static int put_pack_header(AVFormatContext *ctx, uint8_t *buf,
     return put_bits_ptr(&pb) - pb.buf;
 }
 
+static void put_dvd_stream_header(AVFormatContext *ctx, PutBitContext *pb)
+{
+    int P_STD_max_video      = 0;
+    int P_STD_max_mpeg_audio = 0;
+    int P_STD_max_mpeg_PS1   = 0;
+    int i, id;
+
+    for (i = 0; i < ctx->nb_streams; i++) {
+        StreamInfo *stream = ctx->streams[i]->priv_data;
+
+        id = stream->id;
+        if (id == 0xbd && stream->max_buffer_size > P_STD_max_mpeg_PS1) {
+            P_STD_max_mpeg_PS1 = stream->max_buffer_size;
+        } else if (id >= 0xc0 && id <= 0xc7 &&
+                   stream->max_buffer_size > P_STD_max_mpeg_audio) {
+            P_STD_max_mpeg_audio = stream->max_buffer_size;
+        } else if (id == 0xe0 &&
+                   stream->max_buffer_size > P_STD_max_video) {
+            P_STD_max_video = stream->max_buffer_size;
+        }
+    }
+
+    /* video */
+    put_bits(pb, 8, 0xb9); /* stream ID */
+    put_bits(pb, 2, 3);
+    put_bits(pb, 1, 1);
+    put_bits(pb, 13, P_STD_max_video / 1024);
+
+    /* audio */
+    if (P_STD_max_mpeg_audio == 0)
+        P_STD_max_mpeg_audio = 4096;
+    put_bits(pb, 8, 0xb8); /* stream ID */
+    put_bits(pb, 2, 3);
+    put_bits(pb, 1, 0);
+    put_bits(pb, 13, P_STD_max_mpeg_audio / 128);
+
+    /* private stream 1 */
+    put_bits(pb, 8, 0xbd); /* stream ID */
+    put_bits(pb, 2, 3);
+    put_bits(pb, 1, 0);
+    put_bits(pb, 13, P_STD_max_mpeg_PS1 / 128);
+
+    /* private stream 2 */
+    put_bits(pb, 8, 0xbf); /* stream ID */
+    put_bits(pb, 2, 3);
+    put_bits(pb, 1, 1);
+    put_bits(pb, 13, 2);
+}
+
+static void put_stream_header(AVFormatContext *ctx, PutBitContext *pb,
+                              int only_for_stream_id)
+{
+    MpegMuxContext *s = ctx->priv_data;
+    int private_stream_coded = 0; /* audio stream info */
+    int i, id;
+
+    for (i = 0; i < ctx->nb_streams; i++) {
+        StreamInfo *stream = ctx->streams[i]->priv_data;
+
+        /* For VCDs, only include the stream info for the stream
+         * that the pack which contains this system belongs to.
+         * (see VCD standard p. IV-7) */
+        if (!s->is_vcd || stream->id == only_for_stream_id ||
+            only_for_stream_id == 0) {
+            id = stream->id;
+            if (id < 0xc0) {
+                /* special case for private streams (AC-3 uses that) */
+                if (private_stream_coded)
+                    continue;
+                private_stream_coded = 1;
+                id = 0xbd;
+            }
+            put_bits(pb, 8, id);         /* stream ID */
+            put_bits(pb, 2, 3);
+            if (id < 0xe0) {
+                /* audio */
+                put_bits(pb, 1, 0);
+                put_bits(pb, 13, stream->max_buffer_size / 128);
+            } else {
+                /* video */
+                put_bits(pb, 1, 1);
+                put_bits(pb, 13, stream->max_buffer_size / 1024);
+            }
+        }
+    }
+}
+
 static int put_system_header(AVFormatContext *ctx, uint8_t *buf,
                              int only_for_stream_id)
 {
     MpegMuxContext *s = ctx->priv_data;
-    int size, i, private_stream_coded, id;
+    int size;
     PutBitContext pb;
 
     init_put_bits(&pb, buf, 128);
@@ -186,83 +273,9 @@ static int put_system_header(AVFormatContext *ctx, uint8_t *buf,
      * id (0xBD) private stream 1 (audio other than MPEG and subpictures). (P-STD_buffer_bound_scale = 1)
      * id (0xBF) private stream 2, NAV packs, set to 2x1024. */
     if (s->is_dvd) {
-
-        int P_STD_max_video = 0;
-        int P_STD_max_mpeg_audio = 0;
-        int P_STD_max_mpeg_PS1 = 0;
-
-        for (i = 0; i < ctx->nb_streams; i++) {
-            StreamInfo *stream = ctx->streams[i]->priv_data;
-
-            id = stream->id;
-            if (id == 0xbd && stream->max_buffer_size > P_STD_max_mpeg_PS1) {
-                P_STD_max_mpeg_PS1 = stream->max_buffer_size;
-            } else if (id >= 0xc0 && id <= 0xc7 &&
-                       stream->max_buffer_size > P_STD_max_mpeg_audio) {
-                P_STD_max_mpeg_audio = stream->max_buffer_size;
-            } else if (id == 0xe0 &&
-                       stream->max_buffer_size > P_STD_max_video) {
-                P_STD_max_video = stream->max_buffer_size;
-            }
-        }
-
-        /* video */
-        put_bits(&pb, 8, 0xb9); /* stream ID */
-        put_bits(&pb, 2, 3);
-        put_bits(&pb, 1, 1);
-        put_bits(&pb, 13, P_STD_max_video / 1024);
-
-        /* audio */
-        if (P_STD_max_mpeg_audio == 0)
-            P_STD_max_mpeg_audio = 4096;
-        put_bits(&pb, 8, 0xb8); /* stream ID */
-        put_bits(&pb, 2, 3);
-        put_bits(&pb, 1, 0);
-        put_bits(&pb, 13, P_STD_max_mpeg_audio / 128);
-
-        /* private stream 1 */
-        put_bits(&pb, 8, 0xbd); /* stream ID */
-        put_bits(&pb, 2, 3);
-        put_bits(&pb, 1, 0);
-        put_bits(&pb, 13, P_STD_max_mpeg_PS1 / 128);
-
-        /* private stream 2 */
-        put_bits(&pb, 8, 0xbf); /* stream ID */
-        put_bits(&pb, 2, 3);
-        put_bits(&pb, 1, 1);
-        put_bits(&pb, 13, 2);
+        put_dvd_stream_header(ctx, &pb);
     } else {
-        /* audio stream info */
-        private_stream_coded = 0;
-        for (i = 0; i < ctx->nb_streams; i++) {
-            StreamInfo *stream = ctx->streams[i]->priv_data;
-
-            /* For VCDs, only include the stream info for the stream
-             * that the pack which contains this system belongs to.
-             * (see VCD standard p. IV-7) */
-            if (!s->is_vcd || stream->id == only_for_stream_id ||
-                only_for_stream_id == 0) {
-                id = stream->id;
-                if (id < 0xc0) {
-                    /* special case for private streams (AC-3 uses that) */
-                    if (private_stream_coded)
-                        continue;
-                    private_stream_coded = 1;
-                    id = 0xbd;
-                }
-                put_bits(&pb, 8, id);         /* stream ID */
-                put_bits(&pb, 2, 3);
-                if (id < 0xe0) {
-                    /* audio */
-                    put_bits(&pb, 1, 0);
-                    put_bits(&pb, 13, stream->max_buffer_size / 128);
-                } else {
-                    /* video */
-                    put_bits(&pb, 1, 1);
-                    put_bits(&pb, 13, stream->max_buffer_size / 1024);
-                }
-            }
-        }
+        put_stream_header(ctx, &pb, only_for_stream_id);
     }
 
     flush_put_bits(&pb);
