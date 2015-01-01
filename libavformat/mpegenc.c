@@ -817,8 +817,6 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
             stuffing_size     = 0;
         }
 
-        nb_frames = get_nb_frames(ctx, stream, payload_size - stuffing_size);
-
         avio_wb32(ctx->pb, startcode);
 
         avio_wb16(ctx->pb, packet_size);
@@ -895,6 +893,8 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
                 avio_w8(ctx->pb, stream->lpcm_header[2]);
             } else if (id >= 0x40) {
                 /* AC-3 */
+                nb_frames = get_nb_frames(ctx, stream,
+                                          payload_size - stuffing_size);
                 avio_w8(ctx->pb, nb_frames);
                 avio_wb16(ctx->pb, trailer_size + 1);
             }
