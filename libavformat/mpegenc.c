@@ -39,17 +39,15 @@
 #include <assert.h>
 
 typedef struct PacketDesc {
+    AVPacket pkt;
     int64_t pts;
     int64_t dts;
-    int size;
     int unwritten_size;
-    int flags;
-    AVPacket pkt;
     struct PacketDesc *next;
 } PacketDesc;
 
 typedef struct {
-    AVFifoBuffer *fifo;
+    int queue_size;
     uint8_t id;
     int max_buffer_size; /* in bytes */
     int buffer_index;
@@ -146,11 +144,98 @@ static int put_pack_header(AVFormatContext *ctx, uint8_t *buf,
     return put_bits_ptr(&pb) - pb.buf;
 }
 
+static void put_dvd_stream_header(AVFormatContext *ctx, PutBitContext *pb)
+{
+    int P_STD_max_video      = 0;
+    int P_STD_max_mpeg_audio = 0;
+    int P_STD_max_mpeg_PS1   = 0;
+    int i, id;
+
+    for (i = 0; i < ctx->nb_streams; i++) {
+        StreamInfo *stream = ctx->streams[i]->priv_data;
+
+        id = stream->id;
+        if (id == 0xbd && stream->max_buffer_size > P_STD_max_mpeg_PS1) {
+            P_STD_max_mpeg_PS1 = stream->max_buffer_size;
+        } else if (id >= 0xc0 && id <= 0xc7 &&
+                   stream->max_buffer_size > P_STD_max_mpeg_audio) {
+            P_STD_max_mpeg_audio = stream->max_buffer_size;
+        } else if (id == 0xe0 &&
+                   stream->max_buffer_size > P_STD_max_video) {
+            P_STD_max_video = stream->max_buffer_size;
+        }
+    }
+
+    /* video */
+    put_bits(pb, 8, 0xb9); /* stream ID */
+    put_bits(pb, 2, 3);
+    put_bits(pb, 1, 1);
+    put_bits(pb, 13, P_STD_max_video / 1024);
+
+    /* audio */
+    if (P_STD_max_mpeg_audio == 0)
+        P_STD_max_mpeg_audio = 4096;
+    put_bits(pb, 8, 0xb8); /* stream ID */
+    put_bits(pb, 2, 3);
+    put_bits(pb, 1, 0);
+    put_bits(pb, 13, P_STD_max_mpeg_audio / 128);
+
+    /* private stream 1 */
+    put_bits(pb, 8, 0xbd); /* stream ID */
+    put_bits(pb, 2, 3);
+    put_bits(pb, 1, 0);
+    put_bits(pb, 13, P_STD_max_mpeg_PS1 / 128);
+
+    /* private stream 2 */
+    put_bits(pb, 8, 0xbf); /* stream ID */
+    put_bits(pb, 2, 3);
+    put_bits(pb, 1, 1);
+    put_bits(pb, 13, 2);
+}
+
+static void put_stream_header(AVFormatContext *ctx, PutBitContext *pb,
+                              int only_for_stream_id)
+{
+    MpegMuxContext *s = ctx->priv_data;
+    int private_stream_coded = 0; /* audio stream info */
+    int i, id;
+
+    for (i = 0; i < ctx->nb_streams; i++) {
+        StreamInfo *stream = ctx->streams[i]->priv_data;
+
+        /* For VCDs, only include the stream info for the stream
+         * that the pack which contains this system belongs to.
+         * (see VCD standard p. IV-7) */
+        if (!s->is_vcd || stream->id == only_for_stream_id ||
+            only_for_stream_id == 0) {
+            id = stream->id;
+            if (id < 0xc0) {
+                /* special case for private streams (AC-3 uses that) */
+                if (private_stream_coded)
+                    continue;
+                private_stream_coded = 1;
+                id = 0xbd;
+            }
+            put_bits(pb, 8, id);         /* stream ID */
+            put_bits(pb, 2, 3);
+            if (id < 0xe0) {
+                /* audio */
+                put_bits(pb, 1, 0);
+                put_bits(pb, 13, stream->max_buffer_size / 128);
+            } else {
+                /* video */
+                put_bits(pb, 1, 1);
+                put_bits(pb, 13, stream->max_buffer_size / 1024);
+            }
+        }
+    }
+}
+
 static int put_system_header(AVFormatContext *ctx, uint8_t *buf,
                              int only_for_stream_id)
 {
     MpegMuxContext *s = ctx->priv_data;
-    int size, i, private_stream_coded, id;
+    int size;
     PutBitContext pb;
 
     init_put_bits(&pb, buf, 128);
@@ -208,83 +293,9 @@ static int put_system_header(AVFormatContext *ctx, uint8_t *buf,
      * id (0xBD) private stream 1 (audio other than MPEG and subpictures). (P-STD_buffer_bound_scale = 1)
      * id (0xBF) private stream 2, NAV packs, set to 2x1024. */
     if (s->is_dvd) {
-
-        int P_STD_max_video = 0;
-        int P_STD_max_mpeg_audio = 0;
-        int P_STD_max_mpeg_PS1 = 0;
-
-        for (i = 0; i < ctx->nb_streams; i++) {
-            StreamInfo *stream = ctx->streams[i]->priv_data;
-
-            id = stream->id;
-            if (id == 0xbd && stream->max_buffer_size > P_STD_max_mpeg_PS1) {
-                P_STD_max_mpeg_PS1 = stream->max_buffer_size;
-            } else if (id >= 0xc0 && id <= 0xc7 &&
-                       stream->max_buffer_size > P_STD_max_mpeg_audio) {
-                P_STD_max_mpeg_audio = stream->max_buffer_size;
-            } else if (id == 0xe0 &&
-                       stream->max_buffer_size > P_STD_max_video) {
-                P_STD_max_video = stream->max_buffer_size;
-            }
-        }
-
-        /* video */
-        put_bits(&pb, 8, 0xb9); /* stream ID */
-        put_bits(&pb, 2, 3);
-        put_bits(&pb, 1, 1);
-        put_bits(&pb, 13, P_STD_max_video / 1024);
-
-        /* audio */
-        if (P_STD_max_mpeg_audio == 0)
-            P_STD_max_mpeg_audio = 4096;
-        put_bits(&pb, 8, 0xb8); /* stream ID */
-        put_bits(&pb, 2, 3);
-        put_bits(&pb, 1, 0);
-        put_bits(&pb, 13, P_STD_max_mpeg_audio / 128);
-
-        /* private stream 1 */
-        put_bits(&pb, 8, 0xbd); /* stream ID */
-        put_bits(&pb, 2, 3);
-        put_bits(&pb, 1, 0);
-        put_bits(&pb, 13, P_STD_max_mpeg_PS1 / 128);
-
-        /* private stream 2 */
-        put_bits(&pb, 8, 0xbf); /* stream ID */
-        put_bits(&pb, 2, 3);
-        put_bits(&pb, 1, 1);
-        put_bits(&pb, 13, 2);
+        put_dvd_stream_header(ctx, &pb);
     } else {
-        /* audio stream info */
-        private_stream_coded = 0;
-        for (i = 0; i < ctx->nb_streams; i++) {
-            StreamInfo *stream = ctx->streams[i]->priv_data;
-
-            /* For VCDs, only include the stream info for the stream
-             * that the pack which contains this system belongs to.
-             * (see VCD standard p. IV-7) */
-            if (!s->is_vcd || stream->id == only_for_stream_id ||
-                only_for_stream_id == 0) {
-                id = stream->id;
-                if (id < 0xc0) {
-                    /* special case for private streams (AC-3 uses that) */
-                    if (private_stream_coded)
-                        continue;
-                    private_stream_coded = 1;
-                    id = 0xbd;
-                }
-                put_bits(&pb, 8, id);         /* stream ID */
-                put_bits(&pb, 2, 3);
-                if (id < 0xe0) {
-                    /* audio */
-                    put_bits(&pb, 1, 0);
-                    put_bits(&pb, 13, stream->max_buffer_size / 128);
-                } else {
-                    /* video */
-                    put_bits(&pb, 1, 1);
-                    put_bits(&pb, 13, stream->max_buffer_size / 1024);
-                }
-            }
-        }
+        put_stream_header(ctx, &pb, only_for_stream_id);
     }
 
     flush_put_bits(&pb);
@@ -422,9 +433,6 @@ static av_cold int mpeg_mux_init(AVFormatContext *ctx)
         default:
             return -1;
         }
-        stream->fifo = av_fifo_alloc(16);
-        if (!stream->fifo)
-            goto fail;
     }
     bitrate       = 0;
     audio_bitrate = 0;
@@ -579,8 +587,8 @@ static int get_nb_frames(AVFormatContext *ctx, StreamInfo *stream, int len)
     int nb_frames        = 0;
     PacketDesc *pkt_desc = stream->premux_packet;
 
-    while (len > 0 && pkt_desc) {
-        if (pkt_desc->size == pkt_desc->unwritten_size)
+    while (len > 0) {
+        if (pkt_desc->pkt.size == pkt_desc->unwritten_size)
             nb_frames++;
         len     -= pkt_desc->unwritten_size;
         pkt_desc = pkt_desc->next;
@@ -589,10 +597,25 @@ static int get_nb_frames(AVFormatContext *ctx, StreamInfo *stream, int len)
     return nb_frames;
 }
 
+static void write_packets(AVFormatContext *ctx, StreamInfo *stream, int size)
+{
+    PacketDesc *pkt_desc = stream->premux_packet;
+
+    while (size > 0 && pkt_desc) {
+        int pkt_size = FFMIN(pkt_desc->unwritten_size, size);
+        int off      = pkt_desc->pkt.size - pkt_desc->unwritten_size;
+        stream->queue_size -= pkt_size;
+
+        avio_write(ctx->pb, pkt_desc->pkt.data + off, pkt_size);
+
+        size    -= pkt_size;
+        pkt_desc = pkt_desc->next;
+    }
+}
+
 /* flush the packet on stream stream_index */
 static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
-                        int64_t pts, int64_t dts, int64_t scr,
-                        int trailer_size, int flush)
+                        int64_t pts, int64_t dts, int64_t scr, int trailer_size)
 {
     MpegMuxContext *s  = ctx->priv_data;
     StreamInfo *stream = ctx->streams[stream_index]->priv_data;
@@ -610,9 +633,10 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
 
     id = stream->id;
 
-//    av_log(ctx, AV_LOG_INFO|AV_LOG_C(144), "packet ID=%2x %d PTS=%0.3f\n", id, stream_index, pts / 90000.0);
+    av_dlog(ctx, "packet ID=%2x PTS=%0.3f\n", id, pts / 90000.0);
 
     buf_ptr = buffer;
+
     if (pkt) {
         int _;
         nav_data = av_packet_get_side_data(pkt, AV_PKT_DATA_NAV_PACK, &_);
@@ -744,7 +768,7 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
             startcode = 0x100 + id;
         }
 
-        stuffing_size = payload_size - av_fifo_size(stream->fifo);
+        stuffing_size = payload_size - stream->queue_size;
 
         // first byte does not fit -> reset pts/dts + stuffing
         if (payload_size <= trailer_size && pts != AV_NOPTS_VALUE) {
@@ -782,7 +806,7 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
             stuffing_size = 0;
 
         if (startcode == PRIVATE_STREAM_1 && id >= 0xa0) {
-            if (payload_size < av_fifo_size(stream->fifo))
+            if (payload_size < stream->queue_size)
                 stuffing_size += payload_size % stream->lpcm_align;
         }
 
@@ -877,10 +901,10 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
         }
 
         /* output data */
-        assert(payload_size - stuffing_size <= av_fifo_size(stream->fifo));
-        av_fifo_generic_read(stream->fifo, ctx->pb,
-                             payload_size - stuffing_size,
-                             (void (*)(void*, void*, int))avio_write);
+        assert(payload_size - stuffing_size <= stream->queue_size);
+
+        write_packets(ctx, stream, payload_size - stuffing_size);
+
         stream->bytes_to_iframe -= payload_size - stuffing_size;
     } else {
         payload_size  =
@@ -931,7 +955,7 @@ static void put_vcd_padding_sector(AVFormatContext *ctx)
     s->packet_number++;
 }
 
-static int remove_decoded_packets(AVFormatContext *ctx, int64_t scr)
+static void remove_decoded_packets(AVFormatContext *ctx, int64_t scr)
 {
     int i;
 
@@ -942,16 +966,15 @@ static int remove_decoded_packets(AVFormatContext *ctx, int64_t scr)
 
         while ((pkt_desc = stream->predecode_packet) &&
                scr > pkt_desc->dts) { // FIXME: > vs >=
-            if (stream->buffer_index < pkt_desc->size ||
+            if (stream->buffer_index < pkt_desc->pkt.size ||
                 stream->predecode_packet == stream->premux_packet) {
                 av_log(ctx, AV_LOG_ERROR,
                        "buffer underflow i=%d bufi=%d size=%d\n",
-                       i, stream->buffer_index, pkt_desc->size);
+                       i, stream->buffer_index, pkt_desc->pkt.size);
                 break;
             }
-            stream->buffer_index    -= pkt_desc->size;
+            stream->buffer_index    -= pkt_desc->pkt.size;
             stream->predecode_packet = pkt_desc->next;
-
             {
                 int _;
                 uint8_t *data;
@@ -965,38 +988,27 @@ static int remove_decoded_packets(AVFormatContext *ctx, int64_t scr)
             av_freep(&pkt_desc);
         }
     }
-
-    return 0;
 }
 
-static int break_me_here(AVFormatContext *ctx)
-{
-
-    return 0;
-}
-
-static int output_packet(AVFormatContext *ctx, int flush)
+static int find_best_stream(AVFormatContext *ctx,
+                            int flush,
+                            int ignore_constraints,
+                            int64_t scr,
+                            const int64_t max_delay,
+                            int *best_i,
+                            int *avail_space)
 {
     MpegMuxContext *s = ctx->priv_data;
-    AVStream *st;
-    StreamInfo *stream;
-    int i, avail_space = 0, es_size, trailer_size;
-    int best_i = -1;
-    int best_score = INT_MIN;
-    int ignore_constraints = 0;
-    int64_t scr = s->last_scr;
-    PacketDesc *timestamp_packet;
-    const int64_t max_delay = av_rescale(ctx->max_delay, 90000, AV_TIME_BASE);
+    int best_score    = INT_MIN;
+    int i;
 
+    *best_i      = -1;
+    *avail_space = 0;
 
-    av_log(NULL, AV_LOG_INFO|AV_LOG_C(211), "output_packet scr %"PRId64"\n",
-           scr);
-
-retry:
     for (i = 0; i < ctx->nb_streams; i++) {
         AVStream *st = ctx->streams[i];
         StreamInfo *stream = st->priv_data;
-        const int avail_data = av_fifo_size(stream->fifo);
+        const int avail_data = stream->queue_size;
         const int space = stream->max_buffer_size - stream->buffer_index;
         int rel_space = 1024 * space / stream->max_buffer_size;
         PacketDesc *next_pkt = stream->premux_packet;
@@ -1009,7 +1021,6 @@ retry:
 
         if (st->codec->codec_type == AVMEDIA_TYPE_VIDEO &&
             flush) {
-            break_me_here(ctx);
             av_log(ctx, AV_LOG_INFO|AV_LOG_C(122),
                    "Video pts %"PRId64" vobu_start_pts %"PRId64
                    " delay %"PRId64" max_delay %"PRId64"\n"
@@ -1032,77 +1043,109 @@ retry:
          * so we flush after every single subtitle packet */
         if (s->packet_size > avail_data && !flush &&
             st->codec->codec_type != AVMEDIA_TYPE_SUBTITLE)
-            return 0;
-        if (avail_data == 0) {
-            av_log(NULL, AV_LOG_INFO|AV_LOG_C(211), "no avail data %d\n", i);
+            return AVERROR(EAGAIN);
+        if (avail_data == 0)
             continue;
-        }
-        assert(avail_data > 0);
 
-        if (space < s->packet_size && !ignore_constraints && !flush) {
-            av_log(NULL, AV_LOG_INFO|AV_LOG_C(211), "no space %d vs %d %d\n",
-                   space, s->packet_size, i);
+        if (space < s->packet_size && !ignore_constraints)
             continue;
-        }
 
-        if (next_pkt && next_pkt->dts - scr > max_delay) {
-            av_log(NULL, AV_LOG_INFO|AV_LOG_C(212),
-                   "Delay exceeded delay %"PRId64" max_delay %"PRId64"\n",
-                    next_pkt->dts - scr, max_delay);
+        if (next_pkt && next_pkt->dts - scr > max_delay)
             continue;
-        }
 
         if (rel_space > best_score) {
-            best_score  = rel_space;
-            best_i      = i;
-            avail_space = space;
+            best_score   = rel_space;
+            *best_i      = i;
+            *avail_space = space;
         }
     }
 
-    if (flush) {
-        av_log(ctx, AV_LOG_INFO|AV_LOG_C(225),
-               "Picked %d \n",
-               best_i);
+    return 0;
+}
+
+static int update_scr(AVFormatContext *ctx,
+                      int64_t *scr, int *ignore_constraints)
+{
+    int64_t best_dts = INT64_MAX;
+    int i;
+
+    for (i = 0; i < ctx->nb_streams; i++) {
+        AVStream *st         = ctx->streams[i];
+        StreamInfo *stream   = st->priv_data;
+        PacketDesc *pkt_desc = stream->predecode_packet;
+
+        if (pkt_desc && pkt_desc->dts < best_dts)
+            best_dts = pkt_desc->dts;
     }
+
+    av_dlog(ctx, "bumping scr, scr:%f, dts:%f\n",
+            *scr / 90000.0, best_dts / 90000.0);
+    if (best_dts == INT64_MAX)
+        return AVERROR(EAGAIN);
+
+    if (*scr >= best_dts + 1 && !*ignore_constraints) {
+        av_log(ctx, AV_LOG_ERROR,
+               "packet too large, ignoring buffer limits to mux it\n");
+        *ignore_constraints = 1;
+    }
+
+    *scr = FFMAX(best_dts + 1, *scr);
+
+    remove_decoded_packets(ctx, *scr);
+
+    return 0;
+}
+
+/* Write one or more padding sectors, if necessary, to reach
+ * the constant overall bitrate. */
+static void pad_vcd_packets(AVFormatContext *ctx, int64_t pts)
+{
+    MpegMuxContext *s = ctx->priv_data;
+    int pad_bytes;
+
+
+    // FIXME: pts cannot be correct here
+    while ((pad_bytes = get_vcd_padding_size(ctx, pts)) >= s->packet_size) {
+        put_vcd_padding_sector(ctx);
+        // FIXME: rounding and first few bytes of each packet
+        s->last_scr += s->packet_size * 90000LL / (s->mux_rate * 50LL);
+    }
+}
+
+static int output_packet(AVFormatContext *ctx, int flush)
+{
+    MpegMuxContext *s = ctx->priv_data;
+    AVStream *st;
+    StreamInfo *stream;
+    int es_size, trailer_size;
+    int ignore_constraints = 0;
+    int64_t scr = s->last_scr;
+    PacketDesc *timestamp_packet;
+    int best_i, avail_space, ret;
+    const int64_t max_delay = av_rescale(ctx->max_delay, 90000, AV_TIME_BASE);
+
+retry:
+    ret = find_best_stream(ctx, flush, ignore_constraints, scr, max_delay,
+                           &best_i, &avail_space);
+    if (ret == AVERROR(EAGAIN))
+        return 0;
 
     if (best_i < 0) {
-        int64_t best_dts = INT64_MAX;
-
-        for (i = 0; i < ctx->nb_streams; i++) {
-            AVStream *st = ctx->streams[i];
-            StreamInfo *stream = st->priv_data;
-            PacketDesc *pkt_desc = stream->predecode_packet;
-            if (pkt_desc && pkt_desc->dts < best_dts)
-                best_dts = pkt_desc->dts;
-        }
-
-        av_dlog(ctx, "bumping scr, scr:%f, dts:%f\n",
-                scr / 90000.0, best_dts / 90000.0);
-        if (best_dts == INT64_MAX)
+        ret = update_scr(ctx, &scr, &ignore_constraints);
+        if (ret == AVERROR(EAGAIN))
             return 0;
-
-        if (scr >= best_dts + 1 && !ignore_constraints) {
-            av_log(ctx, AV_LOG_ERROR,
-                   "packet too large, ignoring buffer limits to mux it\n");
-            ignore_constraints = 1;
-        }
-        scr = FFMAX(best_dts + 1, scr);
-        if (remove_decoded_packets(ctx, scr) < 0)
-            return -1;
         goto retry;
     }
-
-    assert(best_i >= 0);
 
     st     = ctx->streams[best_i];
     stream = st->priv_data;
 
-    assert(av_fifo_size(stream->fifo) > 0);
+    assert(stream->queue_size > 0);
 
-    assert(avail_space >= s->packet_size || ignore_constraints || flush);
+    assert(avail_space >= s->packet_size || ignore_constraints);
 
     timestamp_packet = stream->premux_packet;
-    if (timestamp_packet->unwritten_size == timestamp_packet->size) {
+    if (timestamp_packet->unwritten_size == timestamp_packet->pkt.size) {
         trailer_size = 0;
     } else {
         trailer_size     = timestamp_packet->unwritten_size;
@@ -1114,36 +1157,18 @@ retry:
                 timestamp_packet->dts / 90000.0,
                 timestamp_packet->pts / 90000.0,
                 scr / 90000.0, best_i);
-
-//        av_log(NULL, AV_LOG_INFO, "Packet %"PRId64", %d\n",
-//                   timestamp_packet->pts, timestamp_packet->pkt.stream_index);
         es_size = flush_packet(ctx, best_i, &timestamp_packet->pkt,
                                timestamp_packet->pts,
-                               timestamp_packet->dts, scr,
-                               trailer_size,
-                               flush);
+                               timestamp_packet->dts, scr, trailer_size);
     } else {
-        assert(av_fifo_size(stream->fifo) == trailer_size);
+        assert(stream->queue_size == trailer_size);
         es_size = flush_packet(ctx, best_i, NULL,
                                AV_NOPTS_VALUE, AV_NOPTS_VALUE, scr,
-                               trailer_size, flush);
-
-        if (flush)
-            av_log(NULL, AV_LOG_INFO|AV_LOG_C(100), "flushing %d\n", best_i);
+                               trailer_size);
     }
 
-    if (s->is_vcd) {
-        /* Write one or more padding sectors, if necessary, to reach
-         * the constant overall bitrate. */
-        int vcd_pad_bytes;
-
-        // FIXME: pts cannot be correct here
-        while ((vcd_pad_bytes = get_vcd_padding_size(ctx, stream->premux_packet->pts)) >= s->packet_size) {
-            put_vcd_padding_sector(ctx);
-            // FIXME: rounding and first few bytes of each packet
-            s->last_scr += s->packet_size * 90000LL / (s->mux_rate * 50LL);
-        }
-    }
+    if (s->is_vcd)
+        pad_vcd_packets(ctx, stream->premux_packet->pts);
 
     stream->buffer_index += es_size;
     // FIXME: rounding and first few bytes of each packet
@@ -1154,11 +1179,10 @@ retry:
         es_size              -= stream->premux_packet->unwritten_size;
         stream->premux_packet = stream->premux_packet->next;
     }
-    if (es_size && stream->premux_packet)
+    if (stream->premux_packet && es_size)
         stream->premux_packet->unwritten_size -= es_size;
 
-    if (remove_decoded_packets(ctx, s->last_scr) < 0)
-        return -1;
+    remove_decoded_packets(ctx, s->last_scr);
 
     return 1;
 }
@@ -1167,7 +1191,6 @@ static int mpeg_mux_write_packet(AVFormatContext *ctx, AVPacket *pkt)
 {
     int stream_index = pkt->stream_index;
     int size         = pkt->size;
-    uint8_t *buf     = pkt->data;
     MpegMuxContext *s = ctx->priv_data;
     AVStream *st      = ctx->streams[stream_index];
     StreamInfo *stream = st->priv_data;
@@ -1190,31 +1213,30 @@ static int mpeg_mux_write_packet(AVFormatContext *ctx, AVPacket *pkt)
         dts += 2 * preload;
     }
 
-//    av_log(ctx, AV_LOG_INFO|AV_LOG_C(222), "dts:%f pts:%f flags:%d stream:%d nopts:%d\n",
-//            dts / 90000.0, pts / 90000.0, pkt->flags,
-//            pkt->stream_index, pts != AV_NOPTS_VALUE);
+    av_dlog(ctx, "dts:%f pts:%f flags:%d stream:%d nopts:%d\n",
+            dts / 90000.0, pts / 90000.0, pkt->flags,
+            pkt->stream_index, pts != AV_NOPTS_VALUE);
     if (!stream->premux_packet)
         stream->next_packet = &stream->premux_packet;
-    *stream->next_packet     =
-    pkt_desc                 = av_mallocz(sizeof(PacketDesc));
+    pkt_desc = av_mallocz(sizeof(PacketDesc));
+    if (!pkt_desc)
+        return AVERROR(ENOMEM);
     pkt_desc->pts            = pts;
     pkt_desc->dts            = dts;
-    pkt_desc->unwritten_size =
-    pkt_desc->size           = size;
-    if (st->codec->codec_type == AVMEDIA_TYPE_VIDEO)
-        av_packet_ref(&pkt_desc->pkt, pkt);
+    pkt_desc->unwritten_size = size;
+    av_packet_ref(&pkt_desc->pkt, pkt);
+
+    *stream->next_packet = pkt_desc;
     if (!stream->predecode_packet)
         stream->predecode_packet = pkt_desc;
     stream->next_packet = &pkt_desc->next;
-
-    if (av_fifo_realloc2(stream->fifo, av_fifo_size(stream->fifo) + size) < 0)
-        return -1;
+    stream->queue_size += size;
 
     if (s->is_dvd) {
         int _;
         uint8_t *data;
         if ((data = av_packet_get_side_data(pkt, AV_PKT_DATA_NAV_PACK, &_))) {
-            stream->bytes_to_iframe = av_fifo_size(stream->fifo);
+            stream->bytes_to_iframe = stream->queue_size;
             stream->align_iframe    = 1;
             stream->vobu_start_pts  = pts;
             printPCI("MPEGENC IN", data);
@@ -1222,8 +1244,6 @@ static int mpeg_mux_write_packet(AVFormatContext *ctx, AVPacket *pkt)
                    "size %d\n", size);
         }
     }
-
-    av_fifo_generic_write(stream->fifo, buf, size, NULL);
 
     for (;;) {
         int ret = output_packet(ctx, 0);
@@ -1254,8 +1274,7 @@ static int mpeg_mux_end(AVFormatContext *ctx)
     for (i = 0; i < ctx->nb_streams; i++) {
         stream = ctx->streams[i]->priv_data;
 
-        assert(av_fifo_size(stream->fifo) == 0);
-        av_fifo_free(stream->fifo);
+        assert(stream->queue_size == 0);
     }
     return 0;
 }
