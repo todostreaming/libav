@@ -2158,6 +2158,8 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
                  st->codec->codec_type == AVMEDIA_TYPE_AUDIO))
                 break;
         }
+
+#if 0
         if (i == ic->nb_streams) {
             /* NOTE: If the format has no header, then we need to read some
              * packets to get most of the streams, so we cannot stop here. */
@@ -2168,6 +2170,7 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
                 break;
             }
         }
+
         /* We did not get all the codec info, but we read too much data. */
         if (read_size >= ic->probesize) {
             ret = count;
@@ -2175,7 +2178,7 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
                    "Probe buffer size limit %d reached\n", ic->probesize);
             break;
         }
-
+#endif
         /* NOTE: A new stream can be added there if no header in file
          * (AVFMTCTX_NOHEADER). */
         ret = read_frame_internal(ic, &pkt1);
@@ -2269,6 +2272,7 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
             st->info->fps_last_dts_idx = st->codec_info_nb_frames;
 
             /* check max_analyze_duration */
+#if 0
             if (av_rescale_q(pkt->dts - st->info->fps_first_dts, st->time_base,
                              AV_TIME_BASE_Q) >= ic->max_analyze_duration) {
                 av_log(ic, AV_LOG_WARNING, "max_analyze_duration %d reached\n",
@@ -2277,6 +2281,7 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
                     av_packet_unref(pkt);
                 break;
             }
+#endif
         }
         if (st->parser && st->parser->parser->split && !st->codec->extradata) {
             int i = st->parser->parser->split(st->codec, pkt->data, pkt->size);
