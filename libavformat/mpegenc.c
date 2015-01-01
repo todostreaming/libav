@@ -597,6 +597,36 @@ static int get_nb_frames(AVFormatContext *ctx, StreamInfo *stream, int len)
     return nb_frames;
 }
 
+// return the size of the data
+
+static int get_queue_size(StreamInfo *stream)
+{
+    PacketDesc *pkt_desc = stream->premux_packet;
+    int size             = stream->queue_size;
+    int initial_size     = size;
+    uint8_t *nav_data    = NULL;
+    int _;
+    int start = 1;
+
+    while (size > 0 && pkt_desc) {
+        int pkt_size = FFMIN(pkt_desc->unwritten_size, size);
+
+        if (!start &&
+            (nav_data = av_packet_get_side_data(&pkt_desc->pkt,
+                                                AV_PKT_DATA_NAV_PACK, &_))) {
+            printPCI("MPEGENC Second packet", nav_data);
+            break;
+        }
+
+        start = 0;
+
+        size    -= pkt_size;
+        pkt_desc = pkt_desc->next;
+    }
+
+    return initial_size - size;
+}
+
 static void write_packets(AVFormatContext *ctx, StreamInfo *stream, int size)
 {
     PacketDesc *pkt_desc = stream->premux_packet;
@@ -629,6 +659,7 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
     /* "general" pack without data specific to one stream? */
     int general_pack = 0;
     int nb_frames;
+    int queue_size = get_queue_size(stream);
     uint8_t *nav_data = NULL;
 
     id = stream->id;
@@ -768,7 +799,7 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
             startcode = 0x100 + id;
         }
 
-        stuffing_size = payload_size - stream->queue_size;
+        stuffing_size = payload_size - queue_size;
 
         // first byte does not fit -> reset pts/dts + stuffing
         if (payload_size <= trailer_size && pts != AV_NOPTS_VALUE) {
@@ -806,7 +837,7 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
             stuffing_size = 0;
 
         if (startcode == PRIVATE_STREAM_1 && id >= 0xa0) {
-            if (payload_size < stream->queue_size)
+            if (payload_size < queue_size)
                 stuffing_size += payload_size % stream->lpcm_align;
         }
 
@@ -901,7 +932,7 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
         }
 
         /* output data */
-        assert(payload_size - stuffing_size <= stream->queue_size);
+        assert(payload_size - stuffing_size <= queue_size);
 
         write_packets(ctx, stream, payload_size - stuffing_size);
 
@@ -1013,12 +1044,13 @@ static int find_best_stream(AVFormatContext *ctx,
         int rel_space = 1024 * space / stream->max_buffer_size;
         PacketDesc *next_pkt = stream->premux_packet;
 
+#if 0
         if (flush) {
             av_log(ctx, AV_LOG_INFO|AV_LOG_C(225),
                    "Index %d \n",
                    i);
         }
-
+#endif
         if (st->codec->codec_type == AVMEDIA_TYPE_VIDEO &&
             flush) {
             av_log(ctx, AV_LOG_INFO|AV_LOG_C(122),
