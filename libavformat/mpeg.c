@@ -610,7 +610,16 @@ found:
         m->pts[st->index] = pkt->pts;
     }
 */
-    if (st->codec->codec_type == AVMEDIA_TYPE_VIDEO && m->nav_pack_found) {
+
+    if (m->nav_pack_found) {
+        av_log(NULL, AV_LOG_INFO|AV_LOG_C(142),
+               "Packet %s\n",
+                st->codec->codec_type == AVMEDIA_TYPE_VIDEO ? "Video" :
+                st->codec->codec_type == AVMEDIA_TYPE_AUDIO ? "Audio" :
+                st->codec->codec_type == AVMEDIA_TYPE_SUBTITLE ? "Sub" :
+                "unknown");
+    }
+    if (m->nav_pack_found) {
         uint8_t *data = av_packet_new_side_data(pkt, AV_PKT_DATA_NAV_PACK,
                                                 NAV_PACK_SIZE);
         if (data) {
