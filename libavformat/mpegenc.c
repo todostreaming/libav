@@ -83,6 +83,7 @@ typedef struct {
     int64_t vcd_padding_bytes_written;
 
     int preload;
+    int first_video;
 } MpegMuxContext;
 
 extern AVOutputFormat ff_mpeg1vcd_muxer;
@@ -425,6 +426,7 @@ static av_cold int mpeg_mux_init(AVFormatContext *ctx)
                 stream->max_buffer_size = 230 * 1024;
             }
             s->video_bound++;
+            s->first_video = 1;
             break;
         case AVMEDIA_TYPE_SUBTITLE:
             stream->id              = mps_id++;
@@ -534,6 +536,8 @@ fail:
 
 static inline void put_timestamp(AVIOContext *pb, int id, int64_t timestamp)
 {
+    av_log(NULL, AV_LOG_INFO, "Timestamp %"PRId64"\n", timestamp);
+
     avio_w8(pb, (id << 4) |  (((timestamp >> 30) & 0x07)   << 1) | 1);
     avio_wb16(pb, (uint16_t)((((timestamp >> 15) & 0x7fff) << 1) | 1));
     avio_wb16(pb, (uint16_t)((((timestamp)       & 0x7fff) << 1) | 1));
@@ -631,6 +635,11 @@ static void write_packets(AVFormatContext *ctx, StreamInfo *stream, int size)
 {
     PacketDesc *pkt_desc = stream->premux_packet;
 
+    av_log(ctx, AV_LOG_INFO|AV_LOG_C(211),
+           "Writing %d bytes from %"PRId64" %d at %"PRId64"\n",
+           size, pkt_desc->pkt.dts, pkt_desc->pkt.stream_index,
+           avio_tell(ctx->pb));
+
     while (size > 0 && pkt_desc) {
         int pkt_size = FFMIN(pkt_desc->unwritten_size, size);
         int off      = pkt_desc->pkt.size - pkt_desc->unwritten_size;
@@ -644,8 +653,10 @@ static void write_packets(AVFormatContext *ctx, StreamInfo *stream, int size)
 }
 
 /* flush the packet on stream stream_index */
-static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
-                        int64_t pts, int64_t dts, int64_t scr, int trailer_size)
+static int flush_packet(AVFormatContext *ctx, int stream_index,
+                        PacketDesc *pkt_desc,
+                        int64_t pts, int64_t dts,
+                        int64_t scr, int trailer_size)
 {
     MpegMuxContext *s  = ctx->priv_data;
     StreamInfo *stream = ctx->streams[stream_index]->priv_data;
@@ -668,16 +679,18 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
 
     buf_ptr = buffer;
 
-    if (pkt) {
+    if (pkt_desc) {
         int _;
-        nav_data = av_packet_get_side_data(pkt, AV_PKT_DATA_NAV_PACK, &_);
+        nav_data = av_packet_get_side_data(&pkt_desc->pkt,
+                                           AV_PKT_DATA_NAV_PACK, &_);
         if (nav_data)
             printPCI("MPEGENC FLUSH", nav_data);
     }
 
     if ((s->packet_number % s->pack_header_freq) == 0 || s->last_scr != scr ||
-        nav_data) {
+        (nav_data && pkt_desc->pkt.size == pkt_desc->unwritten_size)) {
         /* output pack and systems header if needed */
+        AVPacket *pkt = &pkt_desc->pkt;
         size        = put_pack_header(ctx, buf_ptr, scr);
         buf_ptr    += size;
         s->last_scr = scr;
@@ -739,7 +752,6 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
     }
     size = buf_ptr - buffer;
     avio_write(ctx->pb, buffer, size);
-
     packet_size = s->packet_size - size;
 
     if (s->is_vcd && (id & 0xe0) == AUDIO_ID)
@@ -1023,7 +1035,7 @@ static void remove_decoded_packets(AVFormatContext *ctx, int64_t scr)
 
 static int find_best_stream(AVFormatContext *ctx,
                             int flush,
-                            int ignore_constraints,
+                            int *ignore_constraints,
                             int64_t scr,
                             const int64_t max_delay,
                             int *best_i,
@@ -1073,17 +1085,26 @@ static int find_best_stream(AVFormatContext *ctx,
 
         /* for subtitle, a single PES packet must be generated,
          * so we flush after every single subtitle packet */
-        if (s->packet_size > avail_data && !flush &&
+        if (!s->first_video && s->packet_size > avail_data && !flush &&
             st->codec->codec_type != AVMEDIA_TYPE_SUBTITLE)
             return AVERROR(EAGAIN);
         if (avail_data == 0)
             continue;
 
-        if (space < s->packet_size && !ignore_constraints)
+        if (space < s->packet_size && !*ignore_constraints)
             continue;
 
         if (next_pkt && next_pkt->dts - scr > max_delay)
             continue;
+
+        if (s->first_video &&
+            st->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
+            av_log(NULL, AV_LOG_ERROR, "HERE\n");
+            *best_i = i;
+            *avail_space = space;
+            *ignore_constraints = 1;
+            return 0;
+        }
 
         if (rel_space > best_score) {
             best_score   = rel_space;
@@ -1157,7 +1178,7 @@ static int output_packet(AVFormatContext *ctx, int flush)
     const int64_t max_delay = av_rescale(ctx->max_delay, 90000, AV_TIME_BASE);
 
 retry:
-    ret = find_best_stream(ctx, flush, ignore_constraints, scr, max_delay,
+    ret = find_best_stream(ctx, flush, &ignore_constraints, scr, max_delay,
                            &best_i, &avail_space);
     if (ret == AVERROR(EAGAIN))
         return 0;
@@ -1185,11 +1206,11 @@ retry:
     }
 
     if (timestamp_packet) {
-        av_dlog(ctx, "dts:%f pts:%f scr:%f stream:%d\n",
+        av_log(ctx, AV_LOG_INFO, "dts:%f pts:%f scr:%f stream:%d\n",
                 timestamp_packet->dts / 90000.0,
                 timestamp_packet->pts / 90000.0,
                 scr / 90000.0, best_i);
-        es_size = flush_packet(ctx, best_i, &timestamp_packet->pkt,
+        es_size = flush_packet(ctx, best_i, timestamp_packet,
                                timestamp_packet->pts,
                                timestamp_packet->dts, scr, trailer_size);
     } else {
@@ -1231,6 +1252,13 @@ static int mpeg_mux_write_packet(AVFormatContext *ctx, AVPacket *pkt)
     int preload;
     const int is_iframe = st->codec->codec_type == AVMEDIA_TYPE_VIDEO &&
                           (pkt->flags & AV_PKT_FLAG_KEY);
+
+    av_log(NULL, AV_LOG_INFO|AV_LOG_C(122),
+           "OUT Packet %s\n",
+            st->codec->codec_type == AVMEDIA_TYPE_VIDEO ? "Video" :
+            st->codec->codec_type == AVMEDIA_TYPE_AUDIO ? "Audio" :
+            st->codec->codec_type == AVMEDIA_TYPE_SUBTITLE ? "Sub" :
+            "unknown");
 
     preload = av_rescale(s->preload, 90000, AV_TIME_BASE);
 
@@ -1279,8 +1307,9 @@ static int mpeg_mux_write_packet(AVFormatContext *ctx, AVPacket *pkt)
 
     for (;;) {
         int ret = output_packet(ctx, 0);
-        if (ret <= 0)
+        if (ret <= 0) {
             return ret;
+        }
     }
 }
 
