@@ -446,6 +446,23 @@ static int interleave_compare_dts(AVFormatContext *s, AVPacket *next,
     int comp      = av_compare_ts(next->dts, st2->time_base, pkt->dts,
                                   st->time_base);
 
+    av_log(NULL, AV_LOG_INFO|AV_LOG_C(122),
+           "CMP Packet %s vs ",
+            st->codec->codec_type == AVMEDIA_TYPE_VIDEO ? "Video" :
+            st->codec->codec_type == AVMEDIA_TYPE_AUDIO ? "Audio" :
+            st->codec->codec_type == AVMEDIA_TYPE_SUBTITLE ? "Sub" :
+            "unknown");
+
+    av_log(NULL, AV_LOG_INFO|AV_LOG_C(122),
+           "%s ",
+            st2->codec->codec_type == AVMEDIA_TYPE_VIDEO ? "Video" :
+            st2->codec->codec_type == AVMEDIA_TYPE_AUDIO ? "Audio" :
+            st2->codec->codec_type == AVMEDIA_TYPE_SUBTITLE ? "Sub" :
+            "unknown");
+
+    av_log(NULL, AV_LOG_INFO, "%"PRId64" %"PRId64" %d\n",
+           pkt->dts, next->dts, comp);
+
     if (comp == 0)
         return pkt->stream_index < next->stream_index;
     return comp > 0;
@@ -498,6 +515,7 @@ int ff_interleave_packet_per_dts(AVFormatContext *s, AVPacket *out,
 
 
     if (stream_count && (s->internal->nb_interleaved_streams == stream_count || flush)) {
+        AVStream *st;
         pktl = s->packet_buffer;
         *out = pktl->pkt;
 
@@ -508,6 +526,12 @@ int ff_interleave_packet_per_dts(AVFormatContext *s, AVPacket *out,
         if (s->streams[out->stream_index]->last_in_packet_buffer == pktl)
             s->streams[out->stream_index]->last_in_packet_buffer = NULL;
         av_freep(&pktl);
+        st = s->streams[out->stream_index];
+        av_log(NULL, AV_LOG_INFO, "INTER Packet %s\n",
+            st->codec->codec_type == AVMEDIA_TYPE_VIDEO ? "Video" :
+            st->codec->codec_type == AVMEDIA_TYPE_AUDIO ? "Audio" :
+            st->codec->codec_type == AVMEDIA_TYPE_SUBTITLE ? "Sub" :
+            "unknown");
         return 1;
     } else {
         av_init_packet(out);
