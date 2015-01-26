@@ -22,7 +22,6 @@
 #include <stdint.h>
 
 #include "libavutil/attributes.h"
-#include "libavutil/fifo.h"
 #include "libavutil/log.h"
 #include "libavutil/mathematics.h"
 #include "libavutil/opt.h"
@@ -1306,7 +1305,12 @@ static int mpeg_mux_end(AVFormatContext *ctx)
     for (i = 0; i < ctx->nb_streams; i++) {
         stream = ctx->streams[i]->priv_data;
 
-        assert(stream->queue_size == 0);
+        if (stream->queue_size) {
+            av_log(ctx, AV_LOG_ERROR,
+                   "%d bytes pending on close for stream %d\n",
+                   stream->queue_size, i);
+        }
+        //assert(stream->queue_size == 0);
     }
     return 0;
 }
