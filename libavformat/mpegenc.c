@@ -103,10 +103,19 @@ static void printPCI(const char *label, uint8_t *ps2buf) {
 
 static void printDSI(uint8_t *ps2buf) {
     /* DSI structure? */
+/*  uint32_t scr    = AV_RB32(ps2buf);
+    uint32_t lbn    = AV_RB32(ps2buf + 4);
+    uint32_t ea     = AV_RB32(ps2buf + 8); */
+    uint32_t vob_id = AV_RB16(ps2buf + 20);
+    uint32_t c_id   = AV_RB16(ps2buf + 23);
+
     uint8_t hours = ((ps2buf[0x1d] >> 4) * 10) + (ps2buf[0x1d] & 0x0f);
     uint8_t mins  = ((ps2buf[0x1e] >> 4) * 10) + (ps2buf[0x1e] & 0x0f);
     uint8_t secs  = ((ps2buf[0x1f] >> 4) * 10) + (ps2buf[0x1f] & 0x0f);
-    av_log(NULL, AV_LOG_WARNING, "DSI MPEGENC: %d:%d:%d\n", hours, mins, secs);
+    av_log(NULL, AV_LOG_WARNING,
+           "DSI MPEGENC: vob %d cell %d : %d:%d:%d\n",
+           vob_id, c_id,
+           hours, mins, secs);
 }
 
 static int put_pack_header(AVFormatContext *ctx, uint8_t *buf,
@@ -643,7 +652,8 @@ static void write_packets(AVFormatContext *ctx, StreamInfo *stream, int size)
 }
 
 /* flush the packet on stream stream_index */
-static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
+static int flush_packet(AVFormatContext *ctx, int stream_index,
+                        PacketDesc *pkt_desc,
                         int64_t pts, int64_t dts, int64_t scr, int trailer_size)
 {
     MpegMuxContext *s  = ctx->priv_data;
@@ -660,6 +670,7 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
     int nb_frames;
     int queue_size = get_queue_size(stream);
     uint8_t *nav_data = NULL;
+    AVPacket *pkt = NULL;
 
     id = stream->id;
 
@@ -667,15 +678,17 @@ static int flush_packet(AVFormatContext *ctx, int stream_index, AVPacket *pkt,
 
     buf_ptr = buffer;
 
-    if (pkt) {
+    if (pkt_desc) {
         int _;
+        pkt = &pkt_desc->pkt;
         nav_data = av_packet_get_side_data(pkt, AV_PKT_DATA_NAV_PACK, &_);
         if (nav_data)
             printPCI("MPEGENC FLUSH", nav_data);
     }
 
-    if ((s->packet_number % s->pack_header_freq) == 0 || s->last_scr != scr ||
-        nav_data) {
+    if ((s->packet_number % s->pack_header_freq) == 0 ||
+        s->last_scr != scr ||
+        (nav_data && pkt_desc->pkt.size == pkt_desc->unwritten_size)) {
         /* output pack and systems header if needed */
         size        = put_pack_header(ctx, buf_ptr, scr);
         buf_ptr    += size;
@@ -1188,7 +1201,7 @@ retry:
                 timestamp_packet->dts / 90000.0,
                 timestamp_packet->pts / 90000.0,
                 scr / 90000.0, best_i);
-        es_size = flush_packet(ctx, best_i, &timestamp_packet->pkt,
+        es_size = flush_packet(ctx, best_i, timestamp_packet,
                                timestamp_packet->pts,
                                timestamp_packet->dts, scr, trailer_size);
     } else {
