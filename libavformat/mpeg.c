@@ -47,10 +47,10 @@ static void printDSI(uint8_t *ps2buf, const char *tag) {
     uint32_t scr   = AV_RB32(ps2buf);
     uint32_t start = AV_RB32(ps2buf + 4);
     uint32_t len   = AV_RB32(ps2buf + 8);
-    uint16_t vob_idn  = AV_RB16(ps2buf + 6 * 4);
-    uint8_t vob_c_idn = ps2buf[6 * 4 + 2];
+    uint16_t vob_idn  = AV_RB16(ps2buf + 5 * 4);
+    uint8_t vob_c_idn = ps2buf[5 * 4 + 2];
     av_log(NULL, AV_LOG_WARNING,
-           "DSI %s: scr %d start 0x%08x size %d vob idn %d c_idn %d\n",
+           "DSI %s: scr %d start 0x%08x ea %d vob idn %d c_idn %d\n",
            tag, scr, start, len, vob_idn, vob_c_idn);
 }
 
