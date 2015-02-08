@@ -260,7 +260,6 @@ static void parse_nav_pack(MpegDemuxContext *m, AVIOContext *pb)
     len = avio_rb16(pb);
     if (startcode != PRIVATE_STREAM_2 ||
         len != NAV_DSI_SIZE) {
-        avio_skip(pb, len);
         return;
     }
     avio_read(pb, m->nav_pack + NAV_PCI_SIZE, NAV_DSI_SIZE);
@@ -286,9 +285,9 @@ static void mpegps_ps2_parse(MpegDemuxContext *m, AVIOContext *pb)
         m->sofdec -= !m->sofdec;
     }
 
-    if (m->sofdec > 0 || len != NAV_PCI_SIZE) {
+    if (m->sofdec > 0) {
         avio_skip(pb, sofdec_len);
-    } else {
+    } else if (len == NAV_PCI_SIZE) {
         av_log(NULL, AV_LOG_INFO|AV_LOG_C(222), "Sector: 0x%08"PRIx64"\n",
                (cur_pos - 42) / 2048);
         avio_seek(pb, cur_pos + 2, SEEK_SET);

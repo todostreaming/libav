@@ -1534,6 +1534,8 @@ loop_end:
                     exit_program(1);
                 }
 
+                ost->st->id = ist->st->id; //XXX make it a proper option.
+
                 ost->source_index = input_files[map->file_index]->ist_index + map->stream_index;
                 ost->sync_ist     = input_streams[input_files[map->sync_file_index]->ist_index +
                                                map->sync_stream_index];

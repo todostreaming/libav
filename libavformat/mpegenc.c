@@ -414,6 +414,12 @@ static av_cold int mpeg_mux_init(AVFormatContext *ctx)
                 stream->id = mpa_id++;
             }
 
+            if (st->id) {
+                av_log(NULL, AV_LOG_INFO|AV_LOG_C(214),
+                       "Replacing %d with %d for #%d\n",
+                       stream->id, st->id, st->index);
+                stream->id = st->id;
+            }
             /* This value HAS to be used for VCD (see VCD standard, p. IV-7).
              * Right now it is also used for everything else. */
             stream->max_buffer_size = 4 * 1024;
@@ -437,6 +443,12 @@ static av_cold int mpeg_mux_init(AVFormatContext *ctx)
         case AVMEDIA_TYPE_SUBTITLE:
             stream->id              = mps_id++;
             stream->max_buffer_size = 16 * 1024;
+            if (st->id) {
+                av_log(NULL, AV_LOG_INFO|AV_LOG_C(214),
+                       "Replacing %d with %d for #%d\n",
+                       stream->id, st->id, st->index);
+                stream->id = st->id;
+            }
             break;
         default:
             return -1;
