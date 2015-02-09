@@ -3871,6 +3871,20 @@ typedef struct AVCodecParserContext {
      * For example, this corresponds to H.264 PicOrderCnt.
      */
     int output_picture_number;
+
+    /**
+     * Dimensions of the decoded video intended for presentation.
+     */
+    int width;
+    int height;
+
+    /**
+     * Dimensions of the coded video size.
+     */
+    int coded_width;
+    int coded_height;
+
+    int format;
 } AVCodecParserContext;
 
 typedef struct AVCodecParser {
