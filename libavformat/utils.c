@@ -762,7 +762,7 @@ static void print_side_data(uint8_t *ps2buf, const char *tag)
 
     snprintf(buf, sizeof(buf), "startpts %u endpts %u %d %d %d", startpts, endpts, hours, mins, secs);
 
-    av_log(NULL, AV_LOG_INFO, "%s %s", tag, buf);
+    av_log(NULL, AV_LOG_VERBOSE, "%s %s", tag, buf);
 
     ps2buf += 980;
 
@@ -770,9 +770,9 @@ static void print_side_data(uint8_t *ps2buf, const char *tag)
     mins  = ((ps2buf[0x1e] >> 4) * 10) + (ps2buf[0x1e] & 0x0f);
     secs  = ((ps2buf[0x1f] >> 4) * 10) + (ps2buf[0x1f] & 0x0f);
 
-     snprintf(buf, sizeof(buf), "%d:%d:%d\n", hours, mins, secs);
+    snprintf(buf, sizeof(buf), "%d:%d:%d\n", hours, mins, secs);
 
-    av_log(NULL, AV_LOG_INFO, "%s %s", tag, buf);
+    av_log(NULL, AV_LOG_VERBOSE, "%s %s", tag, buf);
 }
 
 /**

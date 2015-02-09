@@ -97,7 +97,7 @@ static void printPCI(const char *label, uint8_t *ps2buf) {
     uint8_t mins  = ((ps2buf[0x1a] >> 4) * 10) + (ps2buf[0x1a] & 0x0f);
     uint8_t secs  = ((ps2buf[0x1b] >> 4) * 10) + (ps2buf[0x1b] & 0x0f);
 
-    av_log(NULL, AV_LOG_WARNING, "%s: startpts %u endpts %u %d %d %d\n",
+    av_log(NULL, AV_LOG_VERBOSE, "%s: startpts %u endpts %u %d %d %d\n",
            label, startpts, endpts, hours, mins, secs);
 }
 
@@ -112,7 +112,7 @@ static void printDSI(uint8_t *ps2buf) {
     uint8_t hours = ((ps2buf[0x1d] >> 4) * 10) + (ps2buf[0x1d] & 0x0f);
     uint8_t mins  = ((ps2buf[0x1e] >> 4) * 10) + (ps2buf[0x1e] & 0x0f);
     uint8_t secs  = ((ps2buf[0x1f] >> 4) * 10) + (ps2buf[0x1f] & 0x0f);
-    av_log(NULL, AV_LOG_WARNING,
+    av_log(NULL, AV_LOG_VERBOSE,
            "DSI MPEGENC: vob %d cell %d : %d:%d:%d\n",
            vob_id, c_id,
            hours, mins, secs);
@@ -415,7 +415,7 @@ static av_cold int mpeg_mux_init(AVFormatContext *ctx)
             }
 
             if (st->id) {
-                av_log(NULL, AV_LOG_INFO|AV_LOG_C(214),
+                av_log(NULL, AV_LOG_VERBOSE|AV_LOG_C(214),
                        "Replacing %d with %d for #%d\n",
                        stream->id, st->id, st->index);
                 stream->id = st->id;
@@ -444,7 +444,7 @@ static av_cold int mpeg_mux_init(AVFormatContext *ctx)
             stream->id              = mps_id++;
             stream->max_buffer_size = 16 * 1024;
             if (st->id) {
-                av_log(NULL, AV_LOG_INFO|AV_LOG_C(214),
+                av_log(NULL, AV_LOG_VERBOSE|AV_LOG_C(214),
                        "Replacing %d with %d for #%d\n",
                        stream->id, st->id, st->index);
                 stream->id = st->id;
@@ -718,7 +718,7 @@ static int flush_packet(AVFormatContext *ctx, int stream_index,
         } else if (s->is_dvd) {
             if (nav_data) {
                 int PES_bytes_to_fill = s->packet_size - size - 10;
-                av_log(NULL, AV_LOG_INFO,
+                av_log(NULL, AV_LOG_VERBOSE,
                        "flushing side_data: align_iframe %d | packet_number %d | bytes_to_iframe %d\n",
                        stream->align_iframe, s->packet_number, stream->bytes_to_iframe);
 
@@ -1077,7 +1077,7 @@ static int find_best_stream(AVFormatContext *ctx,
 #endif
         if (st->codec->codec_type == AVMEDIA_TYPE_VIDEO &&
             flush) {
-            av_log(ctx, AV_LOG_INFO|AV_LOG_C(122),
+            av_log(ctx, AV_LOG_VERBOSE|AV_LOG_C(122),
                    "Video pts %"PRId64" vobu_start_pts %"PRId64
                    " delay %"PRId64" max_delay %"PRId64"\n"
                    "buffer index %d max_buffer_size %d\n",
@@ -1088,7 +1088,8 @@ static int find_best_stream(AVFormatContext *ctx,
                     stream->buffer_index,
                     stream->max_buffer_size);
             if (next_pkt) {
-                av_log(ctx, AV_LOG_INFO, "Video %d pts  %"PRId64" %"PRId64"\n",
+                av_log(ctx, AV_LOG_VERBOSE,
+                       "Video %d pts  %"PRId64" %"PRId64"\n",
                        next_pkt->pkt.side_data_elems,
                        next_pkt->pts,
                        max_delay);
@@ -1296,7 +1297,7 @@ static int mpeg_mux_write_packet(AVFormatContext *ctx, AVPacket *pkt)
             stream->align_iframe    = 1;
             stream->vobu_start_pts  = pts;
             printPCI("MPEGENC IN", data);
-            av_log(NULL, AV_LOG_INFO|AV_LOG_C(153),
+            av_log(NULL, AV_LOG_VERBOSE|AV_LOG_C(153),
                    "size %d\n", size);
         }
     }

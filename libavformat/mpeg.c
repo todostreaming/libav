@@ -39,7 +39,7 @@ static void printPCI(uint8_t *ps2buf) {
     uint8_t mins  = ((ps2buf[0x1a] >> 4) * 10) + (ps2buf[0x1a] & 0x0f);
     uint8_t secs  = ((ps2buf[0x1b] >> 4) * 10) + (ps2buf[0x1b] & 0x0f);
 
-    av_log(NULL, AV_LOG_WARNING, "PCI MPEG: startpts %u | endpts %u | %d:%d:%d\n", startpts, endpts, hours, mins, secs);
+    av_log(NULL, AV_LOG_VERBOSE, "PCI MPEG: startpts %u | endpts %u | %d:%d:%d\n", startpts, endpts, hours, mins, secs);
 }
 
 static void printDSI(uint8_t *ps2buf, const char *tag) {
@@ -49,7 +49,7 @@ static void printDSI(uint8_t *ps2buf, const char *tag) {
     uint32_t len   = AV_RB32(ps2buf + 8);
     uint16_t vob_idn  = AV_RB16(ps2buf + 5 * 4);
     uint8_t vob_c_idn = ps2buf[5 * 4 + 2];
-    av_log(NULL, AV_LOG_WARNING,
+    av_log(NULL, AV_LOG_VERBOSE,
            "DSI %s: scr %d start 0x%08x ea %d vob idn %d c_idn %d\n",
            tag, scr, start, len, vob_idn, vob_c_idn);
 }
@@ -288,7 +288,7 @@ static void mpegps_ps2_parse(MpegDemuxContext *m, AVIOContext *pb)
     if (m->sofdec > 0) {
         avio_skip(pb, sofdec_len);
     } else if (len == NAV_PCI_SIZE) {
-        av_log(NULL, AV_LOG_INFO|AV_LOG_C(222), "Sector: 0x%08"PRIx64"\n",
+        av_log(NULL, AV_LOG_VERBOSE|AV_LOG_C(222), "Sector: 0x%08"PRIx64"\n",
                (cur_pos - 42) / 2048);
         avio_seek(pb, cur_pos + 2, SEEK_SET);
         parse_nav_pack(m, pb);
@@ -602,7 +602,7 @@ found:
         pkt->pts != AV_NOPTS_VALUE) {
         if (m->pts[st->index] != AV_NOPTS_VALUE &&
             m->pts[st->index] == pkt->pts) {
-            av_log(NULL, AV_LOG_INFO, "BOGUS PTS %"PRId64"\n",
+            av_log(NULL, AV_LOG_VERBOSE, "BOGUS PTS %"PRId64"\n",
                    m->pts[st->index]);
             pkt->pts += 1;
         }
@@ -611,7 +611,7 @@ found:
 */
 
     if (m->nav_pack_found) {
-        av_log(NULL, AV_LOG_INFO|AV_LOG_C(142),
+        av_log(NULL, AV_LOG_VERBOSE|AV_LOG_C(142),
                "Packet %s\n",
                 st->codec->codec_type == AVMEDIA_TYPE_VIDEO ? "Video" :
                 st->codec->codec_type == AVMEDIA_TYPE_AUDIO ? "Audio" :
@@ -623,7 +623,7 @@ found:
                                                 NAV_PACK_SIZE);
         if (data) {
             memcpy(data, m->nav_pack, NAV_PACK_SIZE);
-            av_log(NULL, AV_LOG_INFO, "PTS %"PRId64" DTS %"PRId64" ",
+            av_log(NULL, AV_LOG_VERBOSE, "PTS %"PRId64" DTS %"PRId64" ",
                    pkt->pts, pkt->dts);
             printPCI(data);
             printDSI(data + 980 + 1, "MPEG");

@@ -446,14 +446,14 @@ static int interleave_compare_dts(AVFormatContext *s, AVPacket *next,
     int comp      = av_compare_ts(next->dts, st2->time_base, pkt->dts,
                                   st->time_base);
 
-    av_log(NULL, AV_LOG_INFO|AV_LOG_C(122),
+    av_log(NULL, AV_LOG_DEBUG|AV_LOG_C(122),
            "CMP Packet %s vs ",
             st->codec->codec_type == AVMEDIA_TYPE_VIDEO ? "Video" :
             st->codec->codec_type == AVMEDIA_TYPE_AUDIO ? "Audio" :
             st->codec->codec_type == AVMEDIA_TYPE_SUBTITLE ? "Sub" :
             "unknown");
 
-    av_log(NULL, AV_LOG_INFO|AV_LOG_C(122),
+    av_log(NULL, AV_LOG_DEBUG|AV_LOG_C(122),
            "%s ",
             st2->codec->codec_type == AVMEDIA_TYPE_VIDEO ? "Video" :
             st2->codec->codec_type == AVMEDIA_TYPE_AUDIO ? "Audio" :
