@@ -59,6 +59,7 @@ typedef struct {
     int bytes_to_iframe;
     int align_iframe;
     int64_t vobu_start_pts;
+    int packets;
 } StreamInfo;
 
 typedef struct {
@@ -628,8 +629,15 @@ static int get_queue_size(StreamInfo *stream)
     int _;
     int start = 1;
 
+    av_log(NULL, AV_LOG_INFO, "stream %p packets %d\n",
+           stream,
+           stream->packets);
+
     while (size > 0 && pkt_desc) {
         int pkt_size = FFMIN(pkt_desc->unwritten_size, size);
+        av_log(NULL, AV_LOG_INFO, "stream %p looking at %p\n",
+           stream,
+           pkt_desc);
 
         if (!start &&
             (nav_data = av_packet_get_side_data(&pkt_desc->pkt,
@@ -1028,8 +1036,15 @@ static void remove_decoded_packets(AVFormatContext *ctx, int64_t scr)
                        i, stream->buffer_index, pkt_desc->pkt.size);
                 break;
             }
+
+            av_log(ctx, AV_LOG_INFO|AV_LOG_C(111),
+                   "Dropping from stream %p - %p packets %d\n",
+                   stream, pkt_desc,
+                   stream->packets);
+
             stream->buffer_index    -= pkt_desc->pkt.size;
             stream->predecode_packet = pkt_desc->next;
+            stream->packets--;
             {
                 int _;
                 uint8_t *data;
@@ -1126,17 +1141,26 @@ static int update_scr(AVFormatContext *ctx,
     int64_t best_dts = INT64_MAX;
     int i;
 
+    av_log(ctx, AV_LOG_INFO|AV_LOG_C(111),
+           "scr %"PRId64"\n",
+           *scr);
+
     for (i = 0; i < ctx->nb_streams; i++) {
         AVStream *st         = ctx->streams[i];
         StreamInfo *stream   = st->priv_data;
         PacketDesc *pkt_desc = stream->predecode_packet;
 
+        av_log(ctx, AV_LOG_INFO|AV_LOG_C(111),
+           "stream %d dts %"PRId64"\n",
+           i, pkt_desc? pkt_desc->dts : AV_NOPTS_VALUE);
+
         if (pkt_desc && pkt_desc->dts < best_dts)
             best_dts = pkt_desc->dts;
     }
 
-    av_dlog(ctx, "bumping scr, scr:%f, dts:%f\n",
-            *scr / 90000.0, best_dts / 90000.0);
+    av_log(ctx, AV_LOG_INFO|AV_LOG_C(222),
+           "bumping scr, scr:%"PRId64", dts:%"PRId64"\n",
+            *scr, best_dts);
     if (best_dts == INT64_MAX)
         return AVERROR(EAGAIN);
 
@@ -1218,7 +1242,11 @@ retry:
                                timestamp_packet->pts,
                                timestamp_packet->dts, scr, trailer_size);
     } else {
-        assert(stream->queue_size == trailer_size);
+        if (stream->queue_size != trailer_size) {
+            av_log(ctx, AV_LOG_ERROR, "Queue size %d != trailer size %d\n",
+                   stream->queue_size, trailer_size);
+            abort();
+        }
         es_size = flush_packet(ctx, best_i, NULL,
                                AV_NOPTS_VALUE, AV_NOPTS_VALUE, scr,
                                trailer_size);
@@ -1288,6 +1316,10 @@ static int mpeg_mux_write_packet(AVFormatContext *ctx, AVPacket *pkt)
         stream->predecode_packet = pkt_desc;
     stream->next_packet = &pkt_desc->next;
     stream->queue_size += size;
+    stream->packets++;
+
+    av_log(NULL, AV_LOG_INFO, "Adding %p to %p, %d\n",
+           pkt_desc, stream, stream->packets);
 
     if (s->is_dvd) {
         int _;
