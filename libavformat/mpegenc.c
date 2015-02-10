@@ -620,6 +620,8 @@ static int get_nb_frames(AVFormatContext *ctx, StreamInfo *stream, int len)
 
 // return the size of the data
 
+void __asan_describe_address(void*);
+
 static int get_queue_size(StreamInfo *stream)
 {
     PacketDesc *pkt_desc = stream->premux_packet;
@@ -633,23 +635,26 @@ static int get_queue_size(StreamInfo *stream)
            stream,
            stream->packets);
 
-    while (size > 0 && pkt_desc) {
-        int pkt_size = FFMIN(pkt_desc->unwritten_size, size);
+    while (size > 0) {
         av_log(NULL, AV_LOG_INFO, "stream %p looking at %p\n",
            stream,
            pkt_desc);
+        __asan_describe_address(pkt_desc);
+        if (pkt_desc) {
+            int pkt_size = FFMIN(pkt_desc->unwritten_size, size);
 
-        if (!start &&
-            (nav_data = av_packet_get_side_data(&pkt_desc->pkt,
-                                                AV_PKT_DATA_NAV_PACK, &_))) {
-            printPCI("MPEGENC Second packet", nav_data);
-            break;
+            if (!start &&
+                (nav_data = av_packet_get_side_data(&pkt_desc->pkt,
+                                                    AV_PKT_DATA_NAV_PACK, &_))) {
+                printPCI("MPEGENC Second packet", nav_data);
+                break;
+            }
+
+            start = 0;
+
+            size    -= pkt_size;
+            pkt_desc = pkt_desc->next;
         }
-
-        start = 0;
-
-        size    -= pkt_size;
-        pkt_desc = pkt_desc->next;
     }
 
     return initial_size - size;
