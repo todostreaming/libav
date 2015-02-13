@@ -639,7 +639,6 @@ static int get_queue_size(StreamInfo *stream)
         av_log(NULL, AV_LOG_INFO, "stream %p looking at %p\n",
            stream,
            pkt_desc);
-        __asan_describe_address(pkt_desc);
         if (pkt_desc) {
             int pkt_size = FFMIN(pkt_desc->unwritten_size, size);
 
@@ -654,6 +653,8 @@ static int get_queue_size(StreamInfo *stream)
 
             size    -= pkt_size;
             pkt_desc = pkt_desc->next;
+        } else {
+            break;
         }
     }
 
@@ -1023,6 +1024,20 @@ static void put_vcd_padding_sector(AVFormatContext *ctx)
     s->packet_number++;
 }
 
+static void null_me(PacketDesc *list, PacketDesc *to_null)
+{
+    PacketDesc *pkt_desc = list;
+
+    while (pkt_desc) {
+        if (pkt_desc->next == to_null) {
+            pkt_desc->next = NULL;
+            break;
+        } else {
+            pkt_desc = pkt_desc->next;
+        }
+    }
+}
+
 static void remove_decoded_packets(AVFormatContext *ctx, int64_t scr)
 {
     int i;
@@ -1049,6 +1064,8 @@ static void remove_decoded_packets(AVFormatContext *ctx, int64_t scr)
 
             stream->buffer_index    -= pkt_desc->pkt.size;
             stream->predecode_packet = pkt_desc->next;
+
+            null_me(stream->premux_packet, pkt_desc);
             stream->packets--;
             {
                 int _;
