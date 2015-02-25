@@ -22,6 +22,7 @@
 #include "libavutil/log.h"
 
 #include "dca.h"
+#include "dca_syncwords.h"
 #include "get_bits.h"
 
 /* extensions that reside in core substream */
