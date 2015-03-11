@@ -37,6 +37,7 @@ OBJS-$(CONFIG_RESAMPLE_FILTER)               += af_resample.o
 OBJS-$(CONFIG_VOLUME_FILTER)                 += af_volume.o
 
 OBJS-$(CONFIG_ANULLSRC_FILTER)               += asrc_anullsrc.o
+OBJS-$(CONFIG_ATESTSRC_FILTER)               += asrc_atestsrc.o
 
 OBJS-$(CONFIG_ANULLSINK_FILTER)              += asink_anullsink.o
 
