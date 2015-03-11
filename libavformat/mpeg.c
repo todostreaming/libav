@@ -19,6 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavcodec/internal.h"
+
 #include "avformat.h"
 #include "internal.h"
 #include "mpeg.h"
@@ -462,6 +464,199 @@ redo:
     return len;
 }
 
+typedef struct PCMDVDContext {
+    uint32_t last_header;    // Cached header to see if parsing is needed
+    int block_size;          // Size of a block of samples in bytes
+    int samples_per_block;   // Number of samples per channel per block
+    int groups_per_block;    // Number of 20/24bit sample groups per block
+    uint8_t extra_samples[8 * 3 * 4];  // Leftover samples from a frame
+    int extra_sample_count;  // Number of leftover samples in the buffer
+} PCMDVDContext;
+
+static int pcm_dvd_parse_header(PCMDVDContext *s,
+                                AVCodecContext *avctx,
+                                AVIOContext *pb)
+{
+    /* no traces of 44100 and 32000Hz in any commercial software or player */
+    static const uint32_t frequencies[4] = { 48000, 96000, 44100, 32000 };
+    uint8_t header[3];
+    int header_int;
+
+    header[0] = avio_r8(pb);
+    header[1] = avio_r8(pb);
+    header[2] = avio_r8(pb);
+
+    header_int = (header[0] & 0xe0) | (header[1] << 8) | (header[2] << 16);
+
+    /* early exit if the header didn't change apart from the frame number */
+    if (s->last_header == header_int)
+        return 0;
+
+    if (avctx->debug & FF_DEBUG_PICT_INFO)
+        av_dlog(avctx, "pcm_dvd_parse_header: header = %02x%02x%02x\n",
+                header[0], header[1], header[2]);
+    /*
+     * header[0] emphasis (1), muse(1), reserved(1), frame number(5)
+     * header[1] quant (2), freq(2), reserved(1), channels(3)
+     * header[2] dynamic range control (0x80 = off)
+     */
+
+    /* Discard potentially existing leftover samples from old channel layout */
+    s->extra_sample_count = 0;
+
+    /* get the sample depth and derive the sample format from it */
+    avctx->bits_per_coded_sample = 16 + (header[1] >> 6 & 3) * 4;
+    if (avctx->bits_per_coded_sample == 28) {
+        av_log(avctx, AV_LOG_ERROR, "PCM DVD unsupported sample depth\n");
+        return AVERROR_INVALIDDATA;
+    }
+    if (avctx->bits_per_coded_sample != 16) {
+        return AVERROR_PATCHWELCOME;
+    }
+
+    avctx->sample_fmt = avctx->bits_per_coded_sample == 16 ? AV_SAMPLE_FMT_S16
+                                                           : AV_SAMPLE_FMT_S32;
+
+    avctx->codec_id = AV_CODEC_ID_PCM_S16BE;
+
+    avctx->bits_per_raw_sample = avctx->bits_per_coded_sample;
+
+    /* get the sample rate */
+    avctx->sample_rate = frequencies[header[1] >> 4 & 3];
+
+    /* get the number of channels */
+    avctx->channels = 1 + (header[1] & 7);
+    /* calculate the bitrate */
+    avctx->bit_rate = avctx->channels *
+                      avctx->sample_rate *
+                      avctx->bits_per_coded_sample;
+
+    /* 4 samples form a group in 20/24bit PCM on DVD Video.
+     * A block is formed by the number of groups that are
+     * needed to complete a set of samples for each channel. */
+    if (avctx->bits_per_coded_sample == 16) {
+        s->samples_per_block = 1;
+        s->block_size        = avctx->channels * 2;
+    } else {
+        switch (avctx->channels) {
+        case 1:
+        case 2:
+        case 4:
+            /* one group has all the samples needed */
+            s->block_size        = 4 * avctx->bits_per_coded_sample / 8;
+            s->samples_per_block = 4 / avctx->channels;
+            s->groups_per_block  = 1;
+            break;
+        case 8:
+            /* two groups have all the samples needed */
+            s->block_size        = 8 * avctx->bits_per_coded_sample / 8;
+            s->samples_per_block = 1;
+            s->groups_per_block  = 2;
+            break;
+        default:
+            /* need avctx->channels groups */
+            s->block_size        = 4 * avctx->channels *
+                                   avctx->bits_per_coded_sample / 8;
+            s->samples_per_block = 4;
+            s->groups_per_block  = avctx->channels;
+            break;
+        }
+    }
+
+    av_log(avctx, AV_LOG_INFO,
+            "pcm_dvd_parse_header: %d channels, %d bits per sample, %d Hz, %d bit/s\n",
+            avctx->channels, avctx->bits_per_coded_sample,
+            avctx->sample_rate, avctx->bit_rate);
+
+    s->last_header = header_int;
+
+    return 0;
+}
+
+static int pcm_dvd_copy_samples(PCMDVDContext *s,
+                                AVCodecContext *avctx,
+                                uint8_t **dst,
+                                AVIOContext *pb,
+                                int blocks)
+{
+    switch (avctx->bits_per_coded_sample) {
+    case 16:
+        avio_read(pb, *dst, blocks * s->block_size);
+        *dst += blocks * s->block_size;
+        return 0;
+    default:
+        return AVERROR_PATCHWELCOME;
+    }
+}
+
+static int get_pcm_packet(AVFormatContext *s,
+                          AVStream *st,
+                          AVPacket *pkt,
+                          int len)
+{
+    AVCodecContext *avctx = st->codec;
+    PCMDVDContext *pcm    = st->priv_data;
+    int ret, nb_samples, blocks;
+    int sample_size;
+    uint8_t *dst;
+
+    if (len < 3)
+        return AVERROR_INVALIDDATA;
+
+    if ((ret = pcm_dvd_parse_header(pcm, st->codec, s->pb)) < 0)
+        return ret;
+
+    len -= 3;
+
+    sample_size = av_get_bits_per_sample(st->codec->codec_id) / 8;
+
+    blocks = (len + pcm->extra_sample_count) / pcm->block_size;
+    if (blocks) {
+        nb_samples = blocks * pcm->samples_per_block * avctx->channels;
+
+        if ((ret = av_new_packet(pkt, nb_samples * sample_size)) < 0)
+            return ret;
+
+        dst = pkt->data;
+    }
+
+    if (pcm->extra_sample_count) {
+        int missing_samples = pcm->block_size - pcm->extra_sample_count;
+        if (len >= missing_samples) {
+            AVIOContext *pb = avio_alloc_context(pcm->extra_samples,
+                                                 sizeof(pcm->extra_samples),
+                                                 0, NULL, NULL, NULL, NULL);
+            avio_read(s->pb, pcm->extra_samples + pcm->extra_sample_count,
+                      missing_samples);
+            pcm_dvd_copy_samples(pcm, st->codec, &dst, pb, 1);
+            av_free(pb);
+            len -= missing_samples;
+            pcm->extra_sample_count = 0;
+            blocks--;
+        } else {
+            /* new packet still doesn't have enough samples */
+            avio_read(s->pb,
+                      pcm->extra_samples + pcm->extra_sample_count,
+                      len);
+            pcm->extra_sample_count += len;
+            return AVERROR(EAGAIN);
+        }
+    }
+
+    if (blocks) {
+        pcm_dvd_copy_samples(pcm, st->codec, &dst, s->pb, blocks);
+        len -= blocks * pcm->block_size;
+    }
+
+    if (len) {
+        avio_read(s->pb,
+                  pcm->extra_samples, len);
+        pcm->extra_sample_count = len;
+    }
+
+    return 0;
+}
+
 static int mpegps_read_packet(AVFormatContext *s,
                               AVPacket *pkt)
 {
@@ -588,10 +783,21 @@ skip:
     st->codec->codec_id   = codec_id;
     st->need_parsing      = AVSTREAM_PARSE_FULL;
 
+    if (codec_id == AV_CODEC_ID_PCM_DVD)
+        st->priv_data = av_mallocz(sizeof(PCMDVDContext));
+
 found:
     if (st->discard >= AVDISCARD_ALL)
         goto skip;
-    ret = av_get_packet(s->pb, pkt, len);
+
+    // Demangle the PCM audio
+    if (st->id == 0xa0 || (startcode >= 0xa0 && startcode <= 0xaf)) {
+        ret = get_pcm_packet(s, st, pkt, len);
+        if (ret == AVERROR(EAGAIN))
+            goto redo;
+    } else {
+        ret = av_get_packet(s->pb, pkt, len);
+    }
 
     pkt->pts          = pts;
     pkt->dts          = dts;
