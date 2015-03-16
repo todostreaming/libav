@@ -199,6 +199,31 @@ static int opt_data_codec(void *optctx, const char *opt, const char *arg)
     return parse_option(o, "codec:d", arg, options);
 }
 
+
+///XXX refactor
+static int has_codec_parameters(AVStream *st)
+{
+    AVCodecContext *avctx = st->codec;
+    int val;
+
+    switch (avctx->codec_type) {
+    case AVMEDIA_TYPE_AUDIO:
+        val = avctx->sample_rate && avctx->channels;
+        if (avctx->sample_fmt == AV_SAMPLE_FMT_NONE)
+            return 0;
+        break;
+    case AVMEDIA_TYPE_VIDEO:
+        val = avctx->width;
+        if (avctx->pix_fmt == AV_PIX_FMT_NONE)
+            return 0;
+        break;
+    default:
+        val = 1;
+        break;
+    }
+    return avctx->codec_id != AV_CODEC_ID_NONE && val != 0;
+}
+
 static int opt_map(void *optctx, const char *opt, const char *arg)
 {
     OptionsContext *o = optctx;
@@ -267,7 +292,7 @@ static int opt_map(void *optctx, const char *opt, const char *arg)
         else
             for (i = 0; i < input_files[file_idx]->nb_streams; i++) {
                 if (check_stream_specifier(input_files[file_idx]->ctx, input_files[file_idx]->ctx->streams[i],
-                            *p == ':' ? p + 1 : p) <= 0)
+                            *p == ':' ? p + 1 : p) <= 0 || !has_codec_parameters(input_files[file_idx]->ctx->streams[i]))
                     continue;
                 GROW_ARRAY(o->stream_maps, o->nb_stream_maps);
                 m = &o->stream_maps[o->nb_stream_maps - 1];
