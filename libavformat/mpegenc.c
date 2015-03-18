@@ -27,10 +27,12 @@
 #include "libavutil/opt.h"
 
 #include "libavcodec/put_bits.h"
+#include "libavcodec/bytestream.h"
 
 #include "avformat.h"
 #include "internal.h"
 #include "mpeg.h"
+#include "dvdnav.h"
 
 #define MAX_PAYLOAD_SIZE 4096
 
@@ -89,35 +91,6 @@ extern AVOutputFormat ff_mpeg1vcd_muxer;
 extern AVOutputFormat ff_mpeg2dvd_muxer;
 extern AVOutputFormat ff_mpeg2svcd_muxer;
 extern AVOutputFormat ff_mpeg2vob_muxer;
-
-static void printPCI(const char *label, uint8_t *ps2buf) {
-    /* PCI structure? */
-    uint32_t startpts = AV_RB32(ps2buf + 0x0d);
-    uint32_t endpts = AV_RB32(ps2buf + 0x11);
-    uint8_t hours = ((ps2buf[0x19] >> 4) * 10) + (ps2buf[0x19] & 0x0f);
-    uint8_t mins  = ((ps2buf[0x1a] >> 4) * 10) + (ps2buf[0x1a] & 0x0f);
-    uint8_t secs  = ((ps2buf[0x1b] >> 4) * 10) + (ps2buf[0x1b] & 0x0f);
-
-    av_log(NULL, AV_LOG_VERBOSE, "%s: startpts %u endpts %u %d %d %d\n",
-           label, startpts, endpts, hours, mins, secs);
-}
-
-static void printDSI(uint8_t *ps2buf) {
-    /* DSI structure? */
-/*  uint32_t scr    = AV_RB32(ps2buf);
-    uint32_t lbn    = AV_RB32(ps2buf + 4);
-    uint32_t ea     = AV_RB32(ps2buf + 8); */
-    uint32_t vob_id = AV_RB16(ps2buf + 20);
-    uint32_t c_id   = AV_RB16(ps2buf + 23);
-
-    uint8_t hours = ((ps2buf[0x1d] >> 4) * 10) + (ps2buf[0x1d] & 0x0f);
-    uint8_t mins  = ((ps2buf[0x1e] >> 4) * 10) + (ps2buf[0x1e] & 0x0f);
-    uint8_t secs  = ((ps2buf[0x1f] >> 4) * 10) + (ps2buf[0x1f] & 0x0f);
-    av_log(NULL, AV_LOG_VERBOSE,
-           "DSI MPEGENC: vob %d cell %d : %d:%d:%d\n",
-           vob_id, c_id,
-           hours, mins, secs);
-}
 
 static int put_pack_header(AVFormatContext *ctx, uint8_t *buf,
                            int64_t timestamp)
@@ -636,16 +609,13 @@ static int get_queue_size(StreamInfo *stream)
            stream->packets);
 
     while (size > 0) {
-        av_log(NULL, AV_LOG_INFO, "stream %p looking at %p\n",
-           stream,
-           pkt_desc);
         if (pkt_desc) {
             int pkt_size = FFMIN(pkt_desc->unwritten_size, size);
 
             if (!start &&
                 (nav_data = av_packet_get_side_data(&pkt_desc->pkt,
                                                     AV_PKT_DATA_NAV_PACK, &_))) {
-                printPCI("MPEGENC Second packet", nav_data);
+                ff_print_navpci("MPEGENC Second packet", nav_data);
                 break;
             }
 
@@ -709,7 +679,7 @@ static int flush_packet(AVFormatContext *ctx, int stream_index,
         pkt = &pkt_desc->pkt;
         nav_data = av_packet_get_side_data(pkt, AV_PKT_DATA_NAV_PACK, &_);
         if (nav_data)
-            printPCI("MPEGENC FLUSH", nav_data);
+            ff_print_navpci("MPEGENC FLUSH", nav_data);
     }
 
     if ((s->packet_number % s->pack_header_freq) == 0 ||
@@ -751,12 +721,13 @@ static int flush_packet(AVFormatContext *ctx, int stream_index,
                 avio_wb32(ctx->pb, PRIVATE_STREAM_2);
                 avio_wb16(ctx->pb, 0x03d4);     // length
                 avio_write(ctx->pb, pkt->side_data[0].data, 980);
-                printPCI("MPEGENC OUT", pkt->side_data[0].data);
+                ff_print_navpci("MPEGENC OUT", pkt->side_data[0].data);
+
 
                 avio_wb32(ctx->pb, PRIVATE_STREAM_2);
                 avio_wb16(ctx->pb, 1018);     // length
                 avio_write(ctx->pb, pkt->side_data[0].data + 980, 1018);
-                printDSI(pkt->side_data[0].data + 980);
+                ff_print_navdsi("MPEGENC OUT", pkt->side_data[0].data + 980 + 1);
 
                 memset(buffer, 0, 128);
                 buf_ptr = buffer;
@@ -767,6 +738,7 @@ static int flush_packet(AVFormatContext *ctx, int stream_index,
                 size        = put_pack_header(ctx, buf_ptr, scr);
                 s->last_scr = scr;
                 buf_ptr    += size;
+                av_packet_free_side_data(pkt);
             }
         } else {
             if ((s->packet_number % s->system_header_freq) == 0) {
@@ -1057,11 +1029,6 @@ static void remove_decoded_packets(AVFormatContext *ctx, int64_t scr)
                 break;
             }
 
-            av_log(ctx, AV_LOG_INFO|AV_LOG_C(111),
-                   "Dropping from stream %p - %p packets %d\n",
-                   stream, pkt_desc,
-                   stream->packets);
-
             stream->buffer_index    -= pkt_desc->pkt.size;
             stream->predecode_packet = pkt_desc->next;
 
@@ -1073,7 +1040,8 @@ static void remove_decoded_packets(AVFormatContext *ctx, int64_t scr)
                 if ((data = av_packet_get_side_data(&pkt_desc->pkt,
                                                     AV_PKT_DATA_NAV_PACK,
                                                     &_))) {
-                    printPCI("MPEGENC DEL", data);
+                    ff_print_navpci("MPEGENC DEL", data);
+
                 }
             }
             av_packet_unref(&pkt_desc->pkt);
@@ -1350,7 +1318,7 @@ static int mpeg_mux_write_packet(AVFormatContext *ctx, AVPacket *pkt)
             stream->bytes_to_iframe = stream->queue_size;
             stream->align_iframe    = 1;
             stream->vobu_start_pts  = pts;
-            printPCI("MPEGENC IN", data);
+            ff_print_navpci("MPEGENC IN", data);
             av_log(NULL, AV_LOG_VERBOSE|AV_LOG_C(153),
                    "size %d\n", size);
         }

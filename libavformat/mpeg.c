@@ -22,6 +22,7 @@
 #include "libavcodec/internal.h"
 
 #include "avformat.h"
+#include "dvdnav.h"
 #include "internal.h"
 #include "mpeg.h"
 
@@ -32,29 +33,6 @@
 /* demux code */
 
 #define MAX_SYNC_SIZE 100000
-
-static void printPCI(uint8_t *ps2buf) {
-    /* PCI structure? */
-    uint32_t startpts = AV_RB32(ps2buf + 0x0d);
-    uint32_t endpts = AV_RB32(ps2buf + 0x11);
-    uint8_t hours = ((ps2buf[0x19] >> 4) * 10) + (ps2buf[0x19] & 0x0f);
-    uint8_t mins  = ((ps2buf[0x1a] >> 4) * 10) + (ps2buf[0x1a] & 0x0f);
-    uint8_t secs  = ((ps2buf[0x1b] >> 4) * 10) + (ps2buf[0x1b] & 0x0f);
-
-    av_log(NULL, AV_LOG_VERBOSE, "PCI MPEG: startpts %u | endpts %u | %d:%d:%d\n", startpts, endpts, hours, mins, secs);
-}
-
-static void printDSI(uint8_t *ps2buf, const char *tag) {
-    /* DSI structure? */
-    uint32_t scr   = AV_RB32(ps2buf);
-    uint32_t start = AV_RB32(ps2buf + 4);
-    uint32_t len   = AV_RB32(ps2buf + 8);
-    uint16_t vob_idn  = AV_RB16(ps2buf + 5 * 4);
-    uint8_t vob_c_idn = ps2buf[5 * 4 + 2];
-    av_log(NULL, AV_LOG_VERBOSE,
-           "DSI %s: scr %d start 0x%08x ea %d vob idn %d c_idn %d\n",
-           tag, scr, start, len, vob_idn, vob_c_idn);
-}
 
 static int check_pes(uint8_t *p, uint8_t *end)
 {
@@ -831,8 +809,8 @@ found:
             memcpy(data, m->nav_pack, NAV_PACK_SIZE);
             av_log(NULL, AV_LOG_VERBOSE, "PTS %"PRId64" DTS %"PRId64" ",
                    pkt->pts, pkt->dts);
-            printPCI(data);
-            printDSI(data + 980 + 1, "MPEG");
+            ff_print_navpci("DEMUX", data);
+            ff_print_navdsi("DEMUX", data + 980 + 1);
         }
 
         pkt->flags = AV_PKT_FLAG_KEY;
