@@ -24,6 +24,7 @@ size_tolerance=${14:-0}
 cmp_unit=${15:-2}
 gen=${16:-no}
 hwaccel=${17:-none}
+keeperr=${18:-0}
 
 outdir="tests/data/fate"
 outfile="${outdir}/${test}"
@@ -228,5 +229,8 @@ if test $err != 0 && test $gen != "no" ; then
     err=$?
 fi
 
-test $err = 0 && rm -f $outfile $errfile $cmpfile $cleanfiles
+if test $err = 0 ; then
+    rm -f $outfile $cmpfile $cleanfiles
+    test $keeperr = 1 || rm -f $errfile
+fi
 exit $err
