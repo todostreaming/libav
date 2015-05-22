@@ -4289,6 +4289,11 @@ if enabled gnutls; then
     { check_lib gcrypt.h gcry_mpi_new -lgcrypt && enable gcrypt; }
 fi
 
+enabled gnutls && enabled openssl && {
+    warn "Multiple TLS providers found: selecting gnutls over openssl."
+    disable openssl;
+}
+
 # libdc1394 check
 if enabled libdc1394; then
     { require_pkg_config libdc1394-2 dc1394/dc1394.h dc1394_new &&
