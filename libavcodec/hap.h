@@ -44,6 +44,7 @@ typedef struct HAPContext {
     size_t tex_size;         /* Size of the compressed texture */
 
     uint8_t *snappied;       /* Buffer interacting with snappy */
+    uint64_t snappy_size;      /* Current snappy buffer size */
     size_t max_snappy;       /* Maximum compressed size for snappy buffer */
 
     /* Pointer to the selected compress or decompress function */

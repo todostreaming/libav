@@ -29,7 +29,6 @@
  */
 
 #include <stdint.h>
-#include "snappy-c.h"
 
 #include "libavutil/imgutils.h"
 
@@ -38,6 +37,7 @@
 #include "dxtc.h"
 #include "hap.h"
 #include "internal.h"
+#include "snappy.h"
 #include "thread.h"
 
 /* Texture blocks are 4x4 */
@@ -74,7 +74,6 @@ static int setup_texture(AVCodecContext *avctx, size_t length)
 {
     HAPContext *ctx = avctx->priv_data;
     GetByteContext *gbc = &ctx->gbc;
-    size_t snappy_size;
     const char *texture_name;
     const char *compressor_name;
     int ret;
@@ -109,29 +108,18 @@ static int setup_texture(AVCodecContext *avctx, size_t length)
         compressor_name = "none";
         break;
     case COMP_SNAPPY:
-        /* Get the size of the output buffer */
-        ret = snappy_uncompressed_length(gbc->buffer, length, &snappy_size);
-        if (ret != SNAPPY_OK) {
-            av_log(avctx, AV_LOG_ERROR, "Snappy size error\n");
-            return AVERROR_BUG;
-        }
-
-        /* Resize as needed */
-        ret = av_reallocp(&ctx->snappied, snappy_size);
-        if (ret < 0)
-            return ret;
-
         /* Uncompress */
-        ret = snappy_uncompress(gbc->buffer, length,
-                                ctx->snappied, &snappy_size);
-        if (ret != SNAPPY_OK) {
+        ret = ff_snappy_uncompress(gbc,
+                                   &ctx->snappied,
+                                   &ctx->snappy_size);
+        if (ret < 0) {
             av_log(avctx, AV_LOG_ERROR, "Snappy uncompress error\n");
-            return AVERROR_BUG;
+            return ret;
         }
 
         /* Set the pointers */
         ctx->tex_data = ctx->snappied;
-        ctx->tex_size = snappy_size;
+        ctx->tex_size = ctx->snappy_size;
         compressor_name = "snappy";
         break;
     case COMP_COMPLEX:
