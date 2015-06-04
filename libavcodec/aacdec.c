@@ -2812,8 +2812,9 @@ static int aac_decode_frame_int(AVCodecContext *avctx, void *data,
         }
     }
 
-    if ((err = frame_configure_elements(avctx)) < 0)
-        goto fail;
+    if (avctx->channels)
+        if ((err = frame_configure_elements(avctx)) < 0)
+            goto fail;
 
     // The FF_PROFILE_AAC_* defines are all object_type - 1
     // This may lead to an undefined profile being signaled
@@ -2823,6 +2824,9 @@ static int aac_decode_frame_int(AVCodecContext *avctx, void *data,
     // parse
     while ((elem_type = get_bits(gb, 3)) != TYPE_END) {
         elem_id = get_bits(gb, 4);
+
+        if (!avctx->channels && elem_type != TYPE_PCE)
+            goto skip;
 
         if (elem_type < TYPE_DSE) {
             if (!(che=get_che(ac, elem_type, elem_id))) {
@@ -2903,11 +2907,17 @@ static int aac_decode_frame_int(AVCodecContext *avctx, void *data,
         if (err)
             goto fail;
 
+skip:
         if (get_bits_left(gb) < 3) {
             av_log(avctx, AV_LOG_ERROR, overread_err);
             err = AVERROR_INVALIDDATA;
             goto fail;
         }
+    }
+
+    if (!avctx->channels) {
+        *got_frame_ptr = 0;
+        return 0;
     }
 
     spectral_to_sample(ac);
