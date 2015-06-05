@@ -130,7 +130,7 @@
 
 #include "libm.h"
 
-#if defined(_MSC_VER)
+#if defined(_VC_CRT_MAJOR_VERSION) && _VC_CRT_MAJOR_VERSION < 14
 #pragma comment(linker, "/include:"EXTERN_PREFIX"avpriv_strtod")
 #pragma comment(linker, "/include:"EXTERN_PREFIX"avpriv_snprintf")
 #endif
