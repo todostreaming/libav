@@ -93,6 +93,12 @@ enum AVFrameSideDataType {
      * enum AVAudioServiceType defined in avcodec.h.
      */
     AV_FRAME_DATA_AUDIO_SERVICE_TYPE,
+
+    /**
+     * This side data contains verbatim frame ancillary data to be stored in a
+     * custom SEI packet or codec-equivalent.
+     */
+    AV_FRAME_DATA_VANC,
 };
 
 enum AVActiveFormatDescription {

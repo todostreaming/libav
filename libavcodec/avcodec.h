@@ -1137,6 +1137,12 @@ enum AVPacketSideDataType {
      * and FF_LAMBDA_MAX (bad).
      */
     AV_PKT_DATA_QUALITY_FACTOR,
+
+    /**
+     * This side data contains verbatim frame ancillary data to be stored in a
+     * custom SEI packet or codec-equivalent.
+     */
+    AV_PKT_DATA_VANC,
 };
 
 typedef struct AVPacketSideData {
