@@ -930,6 +930,12 @@ enum AVPacketSideDataType {
      * to enum AVAudioServiceType.
      */
     AV_PKT_DATA_AUDIO_SERVICE_TYPE,
+
+    /**
+     * This side data contains verbatim frame ancillary data to be stored in a
+     * custom SEI packet or codec-equivalent.
+     */
+    AV_PKT_DATA_VANC,
 };
 
 typedef struct AVPacketSideData {
