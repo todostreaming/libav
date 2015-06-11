@@ -273,6 +273,12 @@ static void put_str(AVIOContext *bc, const char *string)
     avio_write(bc, string, len);
 }
 
+static void put_vb(AVIOContext *bc, const uint8_t *data, int len)
+{
+    ff_put_v(bc, len);
+    avio_write(bc, data, len);
+}
+
 static void put_s(AVIOContext *bc, int64_t val)
 {
     ff_put_v(bc, 2 * FFABS(val) - (val > 0));
@@ -724,6 +730,18 @@ static int nut_write_header(AVFormatContext *s)
     return 0;
 }
 
+static int is_side_data_mapped(AVPacket *pkt)
+{
+    int i;
+
+    for (i = 0; i < pkt->side_data_elems; i++) {
+        if (ff_nut_side_data_tag(pkt->side_data[i].type))
+            return 1;
+    }
+
+    return 0;
+}
+
 static int get_needed_flags(NUTContext *nut, StreamContext *nus, FrameCode *fc,
                             AVPacket *pkt)
 {
@@ -741,6 +759,8 @@ static int get_needed_flags(NUTContext *nut, StreamContext *nus, FrameCode *fc,
         flags |= FLAG_CHECKSUM;
     if (FFABS(pkt->pts - nus->last_pts) > nus->max_pts_distance)
         flags |= FLAG_CHECKSUM;
+    if (nut->version > NUT_STABLE_VERSION && is_side_data_mapped(pkt))
+        flags |= FLAG_SIDEDATA;
     if (pkt->size < nut->header_len[fc->header_idx] ||
         (pkt->size > 4096 && fc->header_idx)        ||
         memcmp(pkt->data, nut->header[fc->header_idx],
@@ -769,15 +789,55 @@ static int find_best_header_idx(NUTContext *nut, AVPacket *pkt)
     return best_i;
 }
 
+static int get_side_data(AVPacket *pkt,
+                         uint8_t **side_data)
+{
+    AVIOContext *bc, *bc1;
+    uint8_t *buf;
+    int size;
+    int i, ret, nb_side_data = 0;
+
+    ret = avio_open_dyn_buf(&bc);
+    if (ret < 0)
+        return ret;
+
+    ret = avio_open_dyn_buf(&bc1);
+    if (ret < 0)
+        return ret;
+
+    for (i = 0; i < pkt->side_data_elems; i++) {
+        AVPacketSideData *p = pkt->side_data + i;
+        const char *tag = ff_nut_side_data_tag(p->type);
+        if (!tag)
+            continue;
+        nb_side_data++;
+        put_str(bc, tag);
+        switch (p->type) {
+        case AV_PKT_DATA_VANC:
+            put_vb(bc, p->data, p->size);
+            break;
+        }
+    }
+
+    size = avio_close_dyn_buf(bc, &buf);
+
+    ff_put_v(bc1, nb_side_data);
+
+    avio_write(bc1, buf, size);
+
+    return avio_close_dyn_buf(bc1, side_data);
+}
+
 static int nut_write_packet(AVFormatContext *s, AVPacket *pkt)
 {
     NUTContext *nut    = s->priv_data;
     StreamContext *nus = &nut->stream[pkt->stream_index];
     AVIOContext *bc    = s->pb, *dyn_bc;
+    uint8_t *side_data = NULL;
     FrameCode *fc;
     int64_t coded_pts;
     int best_length, frame_code, flags, needed_flags, i, header_idx,
-        best_header_idx;
+        best_header_idx, side_data_len = 0;
     int key_frame = !!(pkt->flags & AV_PKT_FLAG_KEY);
     int store_sp  = 0;
     int ret;
@@ -791,6 +851,12 @@ static int nut_write_packet(AVFormatContext *s, AVPacket *pkt)
 
     if (1LL << (20 + 3 * nut->header_count) <= avio_tell(bc))
         write_headers(s, bc);
+
+    if (nut->version > NUT_STABLE_VERSION && is_side_data_mapped(pkt)) {
+        side_data_len = get_side_data(pkt, &side_data);
+        if (side_data_len < 0)
+            return side_data_len;
+    }
 
     if (key_frame && !(nus->last_flags & FLAG_KEY))
         store_sp = 1;
@@ -926,6 +992,10 @@ static int nut_write_packet(AVFormatContext *s, AVPacket *pkt)
         ff_put_v(bc, pkt->size / fc->size_mul);
     if (flags & FLAG_HEADER_IDX)
         ff_put_v(bc, header_idx = best_header_idx);
+    if (flags & FLAG_SIDEDATA) {
+        avio_write(bc, side_data, side_data_len);
+        av_free(side_data);
+    }
 
     if (flags & FLAG_CHECKSUM)
         avio_wl32(bc, ffio_get_checksum(bc));
