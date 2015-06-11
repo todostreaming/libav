@@ -102,24 +102,84 @@ static int decode_picture_timing(H264Context *h)
     return 0;
 }
 
+static const uint8_t x264_version_uuid[] = { 0xdc, 0x45, 0xe9, 0xbd,
+                                             0xe6, 0xd9, 0x48, 0xb7,
+                                             0x96, 0x2c, 0xd8, 0x20,
+                                             0xd9, 0x23, 0xee, 0xef };
+
+static int decode_x264_version(H264Context *h, int size)
+{
+    int e, build, i;
+    uint8_t x264_string[256];
+
+
+    for (i = 0; i < size && i < sizeof(x264_string) - 1; i++)
+        x264_string[i] = get_bits(&h->gb, 8);
+
+    x264_string[i] = 0;
+
+    e = sscanf(x264_string, "x264 - core %d", &build);
+    if (e == 1 && build > 0)
+         h->x264_build = build;
+
+    if (h->avctx->debug & FF_DEBUG_BUGS)
+        av_log(h->avctx, AV_LOG_DEBUG, "x264 version string:\"%s\"\n", x264_string + 16);
+
+    for (; i < size; i++)
+        skip_bits(&h->gb, 8);
+
+    return 0;
+}
+
+static const uint8_t vanc_uuid[] = { 0x9c, 0x3c, 0x26, 0x8c,
+                                     0x76, 0x32, 0x95, 0x07,
+                                     0x0d, 0x7a, 0xd4, 0x5a,
+                                     0x95, 0x7e, 0xd3, 0xb8 };
+
+static int decode_vanc(H264Context *h, int size)
+{
+    int i, ret;
+    uint8_t *p;
+
+    ret = av_reallocp(&h->sei_user_data, size + 1);
+    if (ret < 0)
+        return ret;
+
+    p = h->sei_user_data;
+
+    for (i = 0; i < size; i++)
+        p[i] = get_bits(&h->gb, 8);
+
+    h->sei_user_data_size = size;
+
+    return 0;
+}
+
 static int decode_unregistered_user_data(H264Context *h, int size)
 {
-    uint8_t user_data[16 + 256];
-    int e, build, i;
+    int i;
+    uint8_t uuid[16];
 
     if (size < 16)
         return AVERROR_INVALIDDATA;
 
-    for (i = 0; i < sizeof(user_data) - 1 && i < size; i++)
-        user_data[i] = get_bits(&h->gb, 8);
+    for (i = 0; i < 16; i++)
+        uuid[i] = get_bits(&h->gb, 8);
 
-    user_data[i] = 0;
-    e = sscanf(user_data + 16, "x264 - core %d", &build);
-    if (e == 1 && build > 0)
-        h->x264_build = build;
+    av_log(h->avctx, AV_LOG_DEBUG, "uuid 0x%02x 0x%02x 0x%02x 0x%02x "
+                                   "0x%02x 0x%02x 0x%02x 0x%02x "
+                                   "0x%02x 0x%02x 0x%02x 0x%02x "
+                                   "0x%02x 0x%02x 0x%02x 0x%02x\n",
+                                   uuid[0], uuid[1], uuid[2], uuid[3],
+                                   uuid[4], uuid[5], uuid[6], uuid[7],
+                                   uuid[8], uuid[9], uuid[10], uuid[11],
+                                   uuid[12], uuid[13], uuid[14], uuid[15]);
 
-    if (h->avctx->debug & FF_DEBUG_BUGS)
-        av_log(h->avctx, AV_LOG_DEBUG, "user data:\"%s\"\n", user_data + 16);
+    if (!memcmp(uuid, x264_version_uuid, 16))
+        return decode_x264_version(h, size - 16);
+
+    if (!memcmp(uuid, vanc_uuid, 16))
+        return decode_vanc(h, size - 16);
 
     for (; i < size; i++)
         skip_bits(&h->gb, 8);
