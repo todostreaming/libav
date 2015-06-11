@@ -844,6 +844,12 @@ static void decode_postinit(H264Context *h, int setup_finished)
         h->a53_caption_size = 0;
     }
 
+    if (h->sei_user_data && h->sei_user_data_size) {
+        AVFrameSideData *vanc = av_frame_new_side_data(cur->f, AV_FRAME_DATA_VANC,
+                                                       h->sei_user_data_size);
+        memcpy(vanc->data, h->sei_user_data, h->sei_user_data_size);
+    }
+
     // FIXME do something with unavailable reference frames
 
     /* Sort B-frames into display order */
