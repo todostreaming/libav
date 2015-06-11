@@ -775,13 +775,47 @@ fail:
     return AVERROR_INVALIDDATA;
 }
 
+
+// FIXME decode_frame would leak on failure?
+static int parse_side_data(NUTContext *nut, AVIOContext *bc, AVPacket *pkt)
+{
+    int nb_side_data = ffio_read_varlen(bc);
+    int i;
+
+    for (i = 0; i < nb_side_data; i++) {
+        uint8_t *buf;
+        char tag[256];
+        int64_t len;
+        int type;
+
+        get_str(bc, tag, sizeof(tag));
+
+        type = ff_nut_side_data_type(tag);
+        if (type < 0)
+            continue;
+
+        len = ffio_read_varlen(bc);
+        if (len > INT_MAX)
+            return AVERROR_INVALIDDATA;
+
+        buf = av_packet_new_side_data(pkt, type, len);
+        if (!buf)
+            return AVERROR(ENOMEM);
+
+        avio_read(bc, buf, len);
+    }
+
+    return 0;
+}
+
 static int decode_frame_header(NUTContext *nut, int64_t *pts, int *stream_id,
-                               uint8_t *header_idx, int frame_code)
+                               uint8_t *header_idx, int frame_code,
+                               AVPacket *pkt)
 {
     AVFormatContext *s = nut->avf;
     AVIOContext *bc    = s->pb;
     StreamContext *stc;
-    int size, flags, size_mul, pts_delta, i, reserved_count;
+    int ret, size, flags, size_mul, pts_delta, i, reserved_count;
     uint64_t tmp;
 
     if (!(nut->flags & NUT_PIPE) &&
@@ -823,6 +857,11 @@ static int decode_frame_header(NUTContext *nut, int64_t *pts, int *stream_id,
         get_s(bc);
     if (flags & FLAG_HEADER_IDX)
         *header_idx = ffio_read_varlen(bc);
+    if (flags & FLAG_SIDEDATA) {
+        ret = parse_side_data(nut, bc, pkt);
+        if (ret < 0)
+            return ret;
+    }
     if (flags & FLAG_RESERVED)
         reserved_count = ffio_read_varlen(bc);
     for (i = 0; i < reserved_count; i++)
@@ -859,8 +898,11 @@ static int decode_frame(NUTContext *nut, AVPacket *pkt, int frame_code)
     int64_t pts, last_IP_pts;
     StreamContext *stc;
     uint8_t header_idx;
+    AVPacketSideData *side_data;
+    int side_data_elems;
 
-    size = decode_frame_header(nut, &pts, &stream_id, &header_idx, frame_code);
+    size = decode_frame_header(nut, &pts, &stream_id, &header_idx, frame_code,
+                               pkt);
     if (size < 0)
         return size;
 
@@ -880,9 +922,16 @@ static int decode_frame(NUTContext *nut, AVPacket *pkt, int frame_code)
         return 1;
     }
 
+    side_data       = pkt->side_data;
+    side_data_elems = pkt->side_data_elems;
+    // FIXME do that in a saner way;
     ret = av_new_packet(pkt, size + nut->header_len[header_idx]);
     if (ret < 0)
         return ret;
+
+    pkt->side_data       = side_data;
+    pkt->side_data_elems = side_data_elems;
+
     memcpy(pkt->data, nut->header[header_idx], nut->header_len[header_idx]);
     pkt->pos = avio_tell(bc); // FIXME
     avio_read(bc, pkt->data + nut->header_len[header_idx], size);

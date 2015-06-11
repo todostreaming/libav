@@ -162,6 +162,37 @@ const AVCodecTag * const ff_nut_codec_tags[] = {
     ff_codec_bmp_tags, ff_codec_wav_tags, ff_nut_data_tags, 0
 };
 
+const SideDataTuple side_data_map[] = {
+    { AV_PKT_DATA_VANC, "Vanc" },
+    { -1, NULL }
+};
+
+const char *ff_nut_side_data_tag(enum AVPacketSideDataType type)
+{
+    const SideDataTuple *t = side_data_map;
+
+    while (t->tag) {
+        if (t->type == type)
+            return t->tag;
+        t++;
+    }
+
+    return NULL;
+}
+
+const int ff_nut_side_data_type(const char *tag)
+{
+    const SideDataTuple *t = side_data_map;
+
+    while (t->tag) {
+        if (!strcmp(t->tag, tag))
+            return t->type;
+        t++;
+    }
+
+    return AVERROR(ENOSYS);
+}
+
 void ff_nut_reset_ts(NUTContext *nut, AVRational time_base, int64_t val)
 {
     int i;
