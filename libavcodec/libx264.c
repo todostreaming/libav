@@ -213,6 +213,35 @@ static void reconfig_encoder(AVCodecContext *ctx, const AVFrame *frame)
     }
 }
 
+static const uint8_t vanc_uuid[] = { 0x9c, 0x3c, 0x26, 0x8c,
+                                     0x76, 0x32, 0x95, 0x07,
+                                     0x0d, 0x7a, 0xd4, 0x5a,
+                                     0x95, 0x7e, 0xd3, 0xb8 };
+
+static int embed_vanc(x264_picture_t *pic_out, AVFrameSideData *side_data)
+{
+    x264_sei_payload_t *sei = av_malloc(sizeof(*sei));
+    if (!sei)
+        return AVERROR(ENOMEM);
+
+    sei->payload_size = side_data->size + sizeof(vanc_uuid);
+    sei->payload_type = 5; //SEI_USER_DATA_UNREGISTERED
+    sei->payload      = av_malloc(sei->payload_size);
+    if (!sei->payload) {
+        av_free(sei);
+        return AVERROR(ENOMEM);
+    }
+
+    memcpy(sei->payload, vanc_uuid, sizeof(vanc_uuid));
+    memcpy(sei->payload + sizeof(vanc_uuid), side_data->data, side_data->size);
+
+    pic_out->extra_sei.payloads     = sei;
+    pic_out->extra_sei.sei_free     = av_free;
+    pic_out->extra_sei.num_payloads = 1;
+
+    return 0;
+}
+
 static int X264_frame(AVCodecContext *ctx, AVPacket *pkt, const AVFrame *frame,
                       int *got_packet)
 {
@@ -220,6 +249,7 @@ static int X264_frame(AVCodecContext *ctx, AVPacket *pkt, const AVFrame *frame,
     x264_nal_t *nal;
     int nnal, i, ret;
     x264_picture_t pic_out;
+    AVFrameSideData *side_data;
 
     x264_picture_init( &x4->pic );
     x4->pic.img.i_csp   = x4->params.i_csp;
@@ -240,6 +270,13 @@ static int X264_frame(AVCodecContext *ctx, AVPacket *pkt, const AVFrame *frame,
             frame->pict_type == AV_PICTURE_TYPE_B ? X264_TYPE_B :
                                             X264_TYPE_AUTO;
         reconfig_encoder(ctx, frame);
+
+        side_data = av_frame_get_side_data(frame, AV_FRAME_DATA_VANC);
+        if (side_data) {
+            ret = embed_vanc(&x4->pic, side_data);
+            if (ret < 0)
+                return ret;
+        }
     }
     do {
         if (x264_encoder_encode(x4->enc, &nal, &nnal, frame? &x4->pic: NULL, &pic_out) < 0)
