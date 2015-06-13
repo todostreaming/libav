@@ -113,6 +113,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     int aligned_width = ((avctx->width + 47) / 48) * 48;
     int stride = aligned_width * 8 / 3;
     int line_padding = stride - ((avctx->width * 8 + 11) / 12) * 4;
+    AVFrameSideData *sd;
     int h, w, ret;
     uint8_t *dst;
 
@@ -206,6 +207,14 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
             u += pic->linesize[1] - avctx->width / 2;
             v += pic->linesize[2] - avctx->width / 2;
         }
+    }
+
+    // FIXME make it generic
+    sd = av_frame_get_side_data(pic, AV_FRAME_DATA_VANC);
+    if (sd) {
+        uint8_t *data = av_packet_new_side_data(pkt, AV_PKT_DATA_VANC,
+                                                sd->size);
+        memcpy(data, sd->data, sd->size);
     }
 
     pkt->flags |= AV_PKT_FLAG_KEY;
