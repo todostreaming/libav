@@ -580,6 +580,8 @@ static void show_packet(AVFormatContext *fmt_ctx, AVPacket *pkt)
                                       pkt->size, unit_byte_str));
     probe_int("pos", pkt->pos);
     probe_str("flags", pkt->flags & AV_PKT_FLAG_KEY ? "K" : "_");
+    if (pkt->side_data_elems)
+        probe_int("side_data", pkt->side_data_elems);
     probe_object_footer("packet");
 }
 
