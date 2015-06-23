@@ -262,9 +262,36 @@ static int decode_vanc(H264Context *h, int size)
         p[i] = get_bits(&h->gb, 8);
 
     h->sei_user_data_size = size;
+    h->sei_user_data_type = AV_FRAME_DATA_VANC;
 
     return 0;
 }
+
+static const uint8_t wall_uuid[] = { 0x8c, 0x2c, 0x26, 0x8c,
+                                     0x76, 0x32, 0x95, 0x07,
+                                     0x0d, 0x7a, 0xd2, 0x5a,
+                                     0x95, 0x7e, 0xd3, 0xb7 };
+
+static int decode_wall(H264Context *h, int size)
+{
+    int i, ret;
+    uint8_t *p;
+
+    ret = av_reallocp(&h->sei_user_data, size + 1);
+    if (ret < 0)
+        return ret;
+
+    p = h->sei_user_data;
+
+    for (i = 0; i < size; i++)
+        p[i] = get_bits(&h->gb, 8);
+
+    h->sei_user_data_size = size;
+    h->sei_user_data_type = AV_FRAME_DATA_WALLCLOCK;
+
+    return 0;
+}
+
 
 static int decode_unregistered_user_data(H264Context *h, int size)
 {
@@ -291,6 +318,9 @@ static int decode_unregistered_user_data(H264Context *h, int size)
 
     if (!memcmp(uuid, vanc_uuid, 16))
         return decode_vanc(h, size - 16);
+
+    if (!memcmp(uuid, wall_uuid, 16))
+        return decode_wall(h, size - 16);
 
     for (; i < size; i++)
         skip_bits(&h->gb, 8);
