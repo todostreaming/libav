@@ -141,17 +141,16 @@ static int decode_vanc(H264Context *h, int size)
     int i, ret;
     uint8_t *p;
 
-    ret = av_reallocp(&h->sei_user_data, size + 1);
+    ret = av_reallocp(&h->sei_vanc, size + 1);
     if (ret < 0)
         return ret;
 
-    p = h->sei_user_data;
+    p = h->sei_vanc;
 
     for (i = 0; i < size; i++)
         p[i] = get_bits(&h->gb, 8);
 
-    h->sei_user_data_size = size;
-    h->sei_user_data_type = AV_FRAME_DATA_VANC;
+    h->sei_vanc_size = size;
 
     return 0;
 }
@@ -166,17 +165,16 @@ static int decode_wall(H264Context *h, int size)
     int i, ret;
     uint8_t *p;
 
-    ret = av_reallocp(&h->sei_user_data, size + 1);
+    ret = av_reallocp(&h->sei_wall, size + 1);
     if (ret < 0)
         return ret;
 
-    p = h->sei_user_data;
+    p = h->sei_wall;
 
     for (i = 0; i < size; i++)
         p[i] = get_bits(&h->gb, 8);
 
-    h->sei_user_data_size = size;
-    h->sei_user_data_type = AV_FRAME_DATA_WALLCLOCK;
+    h->sei_wall_size = size;
 
     return 0;
 }

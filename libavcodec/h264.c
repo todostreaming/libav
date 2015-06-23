@@ -822,10 +822,16 @@ static void decode_postinit(H264Context *h, int setup_finished)
                                h->sei_hflip, h->sei_vflip);
     }
 
-    if (h->sei_user_data && h->sei_user_data_size) {
-        AVFrameSideData *vanc = av_frame_new_side_data(cur->f, h->sei_user_data_type,
-                                                       h->sei_user_data_size);
-        memcpy(vanc->data, h->sei_user_data, h->sei_user_data_size);
+    if (h->sei_vanc && h->sei_vanc_size) {
+        AVFrameSideData *vanc = av_frame_new_side_data(cur->f, AV_FRAME_DATA_VANC,
+                                                       h->sei_vanc_size);
+        memcpy(vanc->data, h->sei_vanc, h->sei_vanc_size);
+    }
+
+    if (h->sei_wall && h->sei_wall_size) {
+        AVFrameSideData *wall = av_frame_new_side_data(cur->f, AV_FRAME_DATA_WALLCLOCK,
+                                                       h->sei_wall_size);
+        memcpy(wall->data, h->sei_wall, h->sei_wall_size);
     }
 
     // FIXME do something with unavailable reference frames
