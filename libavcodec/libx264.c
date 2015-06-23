@@ -218,13 +218,28 @@ static const uint8_t vanc_uuid[] = { 0x9c, 0x3c, 0x26, 0x8c,
                                      0x0d, 0x7a, 0xd4, 0x5a,
                                      0x95, 0x7e, 0xd3, 0xb8 };
 
-static int embed_vanc(x264_picture_t *pic_out, AVFrameSideData *side_data)
+static const uint8_t wall_uuid[] = { 0x8c, 0x2c, 0x26, 0x8c,
+                                     0x76, 0x32, 0x95, 0x07,
+                                     0x0d, 0x7a, 0xd2, 0x5a,
+                                     0x95, 0x7e, 0xd3, 0xb7 };
+
+static int embed_sei(x264_picture_t *pic_out, AVFrameSideData *side_data,
+                     const uint8_t uuid[16])
 {
-    x264_sei_payload_t *sei = av_malloc(sizeof(*sei));
+    x264_sei_payload_t *sei;
+
+    pic_out->extra_sei.num_payloads++;
+
+    sei = av_realloc(pic_out->extra_sei.payloads,
+                     pic_out->extra_sei.num_payloads * sizeof(*sei));
     if (!sei)
         return AVERROR(ENOMEM);
 
-    sei->payload_size = side_data->size + sizeof(vanc_uuid);
+    pic_out->extra_sei.payloads = sei;
+
+    sei = sei + pic_out->extra_sei.num_payloads - 1;
+
+    sei->payload_size = side_data->size + 16;
     sei->payload_type = 5; //SEI_USER_DATA_UNREGISTERED
     sei->payload      = av_malloc(sei->payload_size);
     if (!sei->payload) {
@@ -232,15 +247,14 @@ static int embed_vanc(x264_picture_t *pic_out, AVFrameSideData *side_data)
         return AVERROR(ENOMEM);
     }
 
-    memcpy(sei->payload, vanc_uuid, sizeof(vanc_uuid));
-    memcpy(sei->payload + sizeof(vanc_uuid), side_data->data, side_data->size);
+    memcpy(sei->payload, uuid, 16);
+    memcpy(sei->payload + 16, side_data->data, side_data->size);
 
-    pic_out->extra_sei.payloads     = sei;
-    pic_out->extra_sei.sei_free     = av_free;
-    pic_out->extra_sei.num_payloads = 1;
+    pic_out->extra_sei.sei_free = av_free;
 
     return 0;
 }
+
 
 static int X264_frame(AVCodecContext *ctx, AVPacket *pkt, const AVFrame *frame,
                       int *got_packet)
@@ -273,7 +287,14 @@ static int X264_frame(AVCodecContext *ctx, AVPacket *pkt, const AVFrame *frame,
 
         side_data = av_frame_get_side_data(frame, AV_FRAME_DATA_VANC);
         if (side_data) {
-            ret = embed_vanc(&x4->pic, side_data);
+            ret = embed_sei(&x4->pic, side_data, vanc_uuid);
+            if (ret < 0)
+                return ret;
+        }
+
+        side_data = av_frame_get_side_data(frame, AV_FRAME_DATA_WALLCLOCK);
+        if (side_data) {
+            ret = embed_sei(&x4->pic, side_data, wall_uuid);
             if (ret < 0)
                 return ret;
         }

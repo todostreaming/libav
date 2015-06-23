@@ -823,7 +823,7 @@ static void decode_postinit(H264Context *h, int setup_finished)
     }
 
     if (h->sei_user_data && h->sei_user_data_size) {
-        AVFrameSideData *vanc = av_frame_new_side_data(cur->f, AV_FRAME_DATA_VANC,
+        AVFrameSideData *vanc = av_frame_new_side_data(cur->f, h->sei_user_data_type,
                                                        h->sei_user_data_size);
         memcpy(vanc->data, h->sei_user_data, h->sei_user_data_size);
     }
