@@ -164,6 +164,7 @@ const AVCodecTag * const ff_nut_codec_tags[] = {
 
 const SideDataTuple side_data_map[] = {
     { AV_PKT_DATA_VANC, "Vanc" },
+    { AV_PKT_DATA_WALLCLOCK, "Wallclock" },
     { -1, NULL }
 };
 
