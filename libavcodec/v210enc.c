@@ -210,6 +210,12 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     }
 
     // FIXME make it generic
+    sd = av_frame_get_side_data(pic, AV_FRAME_DATA_WALLCLOCK);
+    if (sd) {
+        uint8_t *data = av_packet_new_side_data(pkt, AV_PKT_DATA_WALLCLOCK,
+                                                sd->size);
+        memcpy(data, sd->data, sd->size);
+    }
     sd = av_frame_get_side_data(pic, AV_FRAME_DATA_VANC);
     if (sd) {
         uint8_t *data = av_packet_new_side_data(pkt, AV_PKT_DATA_VANC,
