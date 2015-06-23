@@ -751,9 +751,11 @@ typedef struct H264Context {
     qpel_mc_func (*qpel_put)[16];
     qpel_mc_func (*qpel_avg)[16];
 
-    uint8_t *sei_user_data;
-    int sei_user_data_size;
-    int sei_user_data_type;
+    uint8_t *sei_vanc;
+    int sei_vanc_size;
+
+    uint8_t *sei_wall;
+    int sei_wall_size;
 } H264Context;
 
 extern const uint8_t ff_h264_chroma_qp[3][QP_MAX_NUM + 1]; ///< One chroma qp table for each supported bit depth (8, 9, 10).
