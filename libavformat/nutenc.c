@@ -814,8 +814,10 @@ static int get_side_data(AVPacket *pkt,
         put_str(bc, tag);
         switch (p->type) {
         case AV_PKT_DATA_VANC:
+        case AV_PKT_DATA_WALLCLOCK:
             put_vb(bc, p->data, p->size);
             break;
+
         }
     }
 
