@@ -99,6 +99,12 @@ enum AVFrameSideDataType {
      * custom SEI packet or codec-equivalent.
      */
     AV_FRAME_DATA_VANC,
+
+    /**
+     * This side data contains the wallclock information expressed as a big
+     * endian 64bit integer with microsecond resolution.
+     */
+    AV_FRAME_DATA_WALLCLOCK,
 };
 
 enum AVActiveFormatDescription {
