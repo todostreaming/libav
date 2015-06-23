@@ -536,6 +536,7 @@ int ff_decode_frame_props(AVCodecContext *avctx, AVFrame *frame)
         { AV_PKT_DATA_DISPLAYMATRIX, AV_FRAME_DATA_DISPLAYMATRIX },
         { AV_PKT_DATA_STEREO3D,      AV_FRAME_DATA_STEREO3D },
         { AV_PKT_DATA_VANC,          AV_FRAME_DATA_VANC },
+        { AV_PKT_DATA_WALLCLOCK,     AV_FRAME_DATA_WALLCLOCK },
         { AV_PKT_DATA_AUDIO_SERVICE_TYPE, AV_FRAME_DATA_AUDIO_SERVICE_TYPE },
     };
 
