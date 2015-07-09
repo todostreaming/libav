@@ -22,6 +22,7 @@
 #include "libavutil/dict.h"
 #include "libavutil/intfloat.h"
 #include "avc.h"
+#include "hevc.h"
 #include "avformat.h"
 #include "flv.h"
 #include "internal.h"
@@ -37,6 +38,7 @@ static const AVCodecTag flv_video_codec_ids[] = {
     { AV_CODEC_ID_VP6F,     FLV_CODECID_VP6 },
     { AV_CODEC_ID_VP6A,     FLV_CODECID_VP6A },
     { AV_CODEC_ID_H264,     FLV_CODECID_H264 },
+    { AV_CODEC_ID_HEVC,     FLV_CODECID_HEVC },
     { AV_CODEC_ID_NONE,     0 }
 };
 
@@ -384,7 +386,9 @@ static int flv_write_header(AVFormatContext *s)
 
     for (i = 0; i < s->nb_streams; i++) {
         AVCodecContext *enc = s->streams[i]->codec;
-        if (enc->codec_id == AV_CODEC_ID_AAC || enc->codec_id == AV_CODEC_ID_H264) {
+        if (enc->codec_id == AV_CODEC_ID_AAC ||
+            enc->codec_id == AV_CODEC_ID_H264 ||
+            enc->codec_id == AV_CODEC_ID_HEVC) {
             int64_t pos;
             avio_w8(pb, enc->codec_type == AVMEDIA_TYPE_VIDEO ?
                     FLV_TAG_TYPE_VIDEO : FLV_TAG_TYPE_AUDIO);
@@ -401,7 +405,10 @@ static int flv_write_header(AVFormatContext *s)
                 avio_w8(pb, enc->codec_tag | FLV_FRAME_KEY); // flags
                 avio_w8(pb, 0); // AVC sequence header
                 avio_wb24(pb, 0); // composition time
-                ff_isom_write_avcc(pb, enc->extradata, enc->extradata_size);
+                if (enc->codec_id == AV_CODEC_ID_H264)
+                    ff_isom_write_avcc(pb, enc->extradata, enc->extradata_size);
+                if (enc->codec_id == AV_CODEC_ID_HEVC)
+                    ff_isom_write_hvcc(pb, enc->extradata, enc->extradata_size, 0);
             }
             data_size = avio_tell(pb) - pos;
             avio_seek(pb, -data_size - 10, SEEK_CUR);
@@ -461,7 +468,7 @@ static int flv_write_packet(AVFormatContext *s, AVPacket *pkt)
     if (enc->codec_id == AV_CODEC_ID_VP6F || enc->codec_id == AV_CODEC_ID_VP6A ||
         enc->codec_id == AV_CODEC_ID_AAC)
         flags_size = 2;
-    else if (enc->codec_id == AV_CODEC_ID_H264)
+    else if (enc->codec_id == AV_CODEC_ID_H264 || enc->codec_id == AV_CODEC_ID_HEVC)
         flags_size = 5;
     else
         flags_size = 1;
@@ -504,7 +511,8 @@ static int flv_write_packet(AVFormatContext *s, AVPacket *pkt)
         return AVERROR(EINVAL);
     }
 
-    if (enc->codec_id == AV_CODEC_ID_H264)
+    if (enc->codec_id == AV_CODEC_ID_H264 ||
+        enc->codec_id == AV_CODEC_ID_HEVC)
         /* check if extradata looks like MP4 */
         if (enc->extradata_size > 0 && *(uint8_t*)enc->extradata != 1)
             if (ff_avc_parse_nal_units_buf(pkt->data, &data, &size) < 0)
@@ -555,7 +563,8 @@ static int flv_write_packet(AVFormatContext *s, AVPacket *pkt)
                              (FFALIGN(enc->height, 16) - enc->height));
         } else if (enc->codec_id == AV_CODEC_ID_AAC)
             avio_w8(pb, 1); // AAC raw
-        else if (enc->codec_id == AV_CODEC_ID_H264) {
+        else if (enc->codec_id == AV_CODEC_ID_H264 ||
+                 enc->codec_id == AV_CODEC_ID_HEVC) {
             avio_w8(pb, 1); // AVC NALU
             avio_wb24(pb, pkt->pts - pkt->dts);
         }
