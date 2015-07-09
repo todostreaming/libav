@@ -127,7 +127,7 @@ OBJS-$(CONFIG_FLAC_MUXER)                += flacenc.o flacenc_header.o \
                                             vorbiscomment.o
 OBJS-$(CONFIG_FLIC_DEMUXER)              += flic.o
 OBJS-$(CONFIG_FLV_DEMUXER)               += flvdec.o
-OBJS-$(CONFIG_FLV_MUXER)                 += flvenc.o avc.o
+OBJS-$(CONFIG_FLV_MUXER)                 += flvenc.o avc.o hevc.o
 OBJS-$(CONFIG_FOURXM_DEMUXER)            += 4xm.o
 OBJS-$(CONFIG_FRAMECRC_MUXER)            += framecrcenc.o framehash.o
 OBJS-$(CONFIG_FRAMEMD5_MUXER)            += md5enc.o framehash.o
