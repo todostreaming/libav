@@ -21,6 +21,8 @@
 
 #include "libavutil/dict.h"
 #include "libavutil/intfloat.h"
+#include "libavutil/opt.h"
+
 #include "avc.h"
 #include "hevc.h"
 #include "avformat.h"
@@ -67,6 +69,7 @@ typedef struct FLVContext {
     AVCodecContext *video_enc;
     double framerate;
     AVCodecContext *data_enc;
+    int flags;
 } FLVContext;
 
 typedef struct FLVStreamContext {
@@ -334,6 +337,9 @@ static int flv_write_header(AVFormatContext *s)
             flv->video_enc = enc;
             if (!ff_codec_get_tag(flv_video_codec_ids, enc->codec_id))
                 return unsupported_codec(s, "Video", enc->codec_id);
+            if (flv->flags & FLV_HEVC_H264 &&
+                enc->codec_id == AV_CODEC_ID_HEVC)
+                enc->codec_tag = FLV_CODECID_H264;
             break;
         case AVMEDIA_TYPE_AUDIO:
             if (flv->audio_enc) {
@@ -581,6 +587,22 @@ static int flv_write_packet(AVFormatContext *s, AVPacket *pkt)
     return pb->error;
 }
 
+#define OFFSET(x) offsetof(FLVContext, x)
+#define E AV_OPT_FLAG_ENCODING_PARAM
+static const AVOption options[] = {
+    { "flv_flags",  "Non-standard flv creation", OFFSET(flags), AV_OPT_TYPE_FLAGS, {.i64 = 0},             INT_MIN, INT_MAX, E, "flags" },
+    { "default",     "",                         0,             AV_OPT_TYPE_CONST, {.i64 = 0},             INT_MIN, INT_MAX, E, "flags" },
+    { "hevc_h264",  "Store HEVC as H264",        0,             AV_OPT_TYPE_CONST, {.i64 = FLV_HEVC_H264}, INT_MIN, INT_MAX, E, "flags" },
+    { NULL },
+};
+
+static const AVClass class = {
+    .class_name = "flvenc",
+    .item_name  = av_default_item_name,
+    .option     = options,
+    .version    = LIBAVUTIL_VERSION_INT,
+};
+
 AVOutputFormat ff_flv_muxer = {
     .name           = "flv",
     .long_name      = NULL_IF_CONFIG_SMALL("FLV (Flash Video)"),
@@ -597,4 +619,5 @@ AVOutputFormat ff_flv_muxer = {
                       },
     .flags          = AVFMT_GLOBALHEADER | AVFMT_VARIABLE_FPS |
                       AVFMT_TS_NONSTRICT,
+    .priv_class     = &class,
 };

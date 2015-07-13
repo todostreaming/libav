@@ -120,4 +120,6 @@ typedef enum {
     AMF_DATA_TYPE_UNSUPPORTED = 0x0d,
 } AMFDataType;
 
+#define FLV_HEVC_H264 1
+
 #endif /* AVFORMAT_FLV_H */
