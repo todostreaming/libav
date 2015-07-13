@@ -57,6 +57,7 @@ typedef struct FLVContext {
     } validate_index[2];
     int validate_next;
     int validate_count;
+    int flags;
 } FLVContext;
 
 static int flv_probe(AVProbeData *p)
@@ -225,6 +226,7 @@ static int flv_same_video_codec(AVCodecContext *vcodec, int flags)
 static int flv_set_video_codec(AVFormatContext *s, AVStream *vstream,
                                int flv_codecid, int read)
 {
+    FLVContext *flv        = s->priv_data;
     AVCodecContext *vcodec = vstream->codec;
     switch (flv_codecid) {
     case FLV_CODECID_H263:
@@ -254,7 +256,10 @@ static int flv_set_video_codec(AVFormatContext *s, AVStream *vstream,
         }
         return 1;     // 1 byte body size adjustment for flv_read_packet()
     case FLV_CODECID_H264:
-        vcodec->codec_id = AV_CODEC_ID_H264;
+        if (flv->flags & FLV_HEVC_H264)
+            vcodec->codec_id = AV_CODEC_ID_HEVC;
+        else
+            vcodec->codec_id = AV_CODEC_ID_H264;
         return 3;     // not 4, reading packet type will consume one byte
     case FLV_CODECID_HEVC:
         vcodec->codec_id = AV_CODEC_ID_HEVC;
@@ -819,7 +824,8 @@ skip:
                     break;
             } else if (!is_audio &&
                        st->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
-                if (flv_same_video_codec(st->codec, flags))
+                if (flv_same_video_codec(st->codec, flags) ||
+                    flv->flags & FLV_HEVC_H264)
                     break;
             }
         }
@@ -1002,6 +1008,9 @@ static int flv_read_seek(AVFormatContext *s, int stream_index,
 #define VD AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_DECODING_PARAM
 static const AVOption options[] = {
     { "flv_metadata", "Allocate streams according to the onMetaData array", OFFSET(trust_metadata), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, 1, VD },
+    { "flv_flags",  "Non-standard flv creation", OFFSET(flags), AV_OPT_TYPE_FLAGS, {.i64 = 0},             INT_MIN, INT_MAX, VD, "flags" },
+    { "default",     "",                         0,             AV_OPT_TYPE_CONST, {.i64 = 0},             INT_MIN, INT_MAX, VD, "flags" },
+    { "hevc_h264",  "Store HEVC as H264",        0,             AV_OPT_TYPE_CONST, {.i64 = FLV_HEVC_H264}, INT_MIN, INT_MAX, VD, "flags" },
     { NULL }
 };
 
