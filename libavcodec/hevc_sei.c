@@ -22,6 +22,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include <ctype.h>
+
+#include "libavutil/avstring.h"
+
 #include "golomb.h"
 #include "hevc.h"
 
@@ -51,6 +55,16 @@ enum HEVC_SEI_TYPE {
     SEI_TYPE_REGION_REFRESH_INFO                  = 134,
     SEI_TYPE_MASTERING_DISPLAY_INFO               = 137,
     SEI_TYPE_CONTENT_LIGHT_LEVEL_INFO             = 144,
+};
+
+static const uint8_t x265_info_uuid[16] = {
+    0x2C, 0xA2, 0xDE, 0x09, 0xB5, 0x17, 0x47, 0xDB,
+    0xBB, 0x55, 0xA4, 0xFE, 0x7F, 0xC2, 0xFC, 0x4E
+};
+
+static const uint8_t kvazaar_info_uuid[16] = {
+    0x32, 0xfe, 0x46, 0x6c, 0x98, 0x41, 0x42, 0x69,
+    0xae, 0x35, 0x6a, 0x91, 0x54, 0x9e, 0xf3, 0xf1
 };
 
 static int decode_nal_sei_decoded_picture_hash(HEVCContext *s)
@@ -118,6 +132,54 @@ static int decode_nal_sei_display_orientation(HEVCContext *s)
     return 0;
 }
 
+static void print_uuid(void *avclass, int level, const char *msg,
+                       uint8_t uuid[16])
+{
+    char buf[5 + 16 * 5 + 1] = { 0 };
+    int i;
+
+    for (i = 0; i < 16; i++)
+        av_strlcatf(buf, sizeof(buf), " 0x%02x", uuid[i]);
+
+    av_log(avclass, level, "%s :%s\n", msg, buf);
+}
+
+static int decode_nal_sei_unregistered(HEVCContext *s, int size)
+{
+    GetBitContext *gb = &s->HEVClc.gb;
+    uint8_t uuid[16];
+    int i;
+
+    if (size < 16)
+        return AVERROR_INVALIDDATA;
+
+    for (i = 0; i < sizeof(uuid); i++)
+        uuid[i] = get_bits(gb, 8);
+
+    size -= 16;
+
+    print_uuid(s->avctx, AV_LOG_DEBUG, "uuid", uuid);
+
+    if (!memcmp(uuid, x265_info_uuid, sizeof(uuid)) ||
+        !memcmp(uuid, kvazaar_info_uuid, sizeof(uuid))) {
+        uint8_t info[1000] = { 0 };
+
+        for (i = 0; i < sizeof(info) - 1 && i < size; i++) {
+            int byte = get_bits(gb, 8);
+            if (isprint(byte))
+                info[i] = byte;
+        }
+
+        av_log(s->avctx, AV_LOG_VERBOSE, "Encoder Info:\n%s\n",
+               info);
+    }
+
+    for (; i < size; i++)
+        skip_bits(gb, 8);
+
+    return 0;
+}
+
 static int decode_nal_sei_prefix(HEVCContext *s, int type, int size)
 {
     GetBitContext *gb = &s->HEVClc.gb;
@@ -129,6 +191,8 @@ static int decode_nal_sei_prefix(HEVCContext *s, int type, int size)
         return decode_nal_sei_frame_packing_arrangement(s);
     case SEI_TYPE_DISPLAY_ORIENTATION:
         return decode_nal_sei_display_orientation(s);
+    case SEI_TYPE_USER_DATA_UNREGISTERED:
+        return decode_nal_sei_unregistered(s, size);
     default:
         av_log(s->avctx, AV_LOG_DEBUG, "Skipped PREFIX SEI %d\n", type);
         skip_bits_long(gb, 8 * size);
