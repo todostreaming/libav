@@ -24,6 +24,8 @@
  * Raw Video Encoder
  */
 
+#include <string.h>
+
 #include "avcodec.h"
 #include "raw.h"
 #include "internal.h"
@@ -50,6 +52,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
 static int raw_encode(AVCodecContext *avctx, AVPacket *pkt,
                       const AVFrame *frame, int *got_packet)
 {
+    AVFrameSideData *sd;
     int ret = avpicture_get_size(avctx->pix_fmt, avctx->width, avctx->height);
 
     if (ret < 0)
@@ -69,6 +72,18 @@ static int raw_encode(AVCodecContext *avctx, AVPacket *pkt,
     }
     pkt->flags |= AV_PKT_FLAG_KEY;
     *got_packet = 1;
+    sd = av_frame_get_side_data(frame, AV_FRAME_DATA_WALLCLOCK);
+    if (sd) {
+        uint8_t *data = av_packet_new_side_data(pkt, AV_PKT_DATA_WALLCLOCK,
+                                                sd->size);
+        memcpy(data, sd->data, sd->size);
+    }
+    sd = av_frame_get_side_data(frame, AV_FRAME_DATA_VANC);
+    if (sd) {
+        uint8_t *data = av_packet_new_side_data(pkt, AV_PKT_DATA_VANC,
+                                                sd->size);
+        memcpy(data, sd->data, sd->size);
+    }
     return 0;
 }
 
