@@ -84,6 +84,12 @@ static int raw_encode(AVCodecContext *avctx, AVPacket *pkt,
                                                 sd->size);
         memcpy(data, sd->data, sd->size);
     }
+    sd = av_frame_get_side_data(frame, AV_FRAME_DATA_SERIAL);
+    if (sd) {
+        uint8_t *data = av_packet_new_side_data(pkt, AV_PKT_DATA_SERIAL,
+                                                sd->size);
+        memcpy(data, sd->data, sd->size);
+    }
     return 0;
 }
 

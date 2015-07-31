@@ -105,6 +105,11 @@ enum AVFrameSideDataType {
      * endian 64bit integer with microsecond resolution.
      */
     AV_FRAME_DATA_WALLCLOCK,
+
+    /**
+     * This side data contains a 7-byte serial.
+     */
+    AV_FRAME_DATA_SERIAL,
 };
 
 enum AVActiveFormatDescription {

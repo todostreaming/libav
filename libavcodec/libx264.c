@@ -224,6 +224,11 @@ static const uint8_t wall_uuid[] = { 0x8c, 0x2c, 0x26, 0x8c,
                                      0x0d, 0x7a, 0xd2, 0x5a,
                                      0x95, 0x7e, 0xd3, 0xb7 };
 
+static const uint8_t ser_uuid[] = { 0x7c, 0x1c, 0x26, 0x8c,
+                                    0x76, 0x32, 0x95, 0x07,
+                                    0x0d, 0x7a, 0xd2, 0x5a,
+                                    0x95, 0x7e, 0xd3, 0xb6 };
+
 static int embed_sei(x264_picture_t *pic_out, AVFrameSideData *side_data,
                      const uint8_t uuid[16])
 {
@@ -296,6 +301,13 @@ static int X264_frame(AVCodecContext *ctx, AVPacket *pkt, const AVFrame *frame,
         side_data = av_frame_get_side_data(frame, AV_FRAME_DATA_WALLCLOCK);
         if (side_data) {
             ret = embed_sei(&x4->pic, side_data, wall_uuid);
+            if (ret < 0)
+                return ret;
+        }
+
+        side_data = av_frame_get_side_data(frame, AV_FRAME_DATA_SERIAL);
+        if (side_data) {
+            ret = embed_sei(&x4->pic, side_data, ser_uuid);
             if (ret < 0)
                 return ret;
         }

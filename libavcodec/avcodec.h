@@ -1137,6 +1137,10 @@ enum AVPacketSideDataType {
      * endian 64bit integer with microsecond resolution.
      */
     AV_PKT_DATA_WALLCLOCK,
+    /**
+     * This side data contains a 7-byte serial.
+     */
+    AV_PKT_DATA_SERIAL,
 };
 
 typedef struct AVPacketSideData {

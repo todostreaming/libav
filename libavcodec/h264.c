@@ -856,6 +856,13 @@ static void decode_postinit(H264Context *h, int setup_finished)
         memcpy(wall->data, h->sei_wall, h->sei_wall_size);
     }
 
+    if (h->sei_ser && h->sei_ser_size) {
+        AVFrameSideData *ser = av_frame_new_side_data(cur->f, AV_FRAME_DATA_SERIAL,
+                                                      h->sei_ser_size);
+        memcpy(ser->data, h->sei_ser, h->sei_ser_size);
+        h->sei_ser_size = 0;
+    }
+
     // FIXME do something with unavailable reference frames
 
     /* Sort B-frames into display order */
