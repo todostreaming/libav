@@ -848,12 +848,14 @@ static void decode_postinit(H264Context *h, int setup_finished)
         AVFrameSideData *vanc = av_frame_new_side_data(cur->f, AV_FRAME_DATA_VANC,
                                                        h->sei_vanc_size);
         memcpy(vanc->data, h->sei_vanc, h->sei_vanc_size);
+        h->sei_vanc_size = 0;
     }
 
     if (h->sei_wall && h->sei_wall_size) {
         AVFrameSideData *wall = av_frame_new_side_data(cur->f, AV_FRAME_DATA_WALLCLOCK,
                                                        h->sei_wall_size);
         memcpy(wall->data, h->sei_wall, h->sei_wall_size);
+        h->sei_wall_size = 0;
     }
 
     // FIXME do something with unavailable reference frames
