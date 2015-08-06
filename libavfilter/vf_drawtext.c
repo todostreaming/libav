@@ -47,6 +47,7 @@
 #include "libavutil/random_seed.h"
 #include "libavutil/parseutils.h"
 #include "libavutil/pixdesc.h"
+#include "libavutil/time.h"
 #include "libavutil/time_internal.h"
 #include "libavutil/tree.h"
 #include "libavutil/lfg.h"
@@ -521,29 +522,25 @@ static inline int is_newline(uint32_t c)
     return c == '\n' || c == '\r' || c == '\f' || c == '\v';
 }
 
-static int expand_strftime(DrawTextContext *s)
+static int expand_wallclock(DrawTextContext *s)
 {
-    struct tm ltime;
-    time_t now   = time(0);
     uint8_t *buf = s->expanded_text;
     int buf_size = s->expanded_text_size;
+    int64_t now  = av_gettime();
+    int size     = snprintf(NULL, 0, "%"PRId64, now);
+    int ret;
 
-    if (!buf)
-        buf_size = 2 * strlen(s->text) + 1;
-
-    localtime_r(&now, &ltime);
-
-    while ((buf = av_realloc(buf, buf_size))) {
-        *buf = 1;
-        if (strftime(buf, buf_size, s->text, &ltime) != 0 || *buf == 0)
-            break;
-        buf_size *= 2;
+    if (!buf || size > buf_size) {
+        buf_size = size;
+        ret = av_reallocp(&s->expanded_text, size);
+        if (ret < 0) {
+            s->expanded_text_size = 0;
+            return ret;
+        }
+        s->expanded_text_size = buf_size;
     }
 
-    if (!buf)
-        return AVERROR(ENOMEM);
-    s->expanded_text      = buf;
-    s->expanded_text_size = buf_size;
+    snprintf(s->expanded_text, buf_size, "%"PRId64, now);
 
     return 0;
 }
@@ -564,7 +561,7 @@ static int dtext_prepare_text(AVFilterContext *ctx)
     int width  = ctx->inputs[0]->w;
     int height = ctx->inputs[0]->h;
 
-    ret = expand_strftime(s);
+    ret = expand_wallclock(s);
     if (ret < 0)
         return ret;
 
