@@ -41,9 +41,7 @@
 
 void avcodec_get_chroma_sub_sample(enum AVPixelFormat pix_fmt, int *h_shift, int *v_shift)
 {
-    const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(pix_fmt);
-    *h_shift = desc->log2_chroma_w;
-    *v_shift = desc->log2_chroma_h;
+    av_pix_fmt_get_chroma_sub_sample(pix_fmt, h_shift, v_shift);
 }
 
 static int is_gray(const AVPixFmtDescriptor *desc)
