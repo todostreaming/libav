@@ -248,6 +248,54 @@ static av_cold int libx265_encode_init(AVCodecContext *avctx)
     return 0;
 }
 
+static const uint8_t vanc_uuid[] = { 0x9c, 0x3c, 0x26, 0x8c,
+                                     0x76, 0x32, 0x95, 0x07,
+                                     0x0d, 0x7a, 0xd4, 0x5a,
+                                     0x95, 0x7e, 0xd3, 0xb8 };
+
+static const uint8_t wall_uuid[] = { 0x8c, 0x2c, 0x26, 0x8c,
+                                     0x76, 0x32, 0x95, 0x07,
+                                     0x0d, 0x7a, 0xd2, 0x5a,
+                                     0x95, 0x7e, 0xd3, 0xb7 };
+
+static const uint8_t ser_uuid[] = { 0x7c, 0x1c, 0x26, 0x8c,
+                                    0x76, 0x32, 0x95, 0x07,
+                                    0x0d, 0x7a, 0xd2, 0x5a,
+                                    0x95, 0x7e, 0xd3, 0xb6 };
+
+static int embed_sei(x265_picture *pic_out, AVFrameSideData *side_data,
+                     const uint8_t uuid[16])
+{
+    x265_sei_payload *sei;
+
+    pic_out->extra_sei.num_payloads++;
+
+    sei = av_realloc(pic_out->extra_sei.payloads,
+                     pic_out->extra_sei.num_payloads * sizeof(*sei));
+    if (!sei)
+        return AVERROR(ENOMEM);
+
+    pic_out->extra_sei.payloads = sei;
+
+    sei = sei + pic_out->extra_sei.num_payloads - 1;
+
+    sei->payload_size = side_data->size + 16;
+    sei->payload_type = SEI_USER_DATA_UNREGISTERED;
+    sei->payload      = av_malloc(sei->payload_size);
+    if (!sei->payload) {
+        av_free(sei);
+        return AVERROR(ENOMEM);
+    }
+
+    memcpy(sei->payload, uuid, 16);
+    memcpy(sei->payload + 16, side_data->data, side_data->size);
+
+    pic_out->extra_sei.sei_free = av_free;
+
+    return 0;
+}
+
+
 static int libx265_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
                                 const AVFrame *pic, int *got_packet)
 {
@@ -264,6 +312,8 @@ static int libx265_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     ctx->api->picture_init(ctx->params, &x265pic);
 
     if (pic) {
+        AVFrameSideData *side_data;
+
         for (i = 0; i < 3; i++) {
            x265pic.planes[i] = pic->data[i];
            x265pic.stride[i] = pic->linesize[i];
@@ -284,6 +334,27 @@ static int libx265_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
             if ((ctx->match_frame_type & MATCH_BFRAME) &&
                 pic->pict_type == AV_PICTURE_TYPE_B)
                 x265pic.sliceType = X265_TYPE_B;
+        }
+
+        side_data = av_frame_get_side_data(pic, AV_FRAME_DATA_VANC);
+        if (side_data) {
+            ret = embed_sei(&x265pic, side_data, vanc_uuid);
+            if (ret < 0)
+                return ret;
+        }
+
+        side_data = av_frame_get_side_data(pic, AV_FRAME_DATA_WALLCLOCK);
+        if (side_data) {
+            ret = embed_sei(&x265pic, side_data, wall_uuid);
+            if (ret < 0)
+                return ret;
+        }
+
+        side_data = av_frame_get_side_data(pic, AV_FRAME_DATA_SERIAL);
+        if (side_data) {
+            ret = embed_sei(&x265pic, side_data, ser_uuid);
+            if (ret < 0)
+                return ret;
         }
     }
 
