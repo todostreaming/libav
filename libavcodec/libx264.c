@@ -77,8 +77,16 @@ typedef struct X264Context {
     char *stats;
     int nal_hrd;
     int motion_est;
+    int match_frame_type;
     char *x264_params;
 } X264Context;
+
+enum {
+    MATCH_IFRAME = 1 << 0,
+    MATCH_PFRAME = 1 << 1,
+    MATCH_BFRAME = 1 << 2,
+    MATCH_ALL    = MATCH_BFRAME | MATCH_PFRAME | MATCH_IFRAME
+};
 
 static void X264_log(void *p, int level, const char *fmt, va_list args)
 {
@@ -284,11 +292,20 @@ static int X264_frame(AVCodecContext *ctx, AVPacket *pkt, const AVFrame *frame,
         }
 
         x4->pic.i_pts  = frame->pts;
-        x4->pic.i_type =
-            frame->pict_type == AV_PICTURE_TYPE_I ? X264_TYPE_KEYFRAME :
-            frame->pict_type == AV_PICTURE_TYPE_P ? X264_TYPE_P :
-            frame->pict_type == AV_PICTURE_TYPE_B ? X264_TYPE_B :
-                                            X264_TYPE_AUTO;
+        x4->pic.i_type = X264_TYPE_AUTO;
+
+        if (x4->match_frame_type) {
+            if ((x4->match_frame_type & MATCH_IFRAME) &&
+                frame->pict_type == AV_PICTURE_TYPE_I)
+                x4->pic.i_type = X264_TYPE_KEYFRAME;
+            if ((x4->match_frame_type & MATCH_PFRAME) &&
+                frame->pict_type == AV_PICTURE_TYPE_P)
+                x4->pic.i_type = X264_TYPE_P;
+            if ((x4->match_frame_type & MATCH_BFRAME) &&
+                frame->pict_type == AV_PICTURE_TYPE_B)
+                x4->pic.i_type = X264_TYPE_B;
+        }
+
         reconfig_encoder(ctx, frame);
 
         side_data = av_frame_get_side_data(frame, AV_FRAME_DATA_VANC);
@@ -760,6 +777,10 @@ static const AVOption options[] = {
     { "umh",           NULL, 0, AV_OPT_TYPE_CONST, { .i64 = X264_ME_UMH },  INT_MIN, INT_MAX, VE, "motion-est" },
     { "esa",           NULL, 0, AV_OPT_TYPE_CONST, { .i64 = X264_ME_ESA },  INT_MIN, INT_MAX, VE, "motion-est" },
     { "tesa",          NULL, 0, AV_OPT_TYPE_CONST, { .i64 = X264_ME_TESA }, INT_MIN, INT_MAX, VE, "motion-est" },
+    { "match-frame-type", "Forward the frame type information to the encoder", OFFSET(match_frame_type),  AV_OPT_TYPE_FLAGS, { .i64 = MATCH_ALL }, 0, UINT_MAX, VE, "match-frame" },
+    { "iframe",        NULL, 0, AV_OPT_TYPE_CONST, { .i64 = MATCH_IFRAME },  INT_MIN, INT_MAX, VE, "match-frame" },
+    { "pframe",        NULL, 0, AV_OPT_TYPE_CONST, { .i64 = MATCH_PFRAME },  INT_MIN, INT_MAX, VE, "match-frame" },
+    { "bframe",        NULL, 0, AV_OPT_TYPE_CONST, { .i64 = MATCH_BFRAME },  INT_MIN, INT_MAX, VE, "match-frame" },
     { "x264-params",  "Override the x264 configuration using a :-separated list of key=value parameters", OFFSET(x264_params), AV_OPT_TYPE_STRING, { 0 }, 0, 0, VE },
     { NULL },
 };
