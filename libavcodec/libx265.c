@@ -36,6 +36,8 @@
 
 typedef struct libx265Context {
     const AVClass *class;
+    int match_frame_type;
+    int forced_idr;
 
     x265_encoder *encoder;
     x265_param   *params;
@@ -46,6 +48,13 @@ typedef struct libx265Context {
     char *tune;
     char *x265_opts;
 } libx265Context;
+
+enum {
+    MATCH_IFRAME = 1 << 0,
+    MATCH_PFRAME = 1 << 1,
+    MATCH_BFRAME = 1 << 2,
+    MATCH_ALL    = MATCH_BFRAME | MATCH_PFRAME | MATCH_IFRAME
+};
 
 static int is_keyframe(NalUnitType naltype)
 {
@@ -263,10 +272,19 @@ static int libx265_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
         x265pic.pts      = pic->pts;
         x265pic.bitDepth = av_pix_fmt_desc_get(avctx->pix_fmt)->comp[0].depth_minus1 + 1;
 
-        x265pic.sliceType = pic->pict_type == AV_PICTURE_TYPE_I ? X265_TYPE_I :
-                            pic->pict_type == AV_PICTURE_TYPE_P ? X265_TYPE_P :
-                            pic->pict_type == AV_PICTURE_TYPE_B ? X265_TYPE_B :
-                            X265_TYPE_AUTO;
+        x265pic.sliceType = X265_TYPE_AUTO;
+
+        if (ctx->match_frame_type) {
+            if ((ctx->match_frame_type & MATCH_IFRAME) &&
+                pic->pict_type == AV_PICTURE_TYPE_I)
+                x265pic.sliceType = (ctx->forced_idr > 0) ? X265_TYPE_IDR : X265_TYPE_I;
+            if ((ctx->match_frame_type & MATCH_PFRAME) &&
+                pic->pict_type == AV_PICTURE_TYPE_P)
+                x265pic.sliceType = X265_TYPE_P;
+            if ((ctx->match_frame_type & MATCH_BFRAME) &&
+                pic->pict_type == AV_PICTURE_TYPE_B)
+                x265pic.sliceType = X265_TYPE_B;
+        }
     }
 
     ret = ctx->api->encoder_encode(ctx->encoder, &nal, &nnal,
@@ -350,6 +368,11 @@ static const AVOption options[] = {
     { "crf",         "set the x265 crf",                                                            OFFSET(crf),       AV_OPT_TYPE_FLOAT,  { .dbl = -1 }, -1, FLT_MAX, VE },
     { "preset",      "set the x265 preset",                                                         OFFSET(preset),    AV_OPT_TYPE_STRING, { 0 }, 0, 0, VE },
     { "tune",        "set the x265 tune parameter",                                                 OFFSET(tune),      AV_OPT_TYPE_STRING, { 0 }, 0, 0, VE },
+    { "match-frame-type", "Forward the frame type information to the encoder", OFFSET(match_frame_type),  AV_OPT_TYPE_FLAGS, { .i64 = MATCH_ALL }, 0, UINT_MAX, VE, "match-frame" },
+    { "iframe",        NULL, 0, AV_OPT_TYPE_CONST, { .i64 = MATCH_IFRAME },  INT_MIN, INT_MAX, VE, "match-frame" },
+    { "pframe",        NULL, 0, AV_OPT_TYPE_CONST, { .i64 = MATCH_PFRAME },  INT_MIN, INT_MAX, VE, "match-frame" },
+    { "bframe",        NULL, 0, AV_OPT_TYPE_CONST, { .i64 = MATCH_BFRAME },  INT_MIN, INT_MAX, VE, "match-frame" },
+    { "forced-idr",   "If forwarding iframes, require them to be IDR frames.", OFFSET(forced_idr),  AV_OPT_TYPE_INT,    { .i64 = -1 }, -1, 1, VE },
     { "x265-params", "set the x265 configuration using a :-separated list of key=value parameters", OFFSET(x265_opts), AV_OPT_TYPE_STRING, { 0 }, 0, 0, VE },
     { NULL }
 };
