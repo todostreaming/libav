@@ -144,6 +144,81 @@ static void print_uuid(void *avclass, int level, const char *msg,
     av_log(avclass, level, "%s :%s\n", msg, buf);
 }
 
+static const uint8_t vanc_uuid[] = {
+    0x9c, 0x3c, 0x26, 0x8c, 0x76, 0x32, 0x95, 0x07,
+    0x0d, 0x7a, 0xd4, 0x5a, 0x95, 0x7e, 0xd3, 0xb8
+};
+
+static int decode_vanc(HEVCContext *s, int size)
+{
+    GetBitContext *gb = &s->HEVClc.gb;
+    int i, ret;
+    uint8_t *p;
+
+    ret = av_reallocp(&s->sei_vanc, size + 1);
+    if (ret < 0)
+        return ret;
+
+    p = s->sei_vanc;
+
+    for (i = 0; i < size; i++)
+        p[i] = get_bits(gb, 8);
+
+    s->sei_vanc_size = size;
+
+    return 0;
+}
+
+static const uint8_t wall_uuid[] = { 0x8c, 0x2c, 0x26, 0x8c,
+                                     0x76, 0x32, 0x95, 0x07,
+                                     0x0d, 0x7a, 0xd2, 0x5a,
+                                     0x95, 0x7e, 0xd3, 0xb7 };
+
+static int decode_wall(HEVCContext *s, int size)
+{
+    GetBitContext *gb = &s->HEVClc.gb;
+    int i, ret;
+    uint8_t *p;
+
+    ret = av_reallocp(&s->sei_wall, size + 1);
+    if (ret < 0)
+        return ret;
+
+    p = s->sei_wall;
+
+    for (i = 0; i < size; i++)
+        p[i] = get_bits(gb, 8);
+
+    s->sei_wall_size = size;
+
+    return 0;
+}
+
+static const uint8_t ser_uuid[] = {
+    0x7c, 0x1c, 0x26, 0x8c, 0x76, 0x32, 0x95, 0x07,
+    0x0d, 0x7a, 0xd2, 0x5a, 0x95, 0x7e, 0xd3, 0xb6
+};
+
+static int decode_serial(HEVCContext *s, int size)
+{
+    GetBitContext *gb = &s->HEVClc.gb;
+    int i, ret;
+    uint8_t *p;
+
+    ret = av_reallocp(&s->sei_ser, size + 1);
+    if (ret < 0)
+        return ret;
+
+    p = s->sei_ser;
+
+    for (i = 0; i < size; i++)
+        p[i] = get_bits(gb, 8);
+
+    s->sei_ser_size = size;
+
+    return 0;
+}
+
 static int decode_nal_sei_unregistered(HEVCContext *s, int size)
 {
     GetBitContext *gb = &s->HEVClc.gb;
@@ -173,6 +248,15 @@ static int decode_nal_sei_unregistered(HEVCContext *s, int size)
         av_log(s->avctx, AV_LOG_VERBOSE, "Encoder Info:\n%s\n",
                info);
     }
+
+    if (!memcmp(uuid, vanc_uuid, 16))
+        return decode_vanc(s, size);
+
+    if (!memcmp(uuid, wall_uuid, 16))
+        return decode_wall(s, size);
+
+    if (!memcmp(uuid, ser_uuid, 16))
+        return decode_serial(s, size);
 
     for (; i < size; i++)
         skip_bits(gb, 8);

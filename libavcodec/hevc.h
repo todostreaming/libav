@@ -877,6 +877,15 @@ typedef struct HEVCContext {
     int sei_display_orientation_present;
     int sei_anticlockwise_rotation;
     int sei_hflip, sei_vflip;
+
+    uint8_t *sei_vanc;
+    int sei_vanc_size;
+
+    uint8_t *sei_wall;
+    int sei_wall_size;
+
+    uint8_t *sei_ser;
+    int sei_ser_size;
 } HEVCContext;
 
 int ff_hevc_decode_short_term_rps(GetBitContext *gb, AVCodecContext *avctx,

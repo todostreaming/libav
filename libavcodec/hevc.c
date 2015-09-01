@@ -2368,6 +2368,29 @@ static int set_side_data(HEVCContext *s)
                                s->sei_hflip, s->sei_vflip);
     }
 
+    if (s->sei_vanc && s->sei_vanc_size) {
+        AVFrameSideData *vanc = av_frame_new_side_data(out, AV_FRAME_DATA_VANC,
+                                                       s->sei_vanc_size);
+        memcpy(vanc->data, s->sei_vanc, s->sei_vanc_size);
+        s->sei_vanc_size = 0;
+
+    }
+
+    if (s->sei_wall && s->sei_wall_size) {
+        AVFrameSideData *wall = av_frame_new_side_data(out, AV_FRAME_DATA_WALLCLOCK,
+                                                       s->sei_wall_size);
+        memcpy(wall->data, s->sei_wall, s->sei_wall_size);
+        s->sei_wall_size = 0;
+    }
+
+    if (s->sei_ser && s->sei_ser_size) {
+        AVFrameSideData *ser = av_frame_new_side_data(out, AV_FRAME_DATA_SERIAL,
+                                                      s->sei_ser_size);
+        memcpy(ser->data, s->sei_ser, s->sei_ser_size);
+        s->sei_ser_size = 0;
+    }
+
+
     return 0;
 }
 
