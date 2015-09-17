@@ -406,9 +406,6 @@ void av_fast_malloc(void *ptr, unsigned int *size, size_t min_size)
 
 int av_str_replace(char *buffer, int buffer_size, const char *haystack, const char *needle, const char *replacement)
 {
-	if (!buffer)
-		return -1;
-	
     const char *ins;    // the next insert point
     char *tmp;    // varies
     int len_needle;  // length of the needle
@@ -416,7 +413,9 @@ int av_str_replace(char *buffer, int buffer_size, const char *haystack, const ch
     int len_front; // distance between needle and end of last needle
     int count;    // number of replacements
     int result;
-
+    
+    if (!buffer)
+		return -1;
     if (!haystack)
         return -1;
     if (!needle)
