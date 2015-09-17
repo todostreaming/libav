@@ -50,6 +50,7 @@
 #include "libavutil/time_internal.h"
 #include "libavutil/tree.h"
 #include "libavutil/lfg.h"
+#include "libavutil/time.h"
 #include "avfilter.h"
 #include "drawutils.h"
 #include "formats.h"
@@ -540,7 +541,7 @@ static int expand_strftime(DrawTextContext *s)
 	snprintf(buf_millis, buf_size, "%"PRId64, millis);
 	
 	while ((buf_millis = av_realloc(buf_millis, buf_size))) {
-        if (str_replace(buf_millis, buf_size, s->text, "%N", buf_millis) != -1)
+        if (av_str_replace(buf_millis, buf_size, s->text, "%N", buf_millis) != -1)
             break;
         buf_size *= 2;
     }
