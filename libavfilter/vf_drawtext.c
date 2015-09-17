@@ -564,29 +564,6 @@ static int expand_strftime(DrawTextContext *s)
     return 0;
 }
 
-static int expand_wallclock(DrawTextContext *s)
-{
-    uint8_t *buf = s->expanded_text;
-    int buf_size = s->expanded_text_size;
-    int64_t now  = av_gettime();
-    int size     = snprintf(NULL, 0, "%"PRId64, now);
-    int ret;
-
-    if (!buf || size > buf_size) {
-        buf_size = size;
-        ret = av_reallocp(&s->expanded_text, size);
-        if (ret < 0) {
-            s->expanded_text_size = 0;
-            return ret;
-        }
-        s->expanded_text_size = buf_size;
-    }
-
-    snprintf(s->expanded_text, buf_size, "%"PRId64, now);
-
-    return 0;
-}
-
 static int dtext_prepare_text(AVFilterContext *ctx)
 {
     DrawTextContext *s = ctx->priv;
