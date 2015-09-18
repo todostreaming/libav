@@ -539,10 +539,10 @@ static int expand_strftime(DrawTextContext *s)
 
     buf_millis = av_malloc(buf_millis_size);
 
-    while ((buf_millis = av_realloc(buf_millis, buf_size))) {
-        if (av_str_replace(buf_millis, buf_size, s->text, "%N", millis_str) != -1)
+    while ((buf_millis = av_realloc(buf_millis, buf_millis_size))) {
+        if (av_str_replace(buf_millis, buf_millis_size, s->text, "%N", millis_str) != -1)
             break;
-        buf_size *= 2;
+        buf_millis_size *= 2;
     }
 
     if (!buf)
