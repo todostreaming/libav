@@ -527,25 +527,27 @@ static int expand_strftime(DrawTextContext *s)
     struct tm ltime;
     time_t now     = time(0);
     uint8_t *buf_millis;
+    int buf_millis_size = s->expanded_text_size;
     uint8_t *buf   = s->expanded_text;
     int buf_size   = s->expanded_text_size;
     int64_t millis = av_gettime();
-	
-	if (!buf)
-		buf_size = 2 * strlen(s->text) + 1;
-	
-	if (buf_size < 21) // 19 digits, minus sign and \0
-		buf_size = 21;
-	
-	buf_millis = av_malloc(buf_size);
-	snprintf(buf_millis, buf_size, "%"PRId64, millis);
-	
-	while ((buf_millis = av_realloc(buf_millis, buf_size))) {
-        if (av_str_replace(buf_millis, buf_size, s->text, "%N", buf_millis) != -1)
+    char millis_str[21];
+    snprintf(millis_str, sizeof(millis_str), "%"PRId64, millis);
+
+    if (buf_millis_size < sizeof(millis_str))
+        buf_millis_size = sizeof(millis_str);
+
+    buf_millis = av_malloc(buf_millis_size);
+
+    while ((buf_millis = av_realloc(buf_millis, buf_size))) {
+        if (av_str_replace(buf_millis, buf_size, s->text, "%N", millis_str) != -1)
             break;
         buf_size *= 2;
     }
-    
+
+    if (!buf)
+        buf_size = 2 * strlen(s->text) + 1;
+
     localtime_r(&now, &ltime);
 
     while ((buf = av_realloc(buf, buf_size))) {
@@ -554,7 +556,7 @@ static int expand_strftime(DrawTextContext *s)
             break;
         buf_size *= 2;
     }
-    
+
     av_free(buf_millis);
 
     if (!buf)
