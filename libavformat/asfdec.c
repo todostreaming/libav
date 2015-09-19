@@ -39,6 +39,94 @@
 #include "asf.h"
 #include "asfcrypt.h"
 
+#define avio_seek(s, o, w) ({ \
+    int64_t _ret = avio_seek(s, o, w); \
+    int64_t _pos = avio_tell(s); \
+    av_log(NULL, AV_LOG_VERBOSE|AV_LOG_C(154), "0x%08"PRIx64" - %s:%d seek %p %"PRId64" %d -> %"PRId64"\n", \
+           _pos, __FUNCTION__, __LINE__, s, o, w, _ret); \
+    _ret; \
+    })
+
+#define avio_skip(s, o) ({ \
+    int64_t _ret = avio_skip(s, o); \
+    int64_t _pos = avio_tell(s); \
+    av_log(NULL, AV_LOG_VERBOSE|AV_LOG_C(134), "0x%08"PRIx64" - %s:%d skip %p %d -> %"PRId64"\n", \
+           _pos, __FUNCTION__, __LINE__, s, (int)o, _ret); \
+    _ret; \
+    })
+
+#define avio_r8(s) ({ \
+    int _ret = avio_r8(s); \
+    int64_t _pos = avio_tell(s); \
+    av_log(NULL, AV_LOG_VERBOSE|AV_LOG_C(124), "0x%08"PRIx64" - %s:%d avio_r8 %p -> %d\n", \
+           _pos, __FUNCTION__, __LINE__, s, _ret); \
+    _ret; \
+    })
+
+#define avio_rl16(s) ({ \
+    unsigned int _ret = avio_rl16(s); \
+    int64_t _pos = avio_tell(s); \
+    av_log(NULL, AV_LOG_VERBOSE, "0x%08"PRIx64" - %s:%d avio_rl16 %p -> %d\n", \
+           _pos, __FUNCTION__, __LINE__, s, _ret); \
+    _ret; \
+    })
+
+#define avio_rl24(s) ({ \
+    unsigned int _ret = avio_rl24(s); \
+    int64_t _pos = avio_tell(s); \
+    av_log(s, AV_LOG_VERBOSE, "0x%08"PRIx64" - %s:%d avio_rl24 %p -> %d\n", \
+           _pos, __FUNCTION__, __LINE__, s, _ret); \
+    _ret; \
+    })
+
+#define avio_rl32(s) ({ \
+    unsigned int _ret = avio_rl32(s); \
+    int64_t _pos = avio_tell(s); \
+    av_log(NULL, AV_LOG_VERBOSE, "0x%08"PRIx64" - %s:%d avio_rl32 %p -> %d\n", \
+           _pos, __FUNCTION__, __LINE__, s, _ret); \
+    _ret; \
+    })
+
+#define avio_rl64(s) ({ \
+    uint64_t _ret = avio_rl64(s); \
+    int64_t _pos = avio_tell(s); \
+    av_log(NULL, AV_LOG_VERBOSE, "0x%08"PRIx64" - %s:%d avio_rl64 %p -> %"PRId64"\n", \
+           _pos, __FUNCTION__, __LINE__, s, _ret); \
+    _ret; \
+    })
+
+#define avio_rb16(s) ({ \
+    unsigned int _ret = avio_rb16(s); \
+    int64_t _pos = avio_tell(s); \
+    av_log(NULL, AV_LOG_VERBOSE, "0x%08"PRIx64" - %s:%d avio_rb16 %p -> %d\n", \
+           _pos, __FUNCTION__, __LINE__, s, _ret); \
+    _ret; \
+    })
+
+#define avio_rb24(s) ({ \
+    unsigned int _ret = avio_rb24(s); \
+    int64_t _pos = avio_tell(s); \
+    av_log(s, AV_LOG_VERBOSE, "0x%08"PRIx64" - %s:%d avio_rb24 %p -> %d\n", \
+           _pos, __FUNCTION__, __LINE__, s, _ret); \
+    _ret; \
+    })
+
+#define avio_rb32(s) ({ \
+    unsigned int _ret = avio_rb32(s); \
+    int64_t _pos = avio_tell(s); \
+    av_log(NULL, AV_LOG_VERBOSE, "0x%08"PRIx64" - %s:%d avio_rb32 %p -> %d\n", \
+           _pos, __FUNCTION__, __LINE__, s, _ret); \
+    _ret; \
+    })
+
+#define avio_rb64(s) ({ \
+    uint64_t _ret = avio_rb64(s); \
+    int64_t _pos = avio_tell(s); \
+    av_log(NULL, AV_LOG_VERBOSE, "0x%08"PRIx64" - %s:%d avio_rb64 %p -> %"PRId64"\n", \
+           _pos, __FUNCTION__, __LINE__, s, _ret); \
+    _ret; \
+    })
+
 #define ASF_BOOL                              0x2
 #define ASF_WORD                              0x5
 #define ASF_GUID                              0x6
