@@ -360,6 +360,7 @@ static int bmd_read_header(AVFormatContext *s)
 
     ctx->video_st = add_video_stream(s, &ctx->conf);
     ctx->audio_st = add_audio_stream(s, &ctx->conf);
+    ctx->data_st  = add_data_stream(s, &ctx->conf);
 
     if (!ctx->video_st || !ctx->audio_st) {
         ret = AVERROR(ENOMEM);
