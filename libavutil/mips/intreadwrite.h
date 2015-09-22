@@ -24,7 +24,7 @@
 #include <stdint.h>
 #include "config.h"
 
-#if ARCH_MIPS64 && HAVE_INLINE_ASM
+#if HAVE_MIPS64R2_INLINE
 
 #define AV_RN32 AV_RN32
 static av_always_inline uint32_t AV_RN32(const void *p)
