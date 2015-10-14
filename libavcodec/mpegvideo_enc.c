@@ -1136,7 +1136,7 @@ static int encode_frame(AVCodecContext *c, AVFrame *frame)
         return ret;
 
     ret = pkt.size;
-    av_free_packet(&pkt);
+    av_packet_unref(&pkt);
     return ret;
 }
 
