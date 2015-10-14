@@ -270,7 +270,7 @@ static void write_frame(AVFormatContext *s, AVPacket *pkt, OutputStream *ost)
      */
     if (!(avctx->codec_type == AVMEDIA_TYPE_VIDEO && avctx->codec)) {
         if (ost->frame_number >= ost->max_frames) {
-            av_free_packet(pkt);
+            av_packet_unref(pkt);
             return;
         }
         ost->frame_number++;
@@ -288,7 +288,7 @@ static void write_frame(AVFormatContext *s, AVPacket *pkt, OutputStream *ost)
                                            pkt->data, pkt->size,
                                            pkt->flags & AV_PKT_FLAG_KEY);
         if (a > 0) {
-            av_free_packet(pkt);
+            av_packet_unref(pkt);
             new_pkt.buf = av_buffer_create(new_pkt.data, new_pkt.size,
                                            av_buffer_default_free, NULL, 0);
             if (!new_pkt.buf)
@@ -2159,7 +2159,7 @@ static void free_input_threads(void)
         pthread_mutex_lock(&f->fifo_lock);
         while (av_fifo_size(f->fifo)) {
             av_fifo_generic_read(f->fifo, &pkt, sizeof(pkt), NULL);
-            av_free_packet(&pkt);
+            av_packet_unref(&pkt);
         }
         pthread_cond_signal(&f->fifo_cond);
         pthread_mutex_unlock(&f->fifo_lock);
@@ -2169,7 +2169,7 @@ static void free_input_threads(void)
 
         while (av_fifo_size(f->fifo)) {
             av_fifo_generic_read(f->fifo, &pkt, sizeof(pkt), NULL);
-            av_free_packet(&pkt);
+            av_packet_unref(&pkt);
         }
         av_fifo_free(f->fifo);
     }
@@ -2484,7 +2484,7 @@ static int process_input(void)
     process_input_packet(ist, &pkt, 0);
 
 discard_packet:
-    av_free_packet(&pkt);
+    av_packet_unref(&pkt);
 
     return 0;
 }
