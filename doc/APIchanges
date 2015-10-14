@@ -16,6 +16,8 @@ API changes, most recent first:
 2015-xx-xx - xxxxxxx - lavc 57.0.0 - avcodec.h
   Deprecate av_free_packet, av_packet_unref replaces it
   and resets the packet in a more consistent way.
+  Deprecate av_dup_packet, it is a no-op for most cases,
+  use av_packet_ref to make a non-refcounted AVPacket refcounted.
 
 2015-xx-xx - xxxxxxx - lavc 57.0.0 - qsv.h
   Add an API for allocating opaque surfaces.
