@@ -319,15 +319,17 @@ static void packet_queue_end(PacketQueue *q)
 static int packet_queue_put(PacketQueue *q, AVPacket *pkt)
 {
     AVPacketList *pkt1;
-
-    /* duplicate the packet */
-    if (pkt != &flush_pkt && av_dup_packet(pkt) < 0)
-        return -1;
+    int ret;
 
     pkt1 = av_malloc(sizeof(AVPacketList));
     if (!pkt1)
+        return AVERROR(ENOMEM);
+
+    /* duplicate the packet */
+    if (pkt != &flush_pkt &&
+        (ret = av_packet_ref(&pkt1->pkt, pkt)) < 0)
         return -1;
-    pkt1->pkt = *pkt;
+
     pkt1->next = NULL;
 
 
