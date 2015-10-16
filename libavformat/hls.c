@@ -149,7 +149,7 @@ static void free_variant_list(HLSContext *c)
  */
 static void reset_packet(AVPacket *pkt)
 {
-    av_init_packet(pkt);
+    av_packet_init(pkt);
     pkt->data = NULL;
 }
 

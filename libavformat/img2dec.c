@@ -262,7 +262,7 @@ static int img_read_packet(AVFormatContext *s1, AVPacket *pkt)
         size[0] = 4096;
     }
 
-    res = av_new_packet(pkt, size[0] + size[1] + size[2]);
+    res = av_packet_new(pkt, size[0] + size[1] + size[2]);
     if (res < 0)
         return res;
     pkt->stream_index = 0;

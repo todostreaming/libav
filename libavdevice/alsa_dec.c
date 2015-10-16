@@ -122,7 +122,7 @@ static int audio_read_packet(AVFormatContext *s1, AVPacket *pkt)
     snd_htimestamp_t timestamp;
     snd_pcm_uframes_t ts_delay;
 
-    if (av_new_packet(pkt, s->period_size) < 0) {
+    if (av_packet_new(pkt, s->period_size) < 0) {
         return AVERROR(EIO);
     }
 

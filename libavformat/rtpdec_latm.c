@@ -81,7 +81,7 @@ static int latm_parse_packet(AVFormatContext *ctx, PayloadContext *data,
         return AVERROR(EIO);
     }
 
-    if ((ret = av_new_packet(pkt, cur_len)) < 0)
+    if ((ret = av_packet_new(pkt, cur_len)) < 0)
         return ret;
     memcpy(pkt->data, data->buf + data->pos, cur_len);
     data->pos += cur_len;

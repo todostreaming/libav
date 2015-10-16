@@ -493,7 +493,7 @@ static int avisynth_read_packet_video(AVFormatContext *s, AVPacket *pkt,
     if (!pkt->size)
         return AVERROR_UNKNOWN;
 
-    if (av_new_packet(pkt, pkt->size) < 0)
+    if (av_packet_new(pkt, pkt->size) < 0)
         return AVERROR(ENOMEM);
 
     pkt->pts      = n;
@@ -590,7 +590,7 @@ static int avisynth_read_packet_audio(AVFormatContext *s, AVPacket *pkt,
     if (!pkt->size)
         return AVERROR_UNKNOWN;
 
-    if (av_new_packet(pkt, pkt->size) < 0)
+    if (av_packet_new(pkt, pkt->size) < 0)
         return AVERROR(ENOMEM);
 
     pkt->pts      = n;

@@ -407,7 +407,7 @@ static int ape_read_packet(AVFormatContext * s, AVPacket * pkt)
         return AVERROR(EIO);
     }
 
-    if (av_new_packet(pkt,  ape->frames[ape->currentframe].size + extra_size) < 0)
+    if (av_packet_new(pkt,  ape->frames[ape->currentframe].size + extra_size) < 0)
         return AVERROR(ENOMEM);
 
     AV_WL32(pkt->data    , nblocks);

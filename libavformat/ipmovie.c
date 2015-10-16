@@ -156,7 +156,7 @@ static int load_ipmovie_packet(IPMVEContext *s, AVIOContext *pb,
 
         /* send both the decode map and the video data together */
 
-        if (av_new_packet(pkt, s->decode_map_chunk_size + s->video_chunk_size))
+        if (av_packet_new(pkt, s->decode_map_chunk_size + s->video_chunk_size))
             return CHUNK_NOMEM;
 
         if (s->has_palette) {

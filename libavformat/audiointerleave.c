@@ -80,7 +80,7 @@ static int interleave_new_audio_packet(AVFormatContext *s, AVPacket *pkt,
     if (!size || (!flush && size == av_fifo_size(aic->fifo)))
         return 0;
 
-    ret = av_new_packet(pkt, size);
+    ret = av_packet_new(pkt, size);
     if (ret < 0)
         return ret;
     av_fifo_generic_read(aic->fifo, pkt->data, size, NULL);

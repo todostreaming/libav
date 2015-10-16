@@ -254,7 +254,7 @@ static int seq_read_packet(AVFormatContext *s, AVPacket *pkt)
 
         /* video packet */
         if (seq->current_pal_data_size + seq->current_video_data_size != 0) {
-            if (av_new_packet(pkt, 1 + seq->current_pal_data_size + seq->current_video_data_size))
+            if (av_packet_new(pkt, 1 + seq->current_pal_data_size + seq->current_video_data_size))
                 return AVERROR(ENOMEM);
 
             pkt->data[0] = 0;

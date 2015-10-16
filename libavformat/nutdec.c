@@ -880,7 +880,7 @@ static int decode_frame(NUTContext *nut, AVPacket *pkt, int frame_code)
         return 1;
     }
 
-    ret = av_new_packet(pkt, size + nut->header_len[header_idx]);
+    ret = av_packet_new(pkt, size + nut->header_len[header_idx]);
     if (ret < 0)
         return ret;
     memcpy(pkt->data, nut->header[header_idx], nut->header_len[header_idx]);

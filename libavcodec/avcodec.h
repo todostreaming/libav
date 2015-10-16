@@ -3420,7 +3420,7 @@ void avsubtitle_free(AVSubtitle *sub);
  *
  * @param pkt packet
  */
-void av_init_packet(AVPacket *pkt);
+void av_packet_init(AVPacket *pkt);
 
 /**
  * Allocate the payload of a packet and initialize its fields with
@@ -3430,7 +3430,7 @@ void av_init_packet(AVPacket *pkt);
  * @param size wanted payload size
  * @return 0 if OK, AVERROR_xxx otherwise
  */
-int av_new_packet(AVPacket *pkt, int size);
+int av_packet_new(AVPacket *pkt, int size);
 
 /**
  * Reduce packet size, correctly zeroing padding
@@ -3438,7 +3438,7 @@ int av_new_packet(AVPacket *pkt, int size);
  * @param pkt packet
  * @param size new size
  */
-void av_shrink_packet(AVPacket *pkt, int size);
+void av_packet_shrink(AVPacket *pkt, int size);
 
 /**
  * Increase packet size, correctly zeroing padding
@@ -3446,7 +3446,7 @@ void av_shrink_packet(AVPacket *pkt, int size);
  * @param pkt packet
  * @param grow_by number of bytes by which to increase the size of the packet
  */
-int av_grow_packet(AVPacket *pkt, int grow_by);
+int av_packet_grow(AVPacket *pkt, int grow_by);
 
 /**
  * Initialize a reference-counted packet from av_malloc()ed data.
@@ -3464,6 +3464,50 @@ int av_grow_packet(AVPacket *pkt, int grow_by);
 int av_packet_from_data(AVPacket *pkt, uint8_t *data, int size);
 
 #if FF_API_AVPACKET_OLD_API
+/**
+ * Initialize optional fields of a packet with default values.
+ *
+ * Note, this does not touch the data and size members, which have to be
+ * initialized separately.
+ *
+ * @param pkt packet
+ * @deprecated Use av_packet_init
+ */
+attribute_deprecated
+void av_init_packet(AVPacket *pkt);
+
+/**
+ * Allocate the payload of a packet and initialize its fields with
+ * default values.
+ *
+ * @param pkt packet
+ * @param size wanted payload size
+ * @return 0 if OK, AVERROR_xxx otherwise
+ * @deprecated Use av_packet_new
+ */
+attribute_deprecated
+int av_new_packet(AVPacket *pkt, int size);
+
+/**
+ * Reduce packet size, correctly zeroing padding
+ *
+ * @param pkt packet
+ * @param size new size
+ * @deprecated Use av_packet_shrink
+ */
+attribute_deprecated
+void av_shrink_packet(AVPacket *pkt, int size);
+
+/**
+ * Increase packet size, correctly zeroing padding
+ *
+ * @param pkt packet
+ * @param grow_by number of bytes by which to increase the size of the packet
+ * @deprecated Use av_packet_grow
+ */
+attribute_deprecated
+int av_grow_packet(AVPacket *pkt, int grow_by);
+
 /**
  * @warning This is a hack - the packet memory allocation stuff is broken. The
  * packet is allocated if it was not really allocated.
@@ -3743,7 +3787,7 @@ int avcodec_decode_audio4(AVCodecContext *avctx, AVFrame *frame,
  *             decoder. The caller may not write to it.
  *
  * @param[in] avpkt The input AVpacket containing the input buffer.
- *            You can create such packet with av_init_packet() and by then setting
+ *            You can create such packet with av_packet_init() and by then setting
  *            data and size, some decoders might in addition need other fields like
  *            flags&AV_PKT_FLAG_KEY. All decoders are designed to use the least
  *            fields possible.
@@ -4061,7 +4105,7 @@ AVCodec *avcodec_find_encoder_by_name(const char *name);
  *                  avpkt->data and avpkt->size prior to calling the
  *                  function, but if the size of the user-provided data is not
  *                  large enough, encoding will fail. All other AVPacket fields
- *                  will be reset by the encoder using av_init_packet(). If
+ *                  will be reset by the encoder using av_packet_init(). If
  *                  avpkt->data is NULL, the encoder will allocate it.
  *                  The encoder will set avpkt->size to the size of the
  *                  output packet.
@@ -4101,7 +4145,7 @@ int avcodec_encode_audio2(AVCodecContext *avctx, AVPacket *avpkt,
  *                  avpkt->data and avpkt->size prior to calling the
  *                  function, but if the size of the user-provided data is not
  *                  large enough, encoding will fail. All other AVPacket fields
- *                  will be reset by the encoder using av_init_packet(). If
+ *                  will be reset by the encoder using av_packet_init(). If
  *                  avpkt->data is NULL, the encoder will allocate it.
  *                  The encoder will set avpkt->size to the size of the
  *                  output packet. The returned data (if any) belongs to the

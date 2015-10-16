@@ -187,7 +187,7 @@ static void audio_encode_example(const char *filename)
     t = 0;
     tincr = 2 * M_PI * 440.0 / c->sample_rate;
     for(i=0;i<200;i++) {
-        av_init_packet(&pkt);
+        av_packet_init(&pkt);
         pkt.data = NULL; // packet data will be allocated by the encoder
         pkt.size = 0;
 
@@ -230,7 +230,7 @@ static void audio_decode_example(const char *outfilename, const char *filename)
     AVPacket avpkt;
     AVFrame *decoded_frame = NULL;
 
-    av_init_packet(&avpkt);
+    av_packet_init(&avpkt);
 
     printf("Audio decoding\n");
 
@@ -370,7 +370,7 @@ static void video_encode_example(const char *filename)
 
     /* encode 1 second of video */
     for(i=0;i<25;i++) {
-        av_init_packet(&pkt);
+        av_packet_init(&pkt);
         pkt.data = NULL;    // packet data will be allocated by the encoder
         pkt.size = 0;
 
@@ -463,7 +463,7 @@ static void video_decode_example(const char *outfilename, const char *filename)
     char buf[1024];
     AVPacket avpkt;
 
-    av_init_packet(&avpkt);
+    av_packet_init(&avpkt);
 
     /* set end of buffer to 0 (this ensures that no overreading happens for damaged mpeg streams) */
     memset(inbuf + INBUF_SIZE, 0, AV_INPUT_BUFFER_PADDING_SIZE);

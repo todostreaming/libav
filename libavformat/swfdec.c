@@ -218,7 +218,7 @@ static int swf_read_packet(AVFormatContext *s, AVPacket *pkt)
             len -= 2;
             if (len < 4)
                 goto skip;
-            if ((res = av_new_packet(pkt, len)) < 0)
+            if ((res = av_packet_new(pkt, len)) < 0)
                 return res;
             avio_read(pb, pkt->data, 4);
             if (AV_RB32(pkt->data) == 0xffd8ffd9 ||

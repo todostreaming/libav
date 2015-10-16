@@ -347,7 +347,7 @@ static int tdsc_decode_jpeg_tile(AVCodecContext *avctx, int tile_size,
     int ret;
 
     /* Prepare a packet and send to the MJPEG decoder */
-    av_init_packet(&jpkt);
+    av_packet_init(&jpkt);
     jpkt.data = ctx->tilebuffer;
     jpkt.size = tile_size;
 

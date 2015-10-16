@@ -181,7 +181,7 @@ static int spdif_read_packet(AVFormatContext *s, AVPacket *pkt)
     if (pkt_size_bits % 16)
         avpriv_request_sample(s, "Packet not ending at a 16-bit boundary");
 
-    ret = av_new_packet(pkt, FFALIGN(pkt_size_bits, 16) >> 3);
+    ret = av_packet_new(pkt, FFALIGN(pkt_size_bits, 16) >> 3);
     if (ret)
         return ret;
 

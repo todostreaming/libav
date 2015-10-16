@@ -193,7 +193,7 @@ static LRESULT CALLBACK videostream_cb(HWND hwnd, LPVIDEOHDR vdhdr)
     if(!pktl_next)
         goto fail;
 
-    if(av_new_packet(&pktl_next->pkt, vdhdr->dwBytesUsed) < 0) {
+    if(av_packet_new(&pktl_next->pkt, vdhdr->dwBytesUsed) < 0) {
         av_free(pktl_next);
         goto fail;
     }

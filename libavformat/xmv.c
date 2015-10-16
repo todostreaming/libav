@@ -504,7 +504,7 @@ static int xmv_fetch_video_packet(AVFormatContext *s,
         return AVERROR(EIO);
 
     /* Create the packet */
-    result = av_new_packet(pkt, frame_size);
+    result = av_packet_new(pkt, frame_size);
     if (result)
         return result;
 

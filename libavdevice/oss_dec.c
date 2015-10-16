@@ -77,7 +77,7 @@ static int audio_read_packet(AVFormatContext *s1, AVPacket *pkt)
     int64_t cur_time;
     struct audio_buf_info abufi;
 
-    if ((ret=av_new_packet(pkt, s->frame_size)) < 0)
+    if ((ret=av_packet_new(pkt, s->frame_size)) < 0)
         return ret;
 
     ret = read(s->fd, pkt->data, pkt->size);

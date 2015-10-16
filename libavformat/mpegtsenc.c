@@ -1101,7 +1101,7 @@ static int mpegts_write_packet_internal(AVFormatContext *s, AVPacket *pkt)
                 return AVERROR_INVALIDDATA;
             }
 
-            av_init_packet(&pkt2);
+            av_packet_init(&pkt2);
             pkt2.data = pkt->data;
             pkt2.size = pkt->size;
 

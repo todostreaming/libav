@@ -84,7 +84,7 @@ static int sp5x_decode_frame(AVCodecContext *avctx,
     recoded[j++] = 0xFF;
     recoded[j++] = 0xD9;
 
-    av_init_packet(&avpkt_recoded);
+    av_packet_init(&avpkt_recoded);
     avpkt_recoded.data = recoded;
     avpkt_recoded.size = j;
     i = ff_mjpeg_decode_frame(avctx, data, got_frame, &avpkt_recoded);

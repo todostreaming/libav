@@ -59,7 +59,7 @@ static int g723_1_read_packet(AVFormatContext *s, AVPacket *pkt)
     byte     = avio_r8(s->pb);
     size     = frame_size[byte & 3];
 
-    ret = av_new_packet(pkt, size);
+    ret = av_packet_new(pkt, size);
     if (ret < 0)
         return ret;
 

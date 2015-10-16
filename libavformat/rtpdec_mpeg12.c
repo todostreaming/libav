@@ -41,7 +41,7 @@ static int mpeg_parse_packet(AVFormatContext *ctx, PayloadContext *data,
         buf += 4;
         len -= 4;
     }
-    if (av_new_packet(pkt, len) < 0)
+    if (av_packet_new(pkt, len) < 0)
         return AVERROR(ENOMEM);
     memcpy(pkt->data, buf, len);
     pkt->stream_index = st->index;

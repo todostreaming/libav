@@ -150,7 +150,7 @@ static int read_packet(AVFormatContext *s, AVPacket *pkt)
             c93->frame_offsets[c93->current_frame], SEEK_SET);
     datasize = avio_rl16(pb); /* video frame size */
 
-    ret = av_new_packet(pkt, datasize + 768 + 1);
+    ret = av_packet_new(pkt, datasize + 768 + 1);
     if (ret < 0)
         return ret;
     pkt->data[0] = 0;

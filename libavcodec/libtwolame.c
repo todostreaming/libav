@@ -159,7 +159,7 @@ static int twolame_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
     if (avpkt->pts != AV_NOPTS_VALUE)
         s->next_pts = avpkt->pts + avpkt->duration;
 
-    av_shrink_packet(avpkt, ret);
+    av_packet_shrink(avpkt, ret);
     *got_packet_ptr = 1;
     return 0;
 }

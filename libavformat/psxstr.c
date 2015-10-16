@@ -185,7 +185,7 @@ static int str_read_packet(AVFormatContext *s,
                     if(pkt->data)
                         av_log(s, AV_LOG_ERROR, "missmatching sector_count\n");
                     av_packet_unref(pkt);
-                    if (av_new_packet(pkt, sector_count*VIDEO_DATA_CHUNK_SIZE))
+                    if (av_packet_new(pkt, sector_count*VIDEO_DATA_CHUNK_SIZE))
                         return AVERROR(EIO);
 
                     pkt->pos= avio_tell(pb) - RAW_CD_SECTOR_SIZE;
@@ -238,7 +238,7 @@ static int str_read_packet(AVFormatContext *s,
                 st->start_time = 0;
             }
             pkt = ret_pkt;
-            if (av_new_packet(pkt, 2304))
+            if (av_packet_new(pkt, 2304))
                 return AVERROR(EIO);
             memcpy(pkt->data,sector+24,2304);
 

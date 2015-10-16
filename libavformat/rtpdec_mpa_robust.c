@@ -90,7 +90,7 @@ static int mpa_robust_parse_packet(AVFormatContext *ctx, PayloadContext *data,
             return AVERROR_INVALIDDATA;
         }
 
-        if (av_new_packet(pkt, adu_size)) {
+        if (av_packet_new(pkt, adu_size)) {
             av_log(ctx, AV_LOG_ERROR, "Out of memory.\n");
             return AVERROR(ENOMEM);
         }
@@ -120,7 +120,7 @@ static int mpa_robust_parse_packet(AVFormatContext *ctx, PayloadContext *data,
     if (!continuation && adu_size <= len) {
         /* One or more complete frames */
 
-        if (av_new_packet(pkt, adu_size)) {
+        if (av_packet_new(pkt, adu_size)) {
             av_log(ctx, AV_LOG_ERROR, "Out of memory.\n");
             return AVERROR(ENOMEM);
         }

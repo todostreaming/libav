@@ -1074,13 +1074,13 @@ static int append_packet_chunked(AVIOContext *s, AVPacket *pkt, int size)
         }
         read_size = FFMIN(size, chunk_size);
 
-        ret = av_grow_packet(pkt, read_size);
+        ret = av_packet_grow(pkt, read_size);
         if (ret < 0)
             break;
 
         ret = avio_read(s, pkt->data + prev_size, read_size);
         if (ret != read_size) {
-            av_shrink_packet(pkt, prev_size + FFMAX(ret, 0));
+            av_packet_shrink(pkt, prev_size + FFMAX(ret, 0));
             break;
         }
 
@@ -1095,7 +1095,7 @@ static int append_packet_chunked(AVIOContext *s, AVPacket *pkt, int size)
 
 int avio_get_packet(AVIOContext *s, AVPacket *pkt, int size)
 {
-    av_init_packet(pkt);
+    av_packet_init(pkt);
     pkt->data = NULL;
     pkt->size = 0;
     pkt->pos  = avio_tell(s);

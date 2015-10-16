@@ -28,7 +28,7 @@
 #include "libavutil/mem.h"
 #include "avcodec.h"
 
-void av_init_packet(AVPacket *pkt)
+void av_packet_init(AVPacket *pkt)
 {
     pkt->pts                  = AV_NOPTS_VALUE;
     pkt->dts                  = AV_NOPTS_VALUE;
@@ -61,7 +61,7 @@ static int packet_alloc(AVBufferRef **buf, int size)
     return 0;
 }
 
-int av_new_packet(AVPacket *pkt, int size)
+int av_packet_new(AVPacket *pkt, int size)
 {
     AVBufferRef *buf = NULL;
     int ret = packet_alloc(&buf, size);
@@ -76,7 +76,7 @@ int av_new_packet(AVPacket *pkt, int size)
     return 0;
 }
 
-void av_shrink_packet(AVPacket *pkt, int size)
+void av_packet_shrink(AVPacket *pkt, int size)
 {
     if (pkt->size <= size)
         return;
@@ -84,7 +84,7 @@ void av_shrink_packet(AVPacket *pkt, int size)
     memset(pkt->data + size, 0, AV_INPUT_BUFFER_PADDING_SIZE);
 }
 
-int av_grow_packet(AVPacket *pkt, int grow_by)
+int av_packet_grow(AVPacket *pkt, int grow_by)
 {
     int new_size;
     av_assert0((unsigned)pkt->size <= INT_MAX - AV_INPUT_BUFFER_PADDING_SIZE);
@@ -130,6 +130,27 @@ int av_packet_from_data(AVPacket *pkt, uint8_t *data, int size)
 
 #if FF_API_AVPACKET_OLD_API
 FF_DISABLE_DEPRECATION_WARNINGS
+
+void av_init_packet(AVPacket *pkt)
+{
+    av_packet_init(pkt);
+}
+
+int av_new_packet(AVPacket *pkt, int size)
+{
+    return av_packet_new(pkt, size);
+}
+
+void av_shrink_packet(AVPacket *pkt, int size)
+{
+    av_packet_shrink(pkt, size);
+}
+
+int av_grow_packet(AVPacket *pkt, int grow_by)
+{
+    return av_packet_grow(pkt, grow_by);
+}
+
 #define ALLOC_MALLOC(data, size) data = av_malloc(size)
 #define ALLOC_BUF(data, size)                \
 do {                                         \

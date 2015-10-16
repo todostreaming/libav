@@ -159,7 +159,7 @@ static int read_packet(AVFormatContext *s, AVPacket *pkt)
     p = ass->event[ass->event_index];
 
     end = strchr(p, '\n');
-    ret = av_new_packet(pkt, end ? end - p + 1 : strlen(p));
+    ret = av_packet_new(pkt, end ? end - p + 1 : strlen(p));
     if (ret < 0)
         return ret;
     pkt->flags |= AV_PKT_FLAG_KEY;

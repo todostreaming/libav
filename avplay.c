@@ -2465,7 +2465,7 @@ static int decode_thread(void *arg)
         }
         if (eof) {
             if (is->video_stream >= 0) {
-                av_init_packet(pkt);
+                av_packet_init(pkt);
                 pkt->data = NULL;
                 pkt->size = 0;
                 pkt->stream_index = is->video_stream;
@@ -2473,7 +2473,7 @@ static int decode_thread(void *arg)
             }
             if (is->audio_stream >= 0 &&
                 (is->audio_st->codec->codec->capabilities & AV_CODEC_CAP_DELAY)) {
-                av_init_packet(pkt);
+                av_packet_init(pkt);
                 pkt->data = NULL;
                 pkt->size = 0;
                 pkt->stream_index = is->audio_stream;
@@ -3053,7 +3053,7 @@ int main(int argc, char **argv)
     SDL_EventState(SDL_SYSWMEVENT, SDL_IGNORE);
     SDL_EventState(SDL_USEREVENT, SDL_IGNORE);
 
-    av_init_packet(&flush_pkt);
+    av_packet_init(&flush_pkt);
     flush_pkt.data = (uint8_t *)&flush_pkt;
 
     cur_stream = stream_open(input_filename, file_iformat);

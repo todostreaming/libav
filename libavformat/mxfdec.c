@@ -330,7 +330,7 @@ static int mxf_get_d10_aes3_packet(AVIOContext *pb, AVStream *st, AVPacket *pkt,
         }
         buf_ptr += 32 - st->codec->channels*4; // always 8 channels stored SMPTE 331M
     }
-    av_shrink_packet(pkt, data_ptr - pkt->data);
+    av_packet_shrink(pkt, data_ptr - pkt->data);
     return 0;
 }
 
@@ -391,7 +391,7 @@ static int mxf_decrypt_triplet(AVFormatContext *s, AVPacket *pkt, KLVPacket *klv
     if (mxf->aesc)
         av_aes_crypt(mxf->aesc, &pkt->data[plaintext_size],
                      &pkt->data[plaintext_size], size >> 4, ivec, 1);
-    av_shrink_packet(pkt, orig_size);
+    av_packet_shrink(pkt, orig_size);
     pkt->stream_index = index;
     avio_skip(pb, end - avio_tell(pb));
     return 0;

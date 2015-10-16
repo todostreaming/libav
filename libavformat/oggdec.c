@@ -642,7 +642,7 @@ retry:
     os->keyframe_seek = 0;
 
     //Alloc a pkt
-    ret = av_new_packet(pkt, psize);
+    ret = av_packet_new(pkt, psize);
     if (ret < 0)
         return ret;
     pkt->stream_index = idx;

@@ -1138,12 +1138,12 @@ int ff_alloc_packet(AVPacket *avpkt, int size)
         if (avpkt->size < size)
             return AVERROR(EINVAL);
 
-        av_init_packet(avpkt);
+        av_packet_init(avpkt);
         avpkt->buf      = buf;
         avpkt->size     = size;
         return 0;
     } else {
-        return av_new_packet(avpkt, size);
+        return av_packet_new(avpkt, size);
     }
 }
 
@@ -1200,7 +1200,7 @@ int attribute_align_arg avcodec_encode_audio2(AVCodecContext *avctx,
 
     if (!(avctx->codec->capabilities & AV_CODEC_CAP_DELAY) && !frame) {
         av_packet_unref(avpkt);
-        av_init_packet(avpkt);
+        av_packet_init(avpkt);
         return 0;
     }
 
@@ -1276,7 +1276,7 @@ int attribute_align_arg avcodec_encode_audio2(AVCodecContext *avctx,
 
     if (ret < 0 || !*got_packet_ptr) {
         av_packet_unref(avpkt);
-        av_init_packet(avpkt);
+        av_packet_init(avpkt);
         goto end;
     }
 
@@ -1307,7 +1307,7 @@ int attribute_align_arg avcodec_encode_video2(AVCodecContext *avctx,
 
     if (!(avctx->codec->capabilities & AV_CODEC_CAP_DELAY) && !frame) {
         av_packet_unref(avpkt);
-        av_init_packet(avpkt);
+        av_packet_init(avpkt);
         avpkt->size = 0;
         return 0;
     }

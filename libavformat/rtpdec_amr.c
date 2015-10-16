@@ -93,7 +93,7 @@ static int amr_handle_packet(AVFormatContext *ctx, PayloadContext *data,
     speech_data = buf + 1 + frames;
 
     /* Everything except the codec mode request byte should be output. */
-    if (av_new_packet(pkt, len - 1)) {
+    if (av_packet_new(pkt, len - 1)) {
         av_log(ctx, AV_LOG_ERROR, "Out of memory\n");
         return AVERROR(ENOMEM);
     }

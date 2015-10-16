@@ -264,7 +264,7 @@ static int wv_read_packet(AVFormatContext *s, AVPacket *pkt)
     }
 
     pos = wc->pos;
-    if (av_new_packet(pkt, wc->header.blocksize + WV_HEADER_SIZE) < 0)
+    if (av_packet_new(pkt, wc->header.blocksize + WV_HEADER_SIZE) < 0)
         return AVERROR(ENOMEM);
     memcpy(pkt->data, wc->block_header, WV_HEADER_SIZE);
     ret = avio_read(s->pb, pkt->data + WV_HEADER_SIZE, wc->header.blocksize);
@@ -279,7 +279,7 @@ static int wv_read_packet(AVFormatContext *s, AVPacket *pkt)
         }
 
         off = pkt->size;
-        if ((ret = av_grow_packet(pkt, WV_HEADER_SIZE + wc->header.blocksize)) < 0) {
+        if ((ret = av_packet_grow(pkt, WV_HEADER_SIZE + wc->header.blocksize)) < 0) {
             av_packet_unref(pkt);
             return ret;
         }

@@ -180,7 +180,7 @@ static int wsvqa_read_packet(AVFormatContext *s,
         if ((chunk_type == SND0_TAG) || (chunk_type == SND1_TAG) ||
             (chunk_type == SND2_TAG) || (chunk_type == VQFR_TAG)) {
 
-            if (av_new_packet(pkt, chunk_size))
+            if (av_packet_new(pkt, chunk_size))
                 return AVERROR(EIO);
             ret = avio_read(pb, pkt->data, chunk_size);
             if (ret != chunk_size) {

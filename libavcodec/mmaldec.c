@@ -727,7 +727,7 @@ static int ffmmal_decode(AVCodecContext *avctx, void *data, int *got_frame,
 
     if (avctx->extradata_size && !ctx->extradata_sent) {
         AVPacket pkt = {0};
-        av_init_packet(&pkt);
+        av_packet_init(&pkt);
         pkt.data = avctx->extradata;
         pkt.size = avctx->extradata_size;
         ctx->extradata_sent = 1;

@@ -246,7 +246,7 @@ static int hevc_handle_packet(AVFormatContext *ctx, PayloadContext *rtp_hevc_ctx
     /* single NAL unit packet */
     default:
         /* create A/V packet */
-        if ((res = av_new_packet(pkt, sizeof(start_sequence) + len)) < 0)
+        if ((res = av_packet_new(pkt, sizeof(start_sequence) + len)) < 0)
             return res;
         /* A/V packet: copy start sequence */
         memcpy(pkt->data, start_sequence, sizeof(start_sequence));

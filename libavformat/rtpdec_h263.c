@@ -73,7 +73,7 @@ int ff_h263_handle_packet(AVFormatContext *ctx, PayloadContext *data,
         return AVERROR_INVALIDDATA;
     }
 
-    if (av_new_packet(pkt, len + startcode)) {
+    if (av_packet_new(pkt, len + startcode)) {
         av_log(ctx, AV_LOG_ERROR, "Out of memory\n");
         return AVERROR(ENOMEM);
     }

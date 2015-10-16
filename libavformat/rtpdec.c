@@ -657,7 +657,7 @@ static int rtp_parse_packet_internal(RTPDemuxContext *s, AVPacket *pkt,
                                       s->st, pkt, &timestamp, buf, len, seq,
                                       flags);
     } else if (st) {
-        if ((rv = av_new_packet(pkt, len)) < 0)
+        if ((rv = av_packet_new(pkt, len)) < 0)
             return rv;
         memcpy(pkt->data, buf, len);
         pkt->stream_index = st->index;
@@ -892,7 +892,7 @@ int ff_parse_fmtp(AVFormatContext *s,
 int ff_rtp_finalize_packet(AVPacket *pkt, AVIOContext **dyn_buf, int stream_idx)
 {
     int ret;
-    av_init_packet(pkt);
+    av_packet_init(pkt);
 
     pkt->size         = avio_close_dyn_buf(*dyn_buf, &pkt->data);
     pkt->stream_index = stream_idx;

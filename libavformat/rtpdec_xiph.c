@@ -77,7 +77,7 @@ static int xiph_handle_packet(AVFormatContext *ctx, PayloadContext *data,
             av_log(ctx, AV_LOG_ERROR, "Not enough data to return\n");
             return AVERROR_INVALIDDATA;
         }
-        if (av_new_packet(pkt, pkt_len)) {
+        if (av_packet_new(pkt, pkt_len)) {
             av_log(ctx, AV_LOG_ERROR, "Out of memory.\n");
             return AVERROR(ENOMEM);
         }
@@ -124,7 +124,7 @@ static int xiph_handle_packet(AVFormatContext *ctx, PayloadContext *data,
     len -= 6;
 
     if (fragmented == 0) {
-        if (av_new_packet(pkt, pkt_len)) {
+        if (av_packet_new(pkt, pkt_len)) {
             av_log(ctx, AV_LOG_ERROR, "Out of memory.\n");
             return AVERROR(ENOMEM);
         }

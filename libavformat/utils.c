@@ -348,7 +348,7 @@ int ff_read_packet(AVFormatContext *s, AVPacket *pkt)
 
         pkt->data = NULL;
         pkt->size = 0;
-        av_init_packet(pkt);
+        av_packet_init(pkt);
         ret = s->iformat->read_packet(s, pkt);
         if (ret < 0) {
             if (!pktl || ret == AVERROR(EAGAIN))
@@ -719,7 +719,7 @@ static int parse_packet(AVFormatContext *s, AVPacket *pkt, int stream_index)
     int ret = 0, got_output = 0;
 
     if (!pkt) {
-        av_init_packet(&flush_pkt);
+        av_packet_init(&flush_pkt);
         pkt        = &flush_pkt;
         got_output = 1;
     }
@@ -727,7 +727,7 @@ static int parse_packet(AVFormatContext *s, AVPacket *pkt, int stream_index)
     while (size > 0 || (pkt == &flush_pkt && got_output)) {
         int len;
 
-        av_init_packet(&out_pkt);
+        av_packet_init(&out_pkt);
         len = av_parser_parse2(st->parser, st->codec,
                                &out_pkt.data, &out_pkt.size, data, size,
                                pkt->pts, pkt->dts, pkt->pos);
@@ -823,7 +823,7 @@ static int read_frame_internal(AVFormatContext *s, AVPacket *pkt)
     int ret = 0, i, got_packet = 0;
     AVDictionary *metadata = NULL;
 
-    av_init_packet(pkt);
+    av_packet_init(pkt);
 
     while (!got_packet && !s->internal->parse_queue) {
         AVStream *st;
@@ -2092,7 +2092,7 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
             /* EOF or error*/
             AVPacket empty_pkt = { 0 };
             int err = 0;
-            av_init_packet(&empty_pkt);
+            av_packet_init(&empty_pkt);
 
             /* We could not have all the codec parameters before EOF. */
             ret = -1;

@@ -1046,7 +1046,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
                         ctx->warn = 1;
                     }
 
-                    ret = av_grow_packet(pkt, delta);
+                    ret = av_packet_grow(pkt, delta);
                     if (ret < 0)
                         return ret;
 

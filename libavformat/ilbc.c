@@ -105,7 +105,7 @@ static int ilbc_read_packet(AVFormatContext *s,
     AVCodecContext *enc = s->streams[0]->codec;
     int ret;
 
-    if ((ret = av_new_packet(pkt, enc->block_align)) < 0)
+    if ((ret = av_packet_new(pkt, enc->block_align)) < 0)
         return ret;
 
     pkt->stream_index = 0;

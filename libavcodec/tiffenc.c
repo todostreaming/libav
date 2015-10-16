@@ -312,7 +312,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
                   avctx->height * 4 + AV_INPUT_BUFFER_MIN_SIZE;
 
     if (!pkt->data &&
-        (ret = av_new_packet(pkt, packet_size)) < 0) {
+        (ret = av_packet_new(pkt, packet_size)) < 0) {
         av_log(avctx, AV_LOG_ERROR, "Error getting output packet.\n");
         return ret;
     }

@@ -213,7 +213,7 @@ static int fbdev_read_packet(AVFormatContext *avctx, AVPacket *pkt)
     /* compute the time of the next frame */
     fbdev->time_frame += INT64_C(1000000) / av_q2d(fbdev->framerate_q);
 
-    if ((ret = av_new_packet(pkt, fbdev->frame_size)) < 0)
+    if ((ret = av_packet_new(pkt, fbdev->frame_size)) < 0)
         return ret;
 
     /* refresh fbdev->varinfo, visible data position may change at each call */

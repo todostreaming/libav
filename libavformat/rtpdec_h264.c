@@ -248,7 +248,7 @@ int ff_h264_handle_aggregated_packet(AVFormatContext *ctx, AVPacket *pkt,
         if (pass == 0) {
             /* now we know the total size of the packet (with the
              * start sequences added) */
-            if ((ret = av_new_packet(pkt, total_length)) < 0)
+            if ((ret = av_packet_new(pkt, total_length)) < 0)
                 return ret;
             dst = pkt->data;
         }
@@ -266,7 +266,7 @@ int ff_h264_handle_frag_packet(AVPacket *pkt, const uint8_t *buf, int len,
     int pos = 0;
     if (start_bit)
         tot_len += sizeof(start_sequence) + nal_header_len;
-    if ((ret = av_new_packet(pkt, tot_len)) < 0)
+    if ((ret = av_packet_new(pkt, tot_len)) < 0)
         return ret;
     if (start_bit) {
         memcpy(pkt->data + pos, start_sequence, sizeof(start_sequence));
@@ -328,7 +328,7 @@ static int h264_handle_packet(AVFormatContext *ctx, PayloadContext *data,
     switch (type) {
     case 0:                    // undefined, but pass them through
     case 1:
-        if ((result = av_new_packet(pkt, len + sizeof(start_sequence))) < 0)
+        if ((result = av_packet_new(pkt, len + sizeof(start_sequence))) < 0)
             return result;
         memcpy(pkt->data, start_sequence, sizeof(start_sequence));
         memcpy(pkt->data + sizeof(start_sequence), buf, len);

@@ -104,7 +104,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    av_init_packet(&pkt);
+    av_packet_init(&pkt);
 
     while ((err = av_read_frame(fctx, &pkt)) >= 0) {
         int fd;

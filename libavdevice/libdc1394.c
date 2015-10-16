@@ -178,7 +178,7 @@ static inline int dc1394_read_common(AVFormatContext *c,
     vst->codec->pix_fmt = fmt->pix_fmt;
 
     /* packet init */
-    av_init_packet(&dc1394->packet);
+    av_packet_init(&dc1394->packet);
     dc1394->packet.size = avpicture_get_size(fmt->pix_fmt, fmt->width, fmt->height);
     dc1394->packet.stream_index = vst->index;
     dc1394->packet.flags |= AV_PKT_FLAG_KEY;

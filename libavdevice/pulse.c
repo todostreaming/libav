@@ -126,7 +126,7 @@ static int pulse_read_packet(AVFormatContext *s, AVPacket *pkt)
     int res;
     pa_usec_t latency;
 
-    if (av_new_packet(pkt, pd->frame_size) < 0) {
+    if (av_packet_new(pkt, pd->frame_size) < 0) {
         return AVERROR(ENOMEM);
     }
 

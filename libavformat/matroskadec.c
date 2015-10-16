@@ -1221,7 +1221,7 @@ static void matroska_fix_ass_packet(MatroskaDemuxContext *matroska,
 static int matroska_merge_packets(AVPacket *out, AVPacket *in)
 {
     int old_size = out->size;
-    int ret = av_grow_packet(out, in->size);
+    int ret = av_packet_grow(out, in->size);
     if (ret < 0)
         return ret;
 
@@ -1912,8 +1912,8 @@ static int matroska_read_header(AVFormatContext *s)
                 st->disposition      |= AV_DISPOSITION_ATTACHED_PIC;
                 st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
 
-                av_init_packet(&st->attached_pic);
-                if ((res = av_new_packet(&st->attached_pic, attachments[j].bin.size)) < 0)
+                av_packet_init(&st->attached_pic);
+                if ((res = av_packet_new(&st->attached_pic, attachments[j].bin.size)) < 0)
                     return res;
                 memcpy(st->attached_pic.data, attachments[j].bin.data, attachments[j].bin.size);
                 st->attached_pic.stream_index = st->index;
@@ -2172,7 +2172,7 @@ static int matroska_parse_rm_audio(MatroskaDemuxContext *matroska,
         if (!pkt)
             return AVERROR(ENOMEM);
 
-        ret = av_new_packet(pkt, a);
+        ret = av_packet_new(pkt, a);
         if (ret < 0) {
             av_free(pkt);
             return ret;
@@ -2310,7 +2310,7 @@ static int matroska_parse_frame(MatroskaDemuxContext *matroska,
         return AVERROR(ENOMEM);
     }
     /* XXX: prevent data copy... */
-    if (av_new_packet(pkt, pkt_size + offset) < 0) {
+    if (av_packet_new(pkt, pkt_size + offset) < 0) {
         av_free(pkt);
         av_freep(&pkt_data);
         return AVERROR(ENOMEM);

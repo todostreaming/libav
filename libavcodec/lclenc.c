@@ -80,7 +80,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     int max_size = deflateBound(&c->zstream, avctx->width * avctx->height * 3);
 
     if (!pkt->data &&
-        (ret = av_new_packet(pkt, max_size)) < 0) {
+        (ret = av_packet_new(pkt, max_size)) < 0) {
             av_log(avctx, AV_LOG_ERROR, "Error allocating packet of size %d.\n", max_size);
             return ret;
     }

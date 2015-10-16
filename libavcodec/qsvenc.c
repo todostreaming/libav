@@ -458,7 +458,7 @@ int ff_qsv_encode(AVCodecContext *avctx, QSVEncContext *q,
         }
     }
 
-    ret = av_new_packet(&new_pkt, q->packet_size);
+    ret = av_packet_new(&new_pkt, q->packet_size);
     if (ret < 0) {
         av_log(avctx, AV_LOG_ERROR, "Error allocating the output packet\n");
         return ret;

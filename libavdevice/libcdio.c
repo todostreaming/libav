@@ -136,7 +136,7 @@ static int read_packet(AVFormatContext *ctx, AVPacket *pkt)
         err = NULL;
     }
 
-    if ((ret = av_new_packet(pkt, CDIO_CD_FRAMESIZE_RAW)) < 0)
+    if ((ret = av_packet_new(pkt, CDIO_CD_FRAMESIZE_RAW)) < 0)
         return ret;
     memcpy(pkt->data, buf, CDIO_CD_FRAMESIZE_RAW);
     return 0;

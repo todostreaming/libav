@@ -73,7 +73,7 @@ static int hnm_read_header(AVFormatContext *s)
 
     /* default context members */
     hnm->pts = 0;
-    av_init_packet(&hnm->vpkt);
+    av_packet_init(&hnm->vpkt);
     hnm->vpkt.data = NULL;
     hnm->vpkt.size = 0;
 

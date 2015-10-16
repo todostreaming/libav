@@ -231,7 +231,7 @@ static int vqf_read_packet(AVFormatContext *s, AVPacket *pkt)
     int ret;
     int size = (c->frame_bit_len - c->remaining_bits + 7)>>3;
 
-    if (av_new_packet(pkt, size+2) < 0)
+    if (av_packet_new(pkt, size+2) < 0)
         return AVERROR(EIO);
 
     pkt->pos          = avio_tell(s->pb);

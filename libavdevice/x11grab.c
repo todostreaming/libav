@@ -510,7 +510,7 @@ static int x11grab_read_packet(AVFormatContext *s1, AVPacket *pkt)
         nanosleep(&ts, NULL);
     }
 
-    av_init_packet(pkt);
+    av_packet_init(pkt);
     pkt->data = image->data;
     pkt->size = s->frame_size;
     pkt->pts  = curtime;

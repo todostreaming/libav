@@ -519,7 +519,7 @@ static int avi_write_packet(AVFormatContext *s, AVPacket *pkt)
            pkt->dts > avist->packet_count) {
         AVPacket empty_packet;
 
-        av_init_packet(&empty_packet);
+        av_packet_init(&empty_packet);
         empty_packet.size         = 0;
         empty_packet.data         = NULL;
         empty_packet.stream_index = stream_index;

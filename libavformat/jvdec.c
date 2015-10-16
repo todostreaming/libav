@@ -186,7 +186,7 @@ static int read_packet(AVFormatContext *s, AVPacket *pkt)
             if (jvf->video_size || jvf->palette_size) {
                 int ret;
                 int size = jvf->video_size + jvf->palette_size;
-                if (av_new_packet(pkt, size + JV_PREAMBLE_SIZE))
+                if (av_packet_new(pkt, size + JV_PREAMBLE_SIZE))
                     return AVERROR(ENOMEM);
 
                 AV_WL32(pkt->data, jvf->video_size);

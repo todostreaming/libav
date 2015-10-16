@@ -174,7 +174,7 @@ static int read_frame(BVID_DemuxContext *vid, AVIOContext *pb, AVPacket *pkt,
     } while(code);
 
     // copy data into packet
-    if ((ret = av_new_packet(pkt, vidbuf_nbytes)) < 0)
+    if ((ret = av_packet_new(pkt, vidbuf_nbytes)) < 0)
         goto fail;
     memcpy(pkt->data, vidbuf_start, vidbuf_nbytes);
 

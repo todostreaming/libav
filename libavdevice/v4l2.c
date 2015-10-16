@@ -497,7 +497,7 @@ static int mmap_read_frame(AVFormatContext *ctx, AVPacket *pkt)
     /* Image is at s->buff_start[buf.index] */
     if (avpriv_atomic_int_get(&s->buffers_queued) == FFMAX(s->buffers / 8, 1)) {
         /* when we start getting low on queued buffers, fall back on copying data */
-        res = av_new_packet(pkt, buf.bytesused);
+        res = av_packet_new(pkt, buf.bytesused);
         if (res < 0) {
             av_log(ctx, AV_LOG_ERROR, "Error allocating a packet.\n");
             return res;
@@ -861,7 +861,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
 #endif
     int res;
 
-    av_init_packet(pkt);
+    av_packet_init(pkt);
     if ((res = mmap_read_frame(s1, pkt)) < 0) {
         return res;
     }

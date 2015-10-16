@@ -347,7 +347,7 @@ static int libopus_encode(AVCodecContext *avctx, AVPacket *avpkt,
         return ff_opus_error_to_averror(ret);
     }
 
-    av_shrink_packet(avpkt, ret);
+    av_packet_shrink(avpkt, ret);
 
     ff_af_queue_remove(&opus->afq, opus->opts.packet_size,
                        &avpkt->pts, &avpkt->duration);

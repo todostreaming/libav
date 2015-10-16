@@ -217,7 +217,7 @@ static int flic_read_packet(AVFormatContext *s,
         magic = AV_RL16(&preamble[4]);
 
         if (((magic == FLIC_CHUNK_MAGIC_1) || (magic == FLIC_CHUNK_MAGIC_2)) && size > FLIC_PREAMBLE_SIZE) {
-            if (av_new_packet(pkt, size)) {
+            if (av_packet_new(pkt, size)) {
                 ret = AVERROR(EIO);
                 break;
             }
@@ -233,7 +233,7 @@ static int flic_read_packet(AVFormatContext *s,
             }
             packet_read = 1;
         } else if (magic == FLIC_TFTD_CHUNK_AUDIO) {
-            if (av_new_packet(pkt, size)) {
+            if (av_packet_new(pkt, size)) {
                 ret = AVERROR(EIO);
                 break;
             }

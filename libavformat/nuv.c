@@ -264,7 +264,7 @@ static int nuv_packet(AVFormatContext *s, AVPacket *pkt)
                 avio_skip(pb, size);
                 break;
             }
-            ret = av_new_packet(pkt, copyhdrsize + size);
+            ret = av_packet_new(pkt, copyhdrsize + size);
             if (ret < 0)
                 return ret;
             // HACK: we have no idea if it is a keyframe,
@@ -280,7 +280,7 @@ static int nuv_packet(AVFormatContext *s, AVPacket *pkt)
                 return ret;
             }
             if (ret < size)
-                av_shrink_packet(pkt, copyhdrsize + ret);
+                av_packet_shrink(pkt, copyhdrsize + ret);
             return 0;
         case NUV_AUDIO:
             if (ctx->a_id < 0) {

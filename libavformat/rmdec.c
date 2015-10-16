@@ -249,7 +249,7 @@ static int rm_read_audio_stream_info(AVFormatContext *s, AVIOContext *pb,
                 ast->audio_framesize * sub_packet_h > (unsigned)INT_MAX ||
                 ast->audio_framesize * sub_packet_h < st->codec->block_align)
                 return AVERROR_INVALIDDATA;
-            if (av_new_packet(&ast->pkt, ast->audio_framesize * sub_packet_h) < 0)
+            if (av_packet_new(&ast->pkt, ast->audio_framesize * sub_packet_h) < 0)
                 return AVERROR(ENOMEM);
         }
         switch (ast->deint_id) {
@@ -645,7 +645,7 @@ static int rm_assemble_video_frame(AVFormatContext *s, AVIOContext *pb,
         if(rm->remaining_len < len)
             return -1;
         rm->remaining_len -= len;
-        if(av_new_packet(pkt, len + 9) < 0)
+        if(av_packet_new(pkt, len + 9) < 0)
             return AVERROR(EIO);
         pkt->data[0] = 0;
         AV_WL32(pkt->data + 1, 1);
@@ -660,7 +660,7 @@ static int rm_assemble_video_frame(AVFormatContext *s, AVIOContext *pb,
         vst->slices = ((hdr & 0x3F) << 1) + 1;
         vst->videobufsize = len2 + 8*vst->slices + 1;
         av_packet_unref(&vst->pkt); //FIXME this should be output.
-        if(av_new_packet(&vst->pkt, vst->videobufsize) < 0)
+        if(av_packet_new(&vst->pkt, vst->videobufsize) < 0)
             return AVERROR(ENOMEM);
         vst->videobufpos = 8*vst->slices + 1;
         vst->cur_slice = 0;
@@ -817,7 +817,7 @@ ff_rm_retrieve_cache (AVFormatContext *s, AVIOContext *pb,
         ast->deint_id == DEINT_ID_VBRS)
         avio_get_packet(pb, pkt, ast->sub_packet_lengths[ast->sub_packet_cnt - rm->audio_pkt_cnt]);
     else {
-        int ret = av_new_packet(pkt, st->codec->block_align);
+        int ret = av_packet_new(pkt, st->codec->block_align);
         if (ret < 0)
             return ret;
         memcpy(pkt->data, ast->pkt.data + st->codec->block_align * //FIXME avoid this

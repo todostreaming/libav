@@ -103,7 +103,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
     }
 
     /* Total length */
-    av_shrink_packet(pkt, buf - pkt->data);
+    av_packet_shrink(pkt, buf - pkt->data);
     pkt->flags |= AV_PKT_FLAG_KEY;
     *got_packet = 1;
 

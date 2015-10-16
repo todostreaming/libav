@@ -90,7 +90,7 @@ avs_read_video_packet(AVFormatContext * s, AVPacket * pkt,
     AvsFormat *avs = s->priv_data;
     int ret;
 
-    ret = av_new_packet(pkt, size + palette_size);
+    ret = av_packet_new(pkt, size + palette_size);
     if (ret < 0)
         return ret;
 

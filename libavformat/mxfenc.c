@@ -1880,7 +1880,7 @@ static int mxf_interleave_get_packet(AVFormatContext *s, AVPacket *out, AVPacket
         return 1;
     } else {
     out:
-        av_init_packet(out);
+        av_packet_init(out);
         return 0;
     }
 }

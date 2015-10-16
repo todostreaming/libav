@@ -522,7 +522,7 @@ int ff_interleave_packet_per_dts(AVFormatContext *s, AVPacket *out,
         av_freep(&pktl);
         return 1;
     } else {
-        av_init_packet(out);
+        av_packet_init(out);
         return 0;
     }
 }
@@ -577,7 +577,7 @@ int av_interleaved_write_frame(AVFormatContext *s, AVPacket *pkt)
         int ret = interleave_packet(s, &opkt, pkt, flush);
         if (pkt) {
             memset(pkt, 0, sizeof(*pkt));
-            av_init_packet(pkt);
+            av_packet_init(pkt);
             pkt = NULL;
         }
         if (ret <= 0) //FIXME cleanup needed for ret<0 ?

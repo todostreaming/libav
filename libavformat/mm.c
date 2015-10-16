@@ -161,7 +161,7 @@ static int read_packet(AVFormatContext *s,
         case MM_TYPE_INTRA_HHV :
         case MM_TYPE_INTER_HHV :
             /* output preamble + data */
-            if (av_new_packet(pkt, length + MM_PREAMBLE_SIZE))
+            if (av_packet_new(pkt, length + MM_PREAMBLE_SIZE))
                 return AVERROR(ENOMEM);
             memcpy(pkt->data, preamble, MM_PREAMBLE_SIZE);
             if (avio_read(pb, pkt->data + MM_PREAMBLE_SIZE, length) != length)

@@ -94,7 +94,7 @@ static int encode_callback(void *id, void *data, int32_t count)
         }
         s->pkt->size += count;
     } else {
-        ret = av_grow_packet(s->pkt, count);
+        ret = av_packet_grow(s->pkt, count);
         if (ret < 0) {
             av_log(avctx, AV_LOG_ERROR, "Error allocating output packet.\n");
             return 0;

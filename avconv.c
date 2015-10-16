@@ -356,7 +356,7 @@ static void do_audio_out(AVFormatContext *s, OutputStream *ost,
     AVPacket pkt;
     int got_packet = 0;
 
-    av_init_packet(&pkt);
+    av_packet_init(&pkt);
     pkt.data = NULL;
     pkt.size = 0;
 
@@ -431,7 +431,7 @@ static void do_subtitle_out(AVFormatContext *s,
             exit_program(1);
         }
 
-        av_init_packet(&pkt);
+        av_packet_init(&pkt);
         pkt.data = subtitle_out;
         pkt.size = subtitle_out_size;
         pkt.pts  = av_rescale_q(sub->pts, AV_TIME_BASE_Q, ost->st->time_base);
@@ -481,7 +481,7 @@ static void do_video_out(AVFormatContext *s,
     if (!ost->frame_number)
         ost->first_pts = in_picture->pts;
 
-    av_init_packet(&pkt);
+    av_packet_init(&pkt);
     pkt.data = NULL;
     pkt.size = 0;
 
@@ -960,7 +960,7 @@ static void flush_encoders(void)
             if (encode) {
                 AVPacket pkt;
                 int got_packet;
-                av_init_packet(&pkt);
+                av_packet_init(&pkt);
                 pkt.data = NULL;
                 pkt.size = 0;
 
@@ -1011,7 +1011,7 @@ static void do_streamcopy(InputStream *ist, OutputStream *ost, const AVPacket *p
     int64_t ost_tb_start_time = av_rescale_q(start_time, AV_TIME_BASE_Q, ost->st->time_base);
     AVPacket opkt;
 
-    av_init_packet(&opkt);
+    av_packet_init(&opkt);
 
     if ((!ost->frame_number && !(pkt->flags & AV_PKT_FLAG_KEY)) &&
         !ost->copy_initial_nonkeyframes)
@@ -1313,7 +1313,7 @@ static void process_input_packet(InputStream *ist, const AVPacket *pkt, int no_e
 
     if (!pkt) {
         /* EOF handling */
-        av_init_packet(&avpkt);
+        av_packet_init(&avpkt);
         avpkt.data = NULL;
         avpkt.size = 0;
         goto handle_eof;

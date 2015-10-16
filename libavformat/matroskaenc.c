@@ -1221,7 +1221,7 @@ static int mkv_write_header(AVFormatContext *s)
         put_ebml_void(pb, mkv->reserve_cues_space);
     }
 
-    av_init_packet(&mkv->cur_audio_pkt);
+    av_packet_init(&mkv->cur_audio_pkt);
     mkv->cur_audio_pkt.size = 0;
 
     avio_flush(pb);

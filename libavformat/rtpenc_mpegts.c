@@ -125,7 +125,7 @@ static int rtp_mpegts_write_packet(AVFormatContext *s, AVPacket *pkt)
         av_free(buf);
         return 0;
     }
-    av_init_packet(&local_pkt);
+    av_packet_init(&local_pkt);
     local_pkt.data         = buf;
     local_pkt.size         = size;
     local_pkt.stream_index = 0;

@@ -286,7 +286,7 @@ static int mmf_read_packet(AVFormatContext *s, AVPacket *pkt)
     if (!size)
         return AVERROR(EIO);
 
-    if (av_new_packet(pkt, size))
+    if (av_packet_new(pkt, size))
         return AVERROR(EIO);
     pkt->stream_index = 0;
 

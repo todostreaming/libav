@@ -775,7 +775,7 @@ static int asf_read_stream_properties(AVFormatContext *s, const GUIDParseTable *
     asf_st->index                = st->index;
     asf_st->indexed              = 0;
     st->id                       = flags & ASF_STREAM_NUM;
-    av_init_packet(&asf_st->pkt.avpkt);
+    av_packet_init(&asf_st->pkt.avpkt);
     asf_st->pkt.data_size        = 0;
     avio_skip(pb, 4); // skip reserved field
 
@@ -1129,7 +1129,7 @@ static void reset_packet(ASFPacket *asf_pkt)
     asf_pkt->dts       = 0;
     asf_pkt->duration  = 0;
     av_packet_unref(&asf_pkt->avpkt);
-    av_init_packet(&asf_pkt->avpkt);
+    av_packet_init(&asf_pkt->avpkt);
 }
 
 static int asf_read_replicated_data(AVFormatContext *s, ASFPacket *asf_pkt)
@@ -1142,7 +1142,7 @@ static int asf_read_replicated_data(AVFormatContext *s, ASFPacket *asf_pkt)
         asf_pkt->data_size = asf_pkt->size_left = avio_rl32(pb); // read media object size
         if (asf_pkt->data_size <= 0)
             return AVERROR_INVALIDDATA;
-        if ((ret = av_new_packet(&asf_pkt->avpkt, asf_pkt->data_size)) < 0)
+        if ((ret = av_packet_new(&asf_pkt->avpkt, asf_pkt->data_size)) < 0)
             return ret;
     } else
         avio_skip(pb, 4); // reading of media object size is already done
@@ -1218,7 +1218,7 @@ static int asf_read_single_payload(AVFormatContext *s, AVPacket *pkt,
         asf_pkt->data_size = asf_pkt->size_left = avio_rl32(pb); // read media object size
         if (asf_pkt->data_size <= 0)
             return AVERROR_EOF;
-        if ((ret = av_new_packet(&asf_pkt->avpkt, asf_pkt->data_size)) < 0)
+        if ((ret = av_packet_new(&asf_pkt->avpkt, asf_pkt->data_size)) < 0)
             return ret;
     } else
         avio_skip(pb, 4); // skip media object size
@@ -1371,7 +1371,7 @@ static int asf_deinterleave(AVFormatContext *s, ASFPacket *asf_pkt, int st_num)
     int pos = 0, j, l, ret;
 
 
-    if ((ret = av_new_packet(&pkt, asf_pkt->data_size)) < 0)
+    if ((ret = av_packet_new(&pkt, asf_pkt->data_size)) < 0)
         return ret;
 
     while (asf_pkt->data_size >= asf_st->span * pkt_len + pos) {
@@ -1522,7 +1522,7 @@ static void reset_packet_state(AVFormatContext *s)
         pkt->dts       = 0;
         pkt->duration  = 0;
         av_packet_unref(&pkt->avpkt);
-        av_init_packet(&pkt->avpkt);
+        av_packet_init(&pkt->avpkt);
     }
 }
 
@@ -1560,7 +1560,7 @@ static int64_t asf_read_timestamp(AVFormatContext *s, int stream_index,
 
         int i, ret, st_found;
 
-        av_init_packet(&pkt);
+        av_packet_init(&pkt);
         pkt_offset = avio_tell(s->pb);
         if ((ret = asf_read_packet(s, &pkt)) < 0) {
             dts = AV_NOPTS_VALUE;

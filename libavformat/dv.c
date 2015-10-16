@@ -248,7 +248,7 @@ static int dv_extract_audio_info(DVDemuxContext *c, uint8_t *frame)
             c->ast[i]->codec->codec_type = AVMEDIA_TYPE_AUDIO;
             c->ast[i]->codec->codec_id   = AV_CODEC_ID_PCM_S16LE;
 
-            av_init_packet(&c->audio_pkt[i]);
+            av_packet_init(&c->audio_pkt[i]);
             c->audio_pkt[i].size         = 0;
             c->audio_pkt[i].data         = c->audio_buf[i];
             c->audio_pkt[i].stream_index = c->ast[i]->index;
@@ -379,7 +379,7 @@ int avpriv_dv_produce_packet(DVDemuxContext *c, AVPacket *pkt,
 
     /* Now it's time to return video packet */
     size = dv_extract_video_info(c, buf);
-    av_init_packet(pkt);
+    av_packet_init(pkt);
     pkt->data         = buf;
     pkt->size         = size;
     pkt->flags       |= AV_PKT_FLAG_KEY;

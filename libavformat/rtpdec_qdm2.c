@@ -195,7 +195,7 @@ static int qdm2_restore_block(PayloadContext *qdm, AVStream *st, AVPacket *pkt)
             break;
     assert(n < 0x80);
 
-    if ((res = av_new_packet(pkt, qdm->block_size)) < 0)
+    if ((res = av_packet_new(pkt, qdm->block_size)) < 0)
         return res;
     memset(pkt->data, 0, pkt->size);
     pkt->stream_index  = st->index;

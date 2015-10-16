@@ -271,7 +271,7 @@ static int film_read_packet(AVFormatContext *s,
     if ((sample->stream == film->video_stream_index) &&
         (film->video_type == AV_CODEC_ID_CINEPAK)) {
         pkt->pos= avio_tell(pb);
-        if (av_new_packet(pkt, sample->sample_size))
+        if (av_packet_new(pkt, sample->sample_size))
             return AVERROR(ENOMEM);
         avio_read(pb, pkt->data, sample->sample_size);
     } else {

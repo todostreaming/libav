@@ -224,7 +224,7 @@ static int dss_sp_read_packet(AVFormatContext *s, AVPacket *pkt)
 
     ctx->counter -= read_size;
 
-    ret = av_new_packet(pkt, DSS_FRAME_SIZE);
+    ret = av_packet_new(pkt, DSS_FRAME_SIZE);
     if (ret < 0)
         return ret;
 
@@ -278,7 +278,7 @@ static int dss_723_1_read_packet(AVFormatContext *s, AVPacket *pkt)
 
     ctx->counter -= size;
 
-    ret = av_new_packet(pkt, size);
+    ret = av_packet_new(pkt, size);
     if (ret < 0)
         return ret;
 

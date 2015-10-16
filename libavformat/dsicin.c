@@ -183,7 +183,7 @@ static int cin_read_packet(AVFormatContext *s, AVPacket *pkt)
         /* palette and video packet */
         pkt_size = (palette_type + 3) * hdr->pal_colors_count + hdr->video_frame_size;
 
-        ret = av_new_packet(pkt, 4 + pkt_size);
+        ret = av_packet_new(pkt, 4 + pkt_size);
         if (ret < 0)
             return ret;
 
@@ -201,7 +201,7 @@ static int cin_read_packet(AVFormatContext *s, AVPacket *pkt)
             return ret;
         }
         if (ret < pkt_size)
-            av_shrink_packet(pkt, 4 + ret);
+            av_packet_shrink(pkt, 4 + ret);
 
         /* sound buffer will be processed on next read_packet() call */
         cin->audio_buffer_size = hdr->audio_frame_size;

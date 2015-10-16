@@ -212,7 +212,7 @@ cleanup:
 /** Initialize one data packet for reading or writing. */
 static void init_packet(AVPacket *packet)
 {
-    av_init_packet(packet);
+    av_packet_init(packet);
     /** Set the packet data and size so that it is recognized as being empty. */
     packet->data = NULL;
     packet->size = 0;

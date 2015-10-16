@@ -125,7 +125,7 @@ static int store_packet(AVFormatContext *ctx, PayloadContext *data,
     if (len - 1 - frame_size > sizeof(data->group[0].data))
         return AVERROR_INVALIDDATA;
 
-    if ((ret = av_new_packet(pkt, frame_size)) < 0)
+    if ((ret = av_packet_new(pkt, frame_size)) < 0)
         return ret;
     memcpy(pkt->data, &buf[1], frame_size);
     pkt->stream_index = st->index;
@@ -165,7 +165,7 @@ static int return_stored_frame(AVFormatContext *ctx, PayloadContext *data,
 
     if (ip->size == 0) {
         /* No stored data for this interleave block, output an empty packet */
-        if ((ret = av_new_packet(pkt, 1)) < 0)
+        if ((ret = av_packet_new(pkt, 1)) < 0)
             return ret;
         pkt->data[0] = 0; // Blank - could also be 14, Erasure
     } else {
@@ -177,7 +177,7 @@ static int return_stored_frame(AVFormatContext *ctx, PayloadContext *data,
         if (ip->pos + frame_size > ip->size)
             return AVERROR_INVALIDDATA;
 
-        if ((ret = av_new_packet(pkt, frame_size)) < 0)
+        if ((ret = av_packet_new(pkt, frame_size)) < 0)
             return ret;
         memcpy(pkt->data, &ip->data[ip->pos], frame_size);
 

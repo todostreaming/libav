@@ -311,7 +311,7 @@ static int lxf_read_packet(AVFormatContext *s, AVPacket *pkt)
         return AVERROR_INVALIDDATA;
     }
 
-    if ((ret2 = av_new_packet(pkt, ret)) < 0)
+    if ((ret2 = av_packet_new(pkt, ret)) < 0)
         return ret2;
 
     if ((ret2 = avio_read(pb, pkt->data, ret)) != ret) {

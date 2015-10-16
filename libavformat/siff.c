@@ -206,7 +206,7 @@ static int siff_read_packet(AVFormatContext *s, AVPacket *pkt)
 
         if (!c->curstrm) {
             size = c->pktsize - c->sndsize;
-            if (av_new_packet(pkt, size) < 0)
+            if (av_packet_new(pkt, size) < 0)
                 return AVERROR(ENOMEM);
             AV_WL16(pkt->data, c->flags);
             if (c->gmcsize)

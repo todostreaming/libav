@@ -202,7 +202,7 @@ static int read_packet(AVFormatContext *s, AVPacket *pkt)
         return AVERROR_EOF;
 
     if (p->got_audio) {
-        if (av_new_packet(pkt, p->audio_size) < 0)
+        if (av_packet_new(pkt, p->audio_size) < 0)
             return AVERROR(ENOMEM);
 
         memcpy(pkt->data, p->temp_audio_frame, p->audio_size);
@@ -243,7 +243,7 @@ static int read_packet(AVFormatContext *s, AVPacket *pkt)
 
     size = p->video_size - p->frames_offset_table[p->current_frame];
 
-    if (av_new_packet(pkt, size) < 0)
+    if (av_packet_new(pkt, size) < 0)
         return AVERROR(ENOMEM);
 
     pkt->stream_index = 0;

@@ -699,7 +699,7 @@ static int mpegts_set_stream_info(AVStream *st, PESContext *pes,
 
 static void new_pes_packet(PESContext *pes, AVPacket *pkt)
 {
-    av_init_packet(pkt);
+    av_packet_init(pkt);
 
     pkt->buf  = pes->buffer;
     pkt->data = pes->buffer->data;
@@ -2157,7 +2157,7 @@ static int mpegts_raw_read_packet(AVFormatContext *s, AVPacket *pkt)
     uint8_t pcr_buf[12];
     const uint8_t *data;
 
-    if (av_new_packet(pkt, TS_PACKET_SIZE) < 0)
+    if (av_packet_new(pkt, TS_PACKET_SIZE) < 0)
         return AVERROR(ENOMEM);
     ret = read_packet(s, pkt->data, ts->raw_packet_size, &data);
     pkt->pos = avio_tell(s->pb);

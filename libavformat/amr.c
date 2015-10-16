@@ -135,7 +135,7 @@ static int amr_read_packet(AVFormatContext *s, AVPacket *pkt)
         assert(0);
     }
 
-    if (!size || av_new_packet(pkt, size))
+    if (!size || av_packet_new(pkt, size))
         return AVERROR(EIO);
 
     /* Both AMR formats have 50 frames per second */

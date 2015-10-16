@@ -333,7 +333,7 @@ static int smacker_read_packet(AVFormatContext *s, AVPacket *pkt)
         }
         if (frame_size < 0 || frame_size >= INT_MAX/2)
             return AVERROR_INVALIDDATA;
-        if (av_new_packet(pkt, frame_size + 769))
+        if (av_packet_new(pkt, frame_size + 769))
             return AVERROR(ENOMEM);
         if(smk->frm_size[smk->cur_frame] & 1)
             palchange |= 2;
@@ -350,7 +350,7 @@ static int smacker_read_packet(AVFormatContext *s, AVPacket *pkt)
     } else {
         if (smk->stream_id[smk->curstream] < 0)
             return AVERROR_INVALIDDATA;
-        if (av_new_packet(pkt, smk->buf_sizes[smk->curstream]))
+        if (av_packet_new(pkt, smk->buf_sizes[smk->curstream]))
             return AVERROR(ENOMEM);
         memcpy(pkt->data, smk->bufs[smk->curstream], smk->buf_sizes[smk->curstream]);
         pkt->size = smk->buf_sizes[smk->curstream];

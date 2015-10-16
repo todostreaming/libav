@@ -1314,7 +1314,7 @@ static int vp8_lossy_decode_frame(AVCodecContext *avctx, AVFrame *p,
         return AVERROR_PATCHWELCOME;
     }
 
-    av_init_packet(&pkt);
+    av_packet_init(&pkt);
     pkt.data = data_start;
     pkt.size = data_size;
 

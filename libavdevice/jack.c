@@ -138,7 +138,7 @@ static int supply_new_packets(JackData *self, AVFormatContext *context)
      * packets FIFO buffer with as many packets as possible. process_callback()
      * can't do this by itself, because it can't allocate memory in realtime. */
     while (av_fifo_space(self->new_pkts) >= sizeof(pkt)) {
-        if ((test = av_new_packet(&pkt, pkt_size)) < 0) {
+        if ((test = av_packet_new(&pkt, pkt_size)) < 0) {
             av_log(context, AV_LOG_ERROR, "Could not create packet of size %d\n", pkt_size);
             return test;
         }

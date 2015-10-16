@@ -223,7 +223,7 @@ static int encode_audio_frame(AVFormatContext *oc, OutputStream *ost,
     AVPacket pkt = { 0 }; // data and size must be 0;
     int got_packet;
 
-    av_init_packet(&pkt);
+    av_packet_init(&pkt);
     avcodec_encode_audio2(ost->st->codec, &pkt, frame, &got_packet);
 
     if (got_packet) {
@@ -498,7 +498,7 @@ static int write_video_frame(AVFormatContext *oc, OutputStream *ost)
 
     frame = get_video_frame(ost);
 
-    av_init_packet(&pkt);
+    av_packet_init(&pkt);
 
     /* encode the image */
     ret = avcodec_encode_video2(c, &pkt, frame, &got_packet);

@@ -141,7 +141,7 @@ static int cdxl_read_packet(AVFormatContext *s, AVPacket *pkt)
                 avpriv_set_pts_info(st, 64, 1, cdxl->sample_rate);
         }
 
-        if (av_new_packet(pkt, video_size + CDXL_HEADER_SIZE) < 0)
+        if (av_packet_new(pkt, video_size + CDXL_HEADER_SIZE) < 0)
             return AVERROR(ENOMEM);
         memcpy(pkt->data, cdxl->header, CDXL_HEADER_SIZE);
         ret = avio_read(pb, pkt->data + CDXL_HEADER_SIZE, video_size);
@@ -149,7 +149,7 @@ static int cdxl_read_packet(AVFormatContext *s, AVPacket *pkt)
             av_packet_unref(pkt);
             return ret;
         }
-        av_shrink_packet(pkt, CDXL_HEADER_SIZE + ret);
+        av_packet_shrink(pkt, CDXL_HEADER_SIZE + ret);
         pkt->stream_index  = cdxl->video_stream_index;
         pkt->flags        |= AV_PKT_FLAG_KEY;
         pkt->pos           = pos;
