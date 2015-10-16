@@ -350,7 +350,7 @@ static int mp3_read_packet(AVFormatContext *s, AVPacket *pkt)
 {
     int ret;
 
-    ret = av_get_packet(s->pb, pkt, MP3_PACKET_SIZE);
+    ret = avio_get_packet(s->pb, pkt, MP3_PACKET_SIZE);
     if (ret < 0)
         return ret;
 

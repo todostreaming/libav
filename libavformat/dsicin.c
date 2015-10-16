@@ -209,7 +209,7 @@ static int cin_read_packet(AVFormatContext *s, AVPacket *pkt)
     }
 
     /* audio packet */
-    ret = av_get_packet(pb, pkt, cin->audio_buffer_size);
+    ret = avio_get_packet(pb, pkt, cin->audio_buffer_size);
     if (ret < 0)
         return ret;
 

@@ -455,7 +455,7 @@ static int xmv_fetch_audio_packet(AVFormatContext *s,
         data_size = audio->data_size;
 
     /* Read the packet */
-    result = av_get_packet(pb, pkt, data_size);
+    result = avio_get_packet(pb, pkt, data_size);
     if (result <= 0)
         return result;
 

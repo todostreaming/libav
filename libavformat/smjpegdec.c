@@ -149,7 +149,7 @@ static int smjpeg_read_packet(AVFormatContext *s, AVPacket *pkt)
     case SMJPEG_SNDD:
         timestamp = avio_rb32(s->pb);
         size = avio_rb32(s->pb);
-        ret = av_get_packet(s->pb, pkt, size);
+        ret = avio_get_packet(s->pb, pkt, size);
         pkt->stream_index = sc->audio_stream_index;
         pkt->pts = timestamp;
         pkt->pos = pos;
@@ -157,7 +157,7 @@ static int smjpeg_read_packet(AVFormatContext *s, AVPacket *pkt)
     case SMJPEG_VIDD:
         timestamp = avio_rb32(s->pb);
         size = avio_rb32(s->pb);
-        ret = av_get_packet(s->pb, pkt, size);
+        ret = avio_get_packet(s->pb, pkt, size);
         pkt->stream_index = sc->video_stream_index;
         pkt->pts = timestamp;
         pkt->pos = pos;

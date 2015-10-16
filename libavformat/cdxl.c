@@ -115,7 +115,7 @@ static int cdxl_read_packet(AVFormatContext *s, AVPacket *pkt)
             avpriv_set_pts_info(st, 64, 1, cdxl->sample_rate);
         }
 
-        ret = av_get_packet(pb, pkt, audio_size);
+        ret = avio_get_packet(pb, pkt, audio_size);
         if (ret < 0)
             return ret;
         pkt->stream_index = cdxl->audio_stream_index;

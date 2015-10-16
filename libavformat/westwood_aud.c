@@ -162,7 +162,7 @@ static int wsaud_read_packet(AVFormatContext *s,
 
         pkt->duration = out_size;
     } else {
-        ret = av_get_packet(pb, pkt, chunk_size);
+        ret = avio_get_packet(pb, pkt, chunk_size);
         if (ret != chunk_size)
             return AVERROR(EIO);
 

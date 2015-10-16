@@ -215,7 +215,7 @@ static int siff_read_packet(AVFormatContext *s, AVPacket *pkt)
             pkt->stream_index = 0;
             c->curstrm        = -1;
         } else {
-            int pktsize = av_get_packet(s->pb, pkt, c->sndsize - 4);
+            int pktsize = avio_get_packet(s->pb, pkt, c->sndsize - 4);
             if (pktsize < 0)
                 return AVERROR(EIO);
             pkt->stream_index = 1;
@@ -227,7 +227,7 @@ static int siff_read_packet(AVFormatContext *s, AVPacket *pkt)
         if (c->curstrm == -1)
             c->cur_frame++;
     } else {
-        int pktsize = av_get_packet(s->pb, pkt, c->block_align);
+        int pktsize = avio_get_packet(s->pb, pkt, c->block_align);
         if (pktsize <= 0)
             return AVERROR(EIO);
         pkt->duration = pktsize;

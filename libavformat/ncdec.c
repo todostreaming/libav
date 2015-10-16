@@ -81,7 +81,7 @@ static int nc_read_packet(AVFormatContext *s, AVPacket *pkt)
         return AVERROR(EAGAIN);
     }
 
-    ret = av_get_packet(s->pb, pkt, size);
+    ret = avio_get_packet(s->pb, pkt, size);
     if (ret != size) {
         if (ret > 0) av_packet_unref(pkt);
         return AVERROR(EIO);

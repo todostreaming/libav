@@ -71,66 +71,6 @@ const char *avformat_license(void)
     return LICENSE_PREFIX LIBAV_LICENSE + sizeof(LICENSE_PREFIX) - 1;
 }
 
-/* an arbitrarily chosen "sane" max packet size -- 50M */
-#define SANE_CHUNK_SIZE (50000000)
-
-/* Read the data in sane-sized chunks and append to pkt.
- * Return the number of bytes read or an error. */
-static int append_packet_chunked(AVIOContext *s, AVPacket *pkt, int size)
-{
-    int64_t chunk_size = size;
-    int64_t orig_pos   = pkt->pos; // av_grow_packet might reset pos
-    int orig_size      = pkt->size;
-    int ret = 0;
-
-    do {
-        int prev_size = pkt->size;
-        int read_size;
-
-        /* When the caller requests a lot of data, limit it to the amount
-         * left in file or SANE_CHUNK_SIZE when it is not known. */
-        if (size > SANE_CHUNK_SIZE) {
-            int64_t filesize = avio_size(s) - avio_tell(s);
-            chunk_size = FFMAX(filesize, SANE_CHUNK_SIZE);
-        }
-        read_size = FFMIN(size, chunk_size);
-
-        ret = av_grow_packet(pkt, read_size);
-        if (ret < 0)
-            break;
-
-        ret = avio_read(s, pkt->data + prev_size, read_size);
-        if (ret != read_size) {
-            av_shrink_packet(pkt, prev_size + FFMAX(ret, 0));
-            break;
-        }
-
-        size -= read_size;
-    } while (size > 0);
-
-    pkt->pos = orig_pos;
-    if (!pkt->size)
-        av_packet_unref(pkt);
-    return pkt->size > orig_size ? pkt->size - orig_size : ret;
-}
-
-int av_get_packet(AVIOContext *s, AVPacket *pkt, int size)
-{
-    av_init_packet(pkt);
-    pkt->data = NULL;
-    pkt->size = 0;
-    pkt->pos  = avio_tell(s);
-
-    return append_packet_chunked(s, pkt, size);
-}
-
-int av_append_packet(AVIOContext *s, AVPacket *pkt, int size)
-{
-    if (!pkt->size)
-        return av_get_packet(s, pkt, size);
-    return append_packet_chunked(s, pkt, size);
-}
-
 int av_filename_number_test(const char *filename)
 {
     char buf[1024];
@@ -3152,3 +3092,17 @@ uint8_t *ff_stream_new_side_data(AVStream *st, enum AVPacketSideDataType type,
     sd->size = size;
     return data;
 }
+
+#if FF_API_LAVF_AVPACKET_OLD_API
+FF_DISABLE_DEPRECATION_WARNINGS
+int av_get_packet(AVIOContext *s, AVPacket *pkt, int size)
+{
+    return avio_get_packet(s, pkt, size);
+}
+
+int av_append_packet(AVIOContext *s, AVPacket *pkt, int size)
+{
+    return avio_append_packet(s, pkt, size);
+}
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif

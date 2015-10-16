@@ -491,7 +491,7 @@ static int gxf_packet(AVFormatContext *s, AVPacket *pkt) {
             } else
                 av_log(s, AV_LOG_ERROR, "invalid first and last sample values\n");
         }
-        ret = av_get_packet(pb, pkt, pkt_len);
+        ret = avio_get_packet(pb, pkt, pkt_len);
         if (skip)
             avio_skip(pb, skip);
         pkt->stream_index = stream_index;

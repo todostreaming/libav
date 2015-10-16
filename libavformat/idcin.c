@@ -304,7 +304,7 @@ static int idcin_read_packet(AVFormatContext *s,
         /* skip the number of decoded bytes (always equal to width * height) */
         avio_skip(pb, 4);
         chunk_size -= 4;
-        ret= av_get_packet(pb, pkt, chunk_size);
+        ret= avio_get_packet(pb, pkt, chunk_size);
         if (ret < 0)
             return ret;
         else if (ret != chunk_size) {
@@ -332,7 +332,7 @@ static int idcin_read_packet(AVFormatContext *s,
             chunk_size = idcin->audio_chunk_size2;
         else
             chunk_size = idcin->audio_chunk_size1;
-        ret= av_get_packet(pb, pkt, chunk_size);
+        ret= avio_get_packet(pb, pkt, chunk_size);
         if (ret < 0)
             return ret;
         pkt->stream_index = idcin->audio_stream_index;

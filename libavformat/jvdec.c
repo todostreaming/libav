@@ -174,7 +174,7 @@ static int read_packet(AVFormatContext *s, AVPacket *pkt)
         case JV_AUDIO:
             jv->state++;
             if (jvf->audio_size) {
-                if (av_get_packet(s->pb, pkt, jvf->audio_size) < 0)
+                if (avio_get_packet(s->pb, pkt, jvf->audio_size) < 0)
                     return AVERROR(ENOMEM);
                 pkt->stream_index = 0;
                 pkt->pts          = e->timestamp;

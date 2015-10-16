@@ -163,7 +163,7 @@ static int hnm_read_packet(AVFormatContext *s, AVPacket *pkt)
     case HNM4_CHUNK_ID_IZ:
     case HNM4_CHUNK_ID_IU:
         avio_seek(pb, -8, SEEK_CUR);
-        ret += av_get_packet(pb, pkt, chunk_size);
+        ret += avio_get_packet(pb, pkt, chunk_size);
         hnm->superchunk_remaining -= chunk_size;
         if (chunk_id == HNM4_CHUNK_ID_IZ || chunk_id == HNM4_CHUNK_ID_IU)
             hnm->currentframe++;

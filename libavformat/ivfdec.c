@@ -72,7 +72,7 @@ static int read_packet(AVFormatContext *s, AVPacket *pkt)
     int ret, size = avio_rl32(s->pb);
     int64_t   pts = avio_rl64(s->pb);
 
-    ret = av_get_packet(s->pb, pkt, size);
+    ret = avio_get_packet(s->pb, pkt, size);
     pkt->stream_index = 0;
     pkt->pts          = pts;
     pkt->pos         -= 12;

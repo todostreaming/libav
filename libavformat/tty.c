@@ -133,7 +133,7 @@ static int read_packet(AVFormatContext *avctx, AVPacket *pkt)
             n = s->fsize - p;
     }
 
-    pkt->size = av_get_packet(avctx->pb, pkt, n);
+    pkt->size = avio_get_packet(avctx->pb, pkt, n);
     if (pkt->size <= 0)
         return AVERROR(EIO);
     pkt->flags |= AV_PKT_FLAG_KEY;

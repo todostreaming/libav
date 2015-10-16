@@ -84,7 +84,7 @@ static int cdata_read_packet(AVFormatContext *s, AVPacket *pkt)
     CdataDemuxContext *cdata = s->priv_data;
     int packet_size = 76*cdata->channels;
 
-    int ret = av_get_packet(s->pb, pkt, packet_size);
+    int ret = avio_get_packet(s->pb, pkt, packet_size);
     if (ret < 0)
         return ret;
     pkt->pts = cdata->audio_pts++;

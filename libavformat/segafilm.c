@@ -275,7 +275,7 @@ static int film_read_packet(AVFormatContext *s,
             return AVERROR(ENOMEM);
         avio_read(pb, pkt->data, sample->sample_size);
     } else {
-        ret= av_get_packet(pb, pkt, sample->sample_size);
+        ret= avio_get_packet(pb, pkt, sample->sample_size);
         if (ret != sample->sample_size)
             ret = AVERROR(EIO);
     }

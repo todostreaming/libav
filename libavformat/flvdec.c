@@ -692,7 +692,7 @@ static int flv_data_packet(AVFormatContext *s, AVPacket *pkt,
         AMFDataType type = avio_r8(pb);
         if (type == AMF_DATA_TYPE_STRING && !strcmp(buf, "text")) {
             length = avio_rb16(pb);
-            ret    = av_get_packet(pb, pkt, length);
+            ret    = avio_get_packet(pb, pkt, length);
             if (ret < 0)
                 goto skip;
             else
@@ -949,7 +949,7 @@ skip:
         goto leave;
     }
 
-    ret = av_get_packet(s->pb, pkt, size);
+    ret = avio_get_packet(s->pb, pkt, size);
     if (ret < 0)
         return AVERROR(EIO);
     /* note: we need to modify the packet size here to handle the last

@@ -1062,7 +1062,7 @@ static int read_packet(AVFormatContext *s, AVPacket *pkt)
     if (stream_index < 0)
         return stream_index;
 
-    ret = av_get_packet(pb, pkt, len - 32);
+    ret = avio_get_packet(pb, pkt, len - 32);
     if (ret < 0)
         return ret;
     pkt->stream_index = stream_index;

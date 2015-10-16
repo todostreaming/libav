@@ -156,7 +156,7 @@ ff_voc_get_packet(AVFormatContext *s, AVPacket *pkt, AVStream *st, int max_size)
         max_size = 2048;
     size = FFMIN(voc->remaining_size, max_size);
     voc->remaining_size -= size;
-    return av_get_packet(pb, pkt, size);
+    return avio_get_packet(pb, pkt, size);
 }
 
 static int voc_read_packet(AVFormatContext *s, AVPacket *pkt)

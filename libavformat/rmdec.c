@@ -777,11 +777,11 @@ ff_rm_parse_packet (AVFormatContext *s, AVIOContext *pb,
             } else
                 return -1;
         } else {
-            av_get_packet(pb, pkt, len);
+            avio_get_packet(pb, pkt, len);
             rm_ac3_swap_bytes(st, pkt);
         }
     } else
-        av_get_packet(pb, pkt, len);
+        avio_get_packet(pb, pkt, len);
 
     pkt->stream_index = st->index;
 
@@ -815,7 +815,7 @@ ff_rm_retrieve_cache (AVFormatContext *s, AVIOContext *pb,
 
     if (ast->deint_id == DEINT_ID_VBRF ||
         ast->deint_id == DEINT_ID_VBRS)
-        av_get_packet(pb, pkt, ast->sub_packet_lengths[ast->sub_packet_cnt - rm->audio_pkt_cnt]);
+        avio_get_packet(pb, pkt, ast->sub_packet_lengths[ast->sub_packet_cnt - rm->audio_pkt_cnt]);
     else {
         int ret = av_new_packet(pkt, st->codec->block_align);
         if (ret < 0)

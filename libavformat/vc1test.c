@@ -101,7 +101,7 @@ static int vc1t_read_packet(AVFormatContext *s,
     if(avio_r8(pb) & 0x80)
         keyframe = 1;
     pts = avio_rl32(pb);
-    if(av_get_packet(pb, pkt, frame_size) < 0)
+    if(avio_get_packet(pb, pkt, frame_size) < 0)
         return AVERROR(EIO);
     if(s->streams[0]->time_base.den == 1000)
         pkt->pts = pts;

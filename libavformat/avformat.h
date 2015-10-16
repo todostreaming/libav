@@ -356,6 +356,36 @@ struct AVFormatContext;
  * @param size desired payload size
  * @return >0 (read size) if OK, AVERROR_xxx otherwise
  */
+int avio_get_packet(AVIOContext *s, AVPacket *pkt, int size);
+
+/**
+ * Read data and append it to the current content of the AVPacket.
+ * If pkt->size is 0 this is identical to av_get_packet.
+ * Note that this uses av_grow_packet and thus involves a realloc
+ * which is inefficient. Thus this function should only be used
+ * when there is no reasonable way to know (an upper bound of)
+ * the final size.
+ *
+ * @param s    associated IO context
+ * @param pkt packet
+ * @param size amount of data to read
+ * @return >0 (read size) if OK, AVERROR_xxx otherwise, previous data
+ *         will not be lost even if an error occurs.
+ */
+int avio_append_packet(AVIOContext *s, AVPacket *pkt, int size);
+
+#if FF_API_LAVF_AVPACKET_OLD_API
+
+/**
+ * Allocate and read the payload of a packet and initialize its
+ * fields with default values.
+ *
+ * @param s    associated IO context
+ * @param pkt packet
+ * @param size desired payload size
+ * @return >0 (read size) if OK, AVERROR_xxx otherwise
+ * @deprecated Use avio_get_packet
+ */
 int av_get_packet(AVIOContext *s, AVPacket *pkt, int size);
 
 
@@ -372,8 +402,10 @@ int av_get_packet(AVIOContext *s, AVPacket *pkt, int size);
  * @param size amount of data to read
  * @return >0 (read size) if OK, AVERROR_xxx otherwise, previous data
  *         will not be lost even if an error occurs.
+ * @deprecated Use avio_append_packet
  */
 int av_append_packet(AVIOContext *s, AVPacket *pkt, int size);
+#endif
 
 #if FF_API_LAVF_FRAC
 /*************************************************/

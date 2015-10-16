@@ -157,7 +157,7 @@ static int tmv_read_packet(AVFormatContext *s, AVPacket *pkt)
     if (pb->eof_reached)
         return AVERROR_EOF;
 
-    ret = av_get_packet(pb, pkt, pkt_size);
+    ret = avio_get_packet(pb, pkt, pkt_size);
 
     if (tmv->stream_index)
         avio_skip(pb, tmv->padding);

@@ -308,7 +308,7 @@ static int rpl_read_packet(AVFormatContext *s, AVPacket *pkt)
         if (avio_seek(pb, -8, SEEK_CUR) < 0)
             return AVERROR(EIO);
 
-        ret = av_get_packet(pb, pkt, frame_size);
+        ret = avio_get_packet(pb, pkt, frame_size);
         if (ret != frame_size) {
             av_packet_unref(pkt);
             return AVERROR(EIO);
@@ -323,7 +323,7 @@ static int rpl_read_packet(AVFormatContext *s, AVPacket *pkt)
             rpl->chunk_part++;
         }
     } else {
-        ret = av_get_packet(pb, pkt, index_entry->size);
+        ret = avio_get_packet(pb, pkt, index_entry->size);
         if (ret != index_entry->size) {
             av_packet_unref(pkt);
             return AVERROR(EIO);

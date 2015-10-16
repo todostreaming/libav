@@ -1190,7 +1190,7 @@ resync:
         if (size > ast->remaining)
             size = ast->remaining;
         avi->last_pkt_pos = avio_tell(pb);
-        err               = av_get_packet(pb, pkt, size);
+        err               = avio_get_packet(pb, pkt, size);
         if (err < 0)
             return err;
 

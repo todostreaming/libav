@@ -101,7 +101,7 @@ static int lmlm4_read_packet(AVFormatContext *s, AVPacket *pkt)
         return AVERROR(EIO);
     }
 
-    if ((ret = av_get_packet(pb, pkt, frame_size)) <= 0)
+    if ((ret = avio_get_packet(pb, pkt, frame_size)) <= 0)
         return AVERROR(EIO);
 
     avio_skip(pb, padding);

@@ -142,7 +142,7 @@ static int pmp_packet(AVFormatContext *s, AVPacket *pkt)
         for (i = 0; i < num_packets; i++)
             pmp->packet_sizes[i] = avio_rl32(pb);
     }
-    ret = av_get_packet(pb, pkt, pmp->packet_sizes[pmp->current_packet]);
+    ret = avio_get_packet(pb, pkt, pmp->packet_sizes[pmp->current_packet]);
     if (ret > 0) {
         ret = 0;
         // FIXME: this is a hack that should be removed once

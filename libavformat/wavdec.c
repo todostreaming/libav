@@ -397,7 +397,7 @@ static int wav_read_packet(AVFormatContext *s, AVPacket *pkt)
         size = (size / st->codec->block_align) * st->codec->block_align;
     }
     size = FFMIN(size, left);
-    ret  = av_get_packet(s->pb, pkt, size);
+    ret  = avio_get_packet(s->pb, pkt, size);
     if (ret < 0)
         return ret;
     pkt->stream_index = 0;

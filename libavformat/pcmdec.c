@@ -67,7 +67,7 @@ static int pcm_read_packet(AVFormatContext *s, AVPacket *pkt)
 
     size= RAW_SAMPLES*s->streams[0]->codec->block_align;
 
-    ret= av_get_packet(s->pb, pkt, size);
+    ret= avio_get_packet(s->pb, pkt, size);
 
     pkt->stream_index = 0;
     if (ret < 0)

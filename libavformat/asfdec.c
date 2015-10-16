@@ -406,7 +406,7 @@ static int asf_read_picture(AVFormatContext *s, int len)
         return AVERROR(ENOMEM);
     len -= avio_get_str16le(s->pb, len - picsize, desc, desc_len);
 
-    ret = av_get_packet(s->pb, &pkt, picsize);
+    ret = avio_get_packet(s->pb, &pkt, picsize);
     if (ret < 0)
         goto fail;
 
@@ -1082,7 +1082,7 @@ static int asf_read_subpayload(AVFormatContext *s, AVPacket *pkt, int is_header)
         asf->sub_left = 1;
     }
     sub_len = avio_r8(pb);
-    if ((ret = av_get_packet(pb, pkt, sub_len)) < 0) // each subpayload is entire frame
+    if ((ret = avio_get_packet(pb, pkt, sub_len)) < 0) // each subpayload is entire frame
         return ret;
     for (i = 0; i < asf->nb_streams; i++) {
         if (asf->stream_index == asf->asf_st[i]->stream_index) {

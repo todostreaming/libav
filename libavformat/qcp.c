@@ -157,7 +157,7 @@ static int qcp_read_packet(AVFormatContext *s, AVPacket *pkt)
                 pkt_size = c->data_size - 1;
             }
 
-            if ((ret = av_get_packet(pb, pkt, pkt_size)) >= 0) {
+            if ((ret = avio_get_packet(pb, pkt, pkt_size)) >= 0) {
                 if (pkt_size != ret)
                     av_log(s, AV_LOG_ERROR, "Packet size is too small.\n");
 

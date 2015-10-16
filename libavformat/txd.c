@@ -83,7 +83,7 @@ next_chunk:
             return AVERROR_INVALIDDATA;
     }
 
-    ret = av_get_packet(s->pb, pkt, chunk_size);
+    ret = avio_get_packet(s->pb, pkt, chunk_size);
     if (ret < 0)
         return ret;
     pkt->stream_index = 0;

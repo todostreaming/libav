@@ -133,7 +133,7 @@ static int load_ipmovie_packet(IPMVEContext *s, AVIOContext *pb,
         avio_seek(pb, s->audio_chunk_offset, SEEK_SET);
         s->audio_chunk_offset = 0;
 
-        if (s->audio_chunk_size != av_get_packet(pb, pkt, s->audio_chunk_size))
+        if (s->audio_chunk_size != avio_get_packet(pb, pkt, s->audio_chunk_size))
             return CHUNK_EOF;
 
         pkt->stream_index = s->audio_stream_index;

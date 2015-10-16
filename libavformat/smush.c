@@ -210,14 +210,14 @@ static int smush_read_packet(AVFormatContext *ctx, AVPacket *pkt)
         case MKBETAG('F', 'R', 'M', 'E'):
             if (smush->version)
                 break;
-            if ((ret = av_get_packet(pb, pkt, size)) < 0)
+            if ((ret = avio_get_packet(pb, pkt, size)) < 0)
                 return ret;
 
             pkt->stream_index = smush->video_stream_index;
             done = 1;
             break;
         case MKBETAG('B', 'l', '1', '6'):
-            if ((ret = av_get_packet(pb, pkt, size)) < 0)
+            if ((ret = avio_get_packet(pb, pkt, size)) < 0)
                 return ret;
 
             pkt->stream_index = smush->video_stream_index;
@@ -227,7 +227,7 @@ static int smush_read_packet(AVFormatContext *ctx, AVPacket *pkt)
         case MKBETAG('W', 'a', 'v', 'e'):
             if (size < 13)
                 return AVERROR_INVALIDDATA;
-            if (av_get_packet(pb, pkt, size) < 13)
+            if (avio_get_packet(pb, pkt, size) < 13)
                 return AVERROR(EIO);
 
             pkt->stream_index = smush->audio_stream_index;

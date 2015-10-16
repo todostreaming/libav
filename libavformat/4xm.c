@@ -320,7 +320,7 @@ static int fourxm_read_packet(AVFormatContext *s,
 
             if (track_number < fourxm->track_count &&
                 fourxm->tracks[track_number].channels > 0) {
-                ret = av_get_packet(s->pb, pkt, size);
+                ret = avio_get_packet(s->pb, pkt, size);
                 if (ret < 0)
                     return AVERROR(EIO);
                 pkt->stream_index =

@@ -145,7 +145,7 @@ static int wc3_read_header(AVFormatContext *s)
         case PALT_TAG:
             /* one of several palettes */
             avio_seek(pb, -8, SEEK_CUR);
-            av_append_packet(pb, &wc3->vpkt, 8 + PALETTE_SIZE);
+            avio_append_packet(pb, &wc3->vpkt, 8 + PALETTE_SIZE);
             break;
 
         default:
@@ -222,13 +222,13 @@ static int wc3_read_packet(AVFormatContext *s,
         case SHOT_TAG:
             /* load up new palette */
             avio_seek(pb, -8, SEEK_CUR);
-            av_append_packet(pb, &wc3->vpkt, 8 + 4);
+            avio_append_packet(pb, &wc3->vpkt, 8 + 4);
             break;
 
         case VGA__TAG:
             /* send out video chunk */
             avio_seek(pb, -8, SEEK_CUR);
-            ret= av_append_packet(pb, &wc3->vpkt, 8 + size);
+            ret= avio_append_packet(pb, &wc3->vpkt, 8 + size);
             // ignore error if we have some data
             if (wc3->vpkt.size > 0)
                 ret = 0;
@@ -260,7 +260,7 @@ static int wc3_read_packet(AVFormatContext *s,
 
         case AUDI_TAG:
             /* send out audio chunk */
-            ret= av_get_packet(pb, pkt, size);
+            ret= avio_get_packet(pb, pkt, size);
             pkt->stream_index = wc3->audio_stream_index;
             pkt->pts = wc3->pts;
 

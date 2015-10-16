@@ -524,7 +524,7 @@ skip:
 found:
     if (st->discard >= AVDISCARD_ALL)
         goto skip;
-    ret = av_get_packet(s->pb, pkt, len);
+    ret = avio_get_packet(s->pb, pkt, len);
 
     pkt->pts          = pts;
     pkt->dts          = dts;

@@ -89,7 +89,7 @@ static int rawvideo_read_packet(AVFormatContext *s, AVPacket *pkt)
     if (packet_size < 0)
         return -1;
 
-    ret = av_get_packet(s->pb, pkt, packet_size);
+    ret = avio_get_packet(s->pb, pkt, packet_size);
     pkt->pts = pkt->dts = pkt->pos / packet_size;
 
     pkt->stream_index = 0;

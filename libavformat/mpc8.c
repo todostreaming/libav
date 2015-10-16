@@ -278,7 +278,7 @@ static int mpc8_read_packet(AVFormatContext *s, AVPacket *pkt)
         if (size < 0)
             return -1;
         if(tag == TAG_AUDIOPACKET){
-            if(av_get_packet(s->pb, pkt, size) < 0)
+            if(avio_get_packet(s->pb, pkt, size) < 0)
                 return AVERROR(ENOMEM);
             pkt->stream_index = 0;
             pkt->duration     = 1;

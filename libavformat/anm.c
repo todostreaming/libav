@@ -209,7 +209,7 @@ repeat:
     avio_seek(pb, tmp, SEEK_SET);
 
     /* fetch record */
-    pkt->size = av_get_packet(s->pb, pkt, record_size);
+    pkt->size = avio_get_packet(s->pb, pkt, record_size);
     if (pkt->size < 0)
         return pkt->size;
     if (p->base_record + anm->record == 0)

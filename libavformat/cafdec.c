@@ -369,7 +369,7 @@ static int read_packet(AVFormatContext *s, AVPacket *pkt)
     if (pkt_size == 0 || pkt_frames == 0 || pkt_size > left)
         return AVERROR(EIO);
 
-    res = av_get_packet(pb, pkt, pkt_size);
+    res = avio_get_packet(pb, pkt, pkt_size);
     if (res < 0)
         return res;
 

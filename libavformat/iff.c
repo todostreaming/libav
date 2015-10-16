@@ -283,7 +283,7 @@ static int iff_read_packet(AVFormatContext *s,
     if(iff->sent_bytes >= iff->body_size)
         return AVERROR_EOF;
 
-    ret = av_get_packet(pb, pkt, iff->body_size);
+    ret = avio_get_packet(pb, pkt, iff->body_size);
     if (ret < 0)
         return ret;
 

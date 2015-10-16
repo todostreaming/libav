@@ -170,7 +170,7 @@ static int mtv_read_packet(AVFormatContext *s, AVPacket *pkt)
     {
         avio_skip(pb, MTV_AUDIO_PADDING_SIZE);
 
-        ret = av_get_packet(pb, pkt, MTV_ASUBCHUNK_DATA_SIZE);
+        ret = avio_get_packet(pb, pkt, MTV_ASUBCHUNK_DATA_SIZE);
         if(ret < 0)
             return ret;
 
@@ -179,7 +179,7 @@ static int mtv_read_packet(AVFormatContext *s, AVPacket *pkt)
 
     }else
     {
-        ret = av_get_packet(pb, pkt, mtv->img_segment_size);
+        ret = avio_get_packet(pb, pkt, mtv->img_segment_size);
         if(ret < 0)
             return ret;
 

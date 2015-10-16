@@ -80,7 +80,7 @@ static int ape_tag_read_field(AVFormatContext *s)
             AVPacket pkt;
             int ret;
 
-            ret = av_get_packet(s->pb, &pkt, size);
+            ret = avio_get_packet(s->pb, &pkt, size);
             if (ret < 0) {
                 av_log(s, AV_LOG_ERROR, "Error reading cover art.\n");
                 return ret;

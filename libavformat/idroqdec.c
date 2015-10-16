@@ -158,7 +158,7 @@ static int roq_read_packet(AVFormatContext *s,
             avio_seek(pb, codebook_offset, SEEK_SET);
 
             /* load up the packet */
-            ret= av_get_packet(pb, pkt, chunk_size);
+            ret= avio_get_packet(pb, pkt, chunk_size);
             if (ret != chunk_size)
                 return AVERROR(EIO);
             pkt->stream_index = roq->video_stream_index;

@@ -160,7 +160,7 @@ static int raw_read_packet(AVFormatContext *s, AVPacket *pkt)
         if (size <= 0)
             return AVERROR_EOF;
 
-        ret = av_get_packet(pb, pkt, size);
+        ret = avio_get_packet(pb, pkt, size);
         if (ret < 0)
             return ret;
 

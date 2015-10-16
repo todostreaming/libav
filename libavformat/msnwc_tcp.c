@@ -114,7 +114,7 @@ static int msnwc_tcp_read_packet(AVFormatContext *ctx, AVPacket *pkt)
     avio_skip(pb, 4);
     timestamp = avio_rl32(pb);
 
-    if(!size || av_get_packet(pb, pkt, size) != size)
+    if(!size || avio_get_packet(pb, pkt, size) != size)
         return -1;
 
     avio_skip(pb, 1); /* Read ahead one byte of struct size like read_header */

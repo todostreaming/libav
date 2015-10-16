@@ -168,7 +168,7 @@ static int swf_read_packet(AVFormatContext *s, AVPacket *pkt)
                     len -= 2;
                     if (len <= 0)
                         goto skip;
-                    if ((res = av_get_packet(pb, pkt, len)) < 0)
+                    if ((res = avio_get_packet(pb, pkt, len)) < 0)
                         return res;
                     pkt->pos = pos;
                     pkt->pts = frame;
@@ -185,12 +185,12 @@ static int swf_read_packet(AVFormatContext *s, AVPacket *pkt)
                         len -= 4;
                         if (len <= 0)
                             goto skip;
-                        if ((res = av_get_packet(pb, pkt, len)) < 0)
+                        if ((res = avio_get_packet(pb, pkt, len)) < 0)
                             return res;
                     } else { // ADPCM, PCM
                         if (len <= 0)
                             goto skip;
-                        if ((res = av_get_packet(pb, pkt, len)) < 0)
+                        if ((res = avio_get_packet(pb, pkt, len)) < 0)
                             return res;
                     }
                     pkt->pos          = pos;

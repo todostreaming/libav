@@ -269,7 +269,7 @@ static int xwma_read_packet(AVFormatContext *s, AVPacket *pkt)
     size = (st->codec->block_align > 1) ? st->codec->block_align : 2230;
     size = FFMIN(size, left);
 
-    ret  = av_get_packet(s->pb, pkt, size);
+    ret  = avio_get_packet(s->pb, pkt, size);
     if (ret < 0)
         return ret;
 

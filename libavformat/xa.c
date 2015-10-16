@@ -107,7 +107,7 @@ static int xa_read_packet(AVFormatContext *s,
     /* 1 byte header and 14 bytes worth of samples * number channels per block */
     packet_size = 15*st->codec->channels;
 
-    ret = av_get_packet(pb, pkt, packet_size);
+    ret = avio_get_packet(pb, pkt, packet_size);
     if(ret < 0)
         return ret;
 

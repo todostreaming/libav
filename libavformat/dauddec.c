@@ -45,7 +45,7 @@ static int daud_packet(AVFormatContext *s, AVPacket *pkt) {
         return AVERROR(EIO);
     size = avio_rb16(pb);
     avio_rb16(pb); // unknown
-    ret = av_get_packet(pb, pkt, size);
+    ret = avio_get_packet(pb, pkt, size);
     pkt->stream_index = 0;
     return ret;
 }

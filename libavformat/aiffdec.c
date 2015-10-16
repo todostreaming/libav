@@ -310,7 +310,7 @@ static int aiff_read_packet(AVFormatContext *s,
     else
         size = (MAX_SIZE / st->codec->block_align) * st->codec->block_align;
     size = FFMIN(max_size, size);
-    res = av_get_packet(s->pb, pkt, size);
+    res = avio_get_packet(s->pb, pkt, size);
     if (res < 0)
         return res;
 

@@ -84,7 +84,7 @@ static int aea_read_header(AVFormatContext *s)
 
 static int aea_read_packet(AVFormatContext *s, AVPacket *pkt)
 {
-    int ret = av_get_packet(s->pb, pkt, s->streams[0]->codec->block_align);
+    int ret = avio_get_packet(s->pb, pkt, s->streams[0]->codec->block_align);
 
     pkt->stream_index = 0;
     if (ret <= 0)

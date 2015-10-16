@@ -409,7 +409,7 @@ static int mv_read_packet(AVFormatContext *avctx, AVPacket *pkt)
             if (ret < 0)
                 return ret;
         }
-        ret = av_get_packet(pb, pkt, index->size);
+        ret = avio_get_packet(pb, pkt, index->size);
         if (ret < 0)
             return ret;
 

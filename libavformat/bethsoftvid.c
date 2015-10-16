@@ -251,7 +251,7 @@ static int vid_read_packet(AVFormatContext *s,
                 avpriv_set_pts_info(st, 64, 1, vid->sample_rate);
             }
             audio_length = avio_rl16(pb);
-            if ((ret_value = av_get_packet(pb, pkt, audio_length)) != audio_length) {
+            if ((ret_value = avio_get_packet(pb, pkt, audio_length)) != audio_length) {
                 if (ret_value < 0)
                     return ret_value;
                 av_log(s, AV_LOG_ERROR, "incomplete audio block\n");

@@ -554,7 +554,7 @@ static int ea_read_packet(AVFormatContext *s, AVPacket *pkt)
             if (!chunk_size)
                 continue;
 
-            ret = av_get_packet(pb, pkt, chunk_size);
+            ret = avio_get_packet(pb, pkt, chunk_size);
             if (ret < 0)
                 return ret;
             pkt->stream_index = ea->audio_stream_index;
@@ -630,7 +630,7 @@ get_video_packet:
             if (!chunk_size)
                 continue;
 
-            ret = av_get_packet(pb, pkt, chunk_size);
+            ret = avio_get_packet(pb, pkt, chunk_size);
             if (ret < 0)
                 return ret;
             pkt->stream_index = ea->video_stream_index;

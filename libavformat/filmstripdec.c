@@ -83,7 +83,7 @@ static int read_packet(AVFormatContext *s,
     if (s->pb->eof_reached)
         return AVERROR(EIO);
     pkt->dts = avio_tell(s->pb) / (st->codec->width * (st->codec->height + film->leading) * 4);
-    pkt->size = av_get_packet(s->pb, pkt, st->codec->width * st->codec->height * 4);
+    pkt->size = avio_get_packet(s->pb, pkt, st->codec->width * st->codec->height * 4);
     avio_skip(s->pb, st->codec->width * (int64_t) film->leading * 4);
     if (pkt->size < 0)
         return pkt->size;

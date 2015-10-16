@@ -148,7 +148,7 @@ static int yop_read_packet(AVFormatContext *s, AVPacket *pkt)
         goto err_out;
     }
 
-    ret = av_get_packet(pb, pkt, 920);
+    ret = avio_get_packet(pb, pkt, 920);
     if (ret < 0)
         goto err_out;
 

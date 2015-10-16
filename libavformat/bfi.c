@@ -138,7 +138,7 @@ static int bfi_read_packet(AVFormatContext * s, AVPacket * pkt)
         }
 
         //Tossing an audio packet at the audio decoder.
-        ret = av_get_packet(pb, pkt, audio_size);
+        ret = avio_get_packet(pb, pkt, audio_size);
         if (ret < 0)
             return ret;
 
@@ -147,7 +147,7 @@ static int bfi_read_packet(AVFormatContext * s, AVPacket * pkt)
     } else if (bfi->video_size > 0) {
 
         //Tossing a video packet at the video decoder.
-        ret = av_get_packet(pb, pkt, bfi->video_size);
+        ret = avio_get_packet(pb, pkt, bfi->video_size);
         if (ret < 0)
             return ret;
 

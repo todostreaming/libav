@@ -117,7 +117,7 @@ static av_cold int iss_read_header(AVFormatContext *s)
 static int iss_read_packet(AVFormatContext *s, AVPacket *pkt)
 {
     IssDemuxContext *iss = s->priv_data;
-    int ret = av_get_packet(s->pb, pkt, iss->packet_size);
+    int ret = avio_get_packet(s->pb, pkt, iss->packet_size);
 
     if(ret != iss->packet_size)
         return AVERROR(EIO);

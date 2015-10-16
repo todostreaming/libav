@@ -196,7 +196,7 @@ static int mov_read_covr(MOVContext *c, AVIOContext *pb, int type, int len)
         return AVERROR(ENOMEM);
     st->priv_data = sc;
 
-    ret = av_get_packet(pb, &pkt, len);
+    ret = avio_get_packet(pb, &pkt, len);
     if (ret < 0)
         return ret;
 
@@ -3486,7 +3486,7 @@ static int mov_read_packet(AVFormatContext *s, AVPacket *pkt)
                    sc->ffindex, sample->pos);
             return AVERROR_INVALIDDATA;
         }
-        ret = av_get_packet(sc->pb, pkt, sample->size);
+        ret = avio_get_packet(sc->pb, pkt, sample->size);
         if (ret < 0)
             return ret;
         if (sc->has_palette) {

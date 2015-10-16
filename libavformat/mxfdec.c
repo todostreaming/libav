@@ -314,7 +314,7 @@ static int mxf_get_d10_aes3_packet(AVIOContext *pb, AVStream *st, AVPacket *pkt,
 
     if (length > 61444) /* worst case PAL 1920 samples 8 channels */
         return AVERROR_INVALIDDATA;
-    length = av_get_packet(pb, pkt, length);
+    length = avio_get_packet(pb, pkt, length);
     if (length < 0)
         return length;
     data_ptr = pkt->data;
@@ -382,7 +382,7 @@ static int mxf_decrypt_triplet(AVFormatContext *s, AVPacket *pkt, KLVPacket *klv
     if (memcmp(tmpbuf, checkv, 16))
         av_log(s, AV_LOG_ERROR, "probably incorrect decryption key\n");
     size -= 32;
-    size = av_get_packet(pb, pkt, size);
+    size = avio_get_packet(pb, pkt, size);
     if (size < 0)
         return size;
     else if (size < plaintext_size)
@@ -2397,7 +2397,7 @@ static int mxf_read_packet_old(AVFormatContext *s, AVPacket *pkt)
                     return ret;
                 }
             } else {
-                ret = av_get_packet(s->pb, pkt, klv.length);
+                ret = avio_get_packet(s->pb, pkt, klv.length);
                 if (ret < 0)
                     return ret;
             }
@@ -2479,7 +2479,7 @@ static int mxf_read_packet(AVFormatContext *s, AVPacket *pkt)
     if ((ret64 = avio_seek(s->pb, pos, SEEK_SET)) < 0)
         return ret64;
 
-        if ((ret = av_get_packet(s->pb, pkt, size)) != size)
+        if ((ret = avio_get_packet(s->pb, pkt, size)) != size)
             return ret < 0 ? ret : AVERROR_EOF;
 
     pkt->stream_index = 0;

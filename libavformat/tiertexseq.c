@@ -284,7 +284,7 @@ static int seq_read_packet(AVFormatContext *s, AVPacket *pkt)
         return AVERROR(EIO);
 
     avio_seek(pb, seq->current_frame_offs + seq->current_audio_data_offs, SEEK_SET);
-    rc = av_get_packet(pb, pkt, seq->current_audio_data_size);
+    rc = avio_get_packet(pb, pkt, seq->current_audio_data_size);
     if (rc < 0)
         return rc;
 

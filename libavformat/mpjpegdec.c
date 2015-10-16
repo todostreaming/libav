@@ -204,7 +204,7 @@ static int mpjpeg_read_packet(AVFormatContext *s, AVPacket *pkt)
     if (size < 0)
         return size;
 
-    ret = av_get_packet(s->pb, pkt, size);
+    ret = avio_get_packet(s->pb, pkt, size);
     if (ret < 0)
         return ret;
 

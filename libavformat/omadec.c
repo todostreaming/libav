@@ -441,7 +441,7 @@ static int oma_read_packet(AVFormatContext *s, AVPacket *pkt)
     int packet_size = st->codec->block_align;
     int byte_rate   = st->codec->bit_rate >> 3;
     int64_t pos     = avio_tell(s->pb);
-    int ret         = av_get_packet(s->pb, pkt, packet_size);
+    int ret         = avio_get_packet(s->pb, pkt, packet_size);
 
     if (ret < packet_size)
         pkt->flags |= AV_PKT_FLAG_CORRUPT;

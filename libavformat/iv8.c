@@ -82,14 +82,14 @@ static int read_packet(AVFormatContext *s, AVPacket *pkt)
         }
 
         if (!first_pkt) {
-            ret = av_get_packet(s->pb, pkt, size);
+            ret = avio_get_packet(s->pb, pkt, size);
             if (ret < 0)
                 return ret;
             first_pkt = 1;
             pkt->pts  = pts;
             pkt->pos -= 16;
         } else {
-            ret = av_append_packet(s->pb, pkt, size);
+            ret = avio_append_packet(s->pb, pkt, size);
             if (ret < 0) {
                 av_log(s, AV_LOG_ERROR, "failed to grow packet\n");
                 av_packet_unref(pkt);

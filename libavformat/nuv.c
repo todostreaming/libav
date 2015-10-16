@@ -288,7 +288,7 @@ static int nuv_packet(AVFormatContext *s, AVPacket *pkt)
                 avio_skip(pb, size);
                 break;
             }
-            ret               = av_get_packet(pb, pkt, size);
+            ret               = avio_get_packet(pb, pkt, size);
             pkt->flags       |= AV_PKT_FLAG_KEY;
             pkt->pos          = pos;
             pkt->pts          = AV_RL32(&hdr[4]);

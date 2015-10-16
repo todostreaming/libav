@@ -141,7 +141,7 @@ static int tta_read_packet(AVFormatContext *s, AVPacket *pkt)
 
     size = st->index_entries[c->currentframe].size;
 
-    ret = av_get_packet(s->pb, pkt, size);
+    ret = avio_get_packet(s->pb, pkt, size);
     pkt->dts = st->index_entries[c->currentframe++].timestamp;
     pkt->duration = c->currentframe == c->totalframes ? c->last_frame_size :
                                                         c->frame_size;

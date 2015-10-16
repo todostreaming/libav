@@ -161,7 +161,7 @@ static int dxa_read_packet(AVFormatContext *s, AVPacket *pkt)
         c->readvid = 1;
         avio_seek(s->pb, c->wavpos, SEEK_SET);
         size = FFMIN(c->bytes_left, c->bpc);
-        ret = av_get_packet(s->pb, pkt, size);
+        ret = avio_get_packet(s->pb, pkt, size);
         pkt->stream_index = 1;
         if(ret != size)
             return AVERROR(EIO);

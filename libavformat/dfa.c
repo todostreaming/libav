@@ -76,11 +76,11 @@ static int dfa_read_packet(AVFormatContext *s, AVPacket *pkt)
     if (pb->eof_reached)
         return AVERROR_EOF;
 
-    if (av_get_packet(pb, pkt, 12) != 12)
+    if (avio_get_packet(pb, pkt, 12) != 12)
         return AVERROR(EIO);
     while (!pb->eof_reached) {
         if (!first) {
-            ret = av_append_packet(pb, pkt, 12);
+            ret = avio_append_packet(pb, pkt, 12);
             if (ret < 0) {
                 av_packet_unref(pkt);
                 return ret;
@@ -101,7 +101,7 @@ static int dfa_read_packet(AVFormatContext *s, AVPacket *pkt)
             }
             return 0;
         }
-        ret = av_append_packet(pb, pkt, frame_size);
+        ret = avio_append_packet(pb, pkt, frame_size);
         if (ret < 0) {
             av_packet_unref(pkt);
             return ret;
