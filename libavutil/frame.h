@@ -35,6 +35,7 @@
 #include "pixfmt.h"
 #include "version.h"
 
+#include "formaton.h"
 
 /**
  * @defgroup lavu_frame AVFrame
@@ -359,6 +360,8 @@ typedef struct AVFrame {
      * AVHWFramesContext describing the frame.
      */
     AVBufferRef *hw_frames_ctx;
+
+    AVPixelFormaton *formaton;
 } AVFrame;
 
 /**
