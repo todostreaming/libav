@@ -300,6 +300,23 @@ enum AVPixelFormat {
 #define AV_PIX_FMT_P010       AV_PIX_FMT_NE(P010BE,  P010LE)
 
 /**
+ * Color Model
+ */
+
+enum AVColorModel {
+    AVCOL_MODEL_RGB,
+    AVCOL_MODEL_XYZ,
+    AVCOL_MODEL_YUV,
+
+    AVCOL_MODEL_CYL, ///< HSL, HSV. HSI
+    AVCOL_MODEL_CFA, ///< Bayer and other Field Arrays
+    AVCOL_MODEL_OPAQUE, ///< Opaque, implementation dependent
+
+    AVCOL_MODEL_NB,
+};
+
+
+/**
   * Chromaticity coordinates of the source primaries.
   */
 enum AVColorPrimaries {
