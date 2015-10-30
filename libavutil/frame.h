@@ -36,6 +36,7 @@
 #include "pixfmt.h"
 #include "version.h"
 
+#include "formaton.h"
 
 /**
  * @defgroup lavu_frame AVFrame
@@ -354,6 +355,8 @@ typedef struct AVFrame {
     enum AVColorSpace colorspace;
 
     enum AVChromaLocation chroma_location;
+
+    AVPixelFormaton *formaton;
 } AVFrame;
 
 /**
