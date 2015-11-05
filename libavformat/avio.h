@@ -134,6 +134,26 @@ typedef struct AVIOContext {
 int avio_check(const char *url, int flags);
 
 /**
+ * Return AVIO_FLAG_* access flags corresponding to the access permissions
+ * of the resource in url, or a negative value corresponding to an
+ * AVERROR code in case of failure. The returned access flags are
+ * masked by the value in flags.
+ *
+ * @note This function is intrinsically unsafe, in the sense that the
+ * checked resource may change its existence or permission status from
+ * one call to another. Thus you should not trust the returned value,
+ * unless you are sure that no other processes are accessing the
+ * checked resource.
+ *
+ * @param url     The resource url to check
+ * @param flags   Or-ed AVIO_FLAG_* to check for
+ * @param int_cb  Interruption callback
+ * @param options Protocol options
+ */
+int avio_check2(const char *url, int flags,
+                const AVIOInterruptCB *int_cb, AVDictionary **options);
+
+/**
  * Allocate and initialize an AVIOContext for buffered I/O. It must be later
  * freed with av_free().
  *
