@@ -337,8 +337,14 @@ static void write_frame(AVFormatContext *s, AVPacket *pkt, OutputStream *ost)
         return;
     
     pthread_mutex_lock(&f->fifo_lock);
-    while (!av_fifo_space(f->fifo))
-        pthread_cond_wait(&f->fifo_cond, &f->fifo_lock);
+    while (!av_fifo_space(f->fifo)) {
+        ret = av_fifo_realloc2(f->fifo, av_fifo_size(f->fifo) * 2);
+        
+        if (ret < 0) {
+            print_error("av_fifo_realloc2()", ret);
+            exit_program(1);
+        }
+    }
     
     av_fifo_generic_write(f->fifo, &pkt, sizeof(pkt), NULL);
     
