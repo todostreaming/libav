@@ -259,6 +259,7 @@ static void write_frame(AVFormatContext *s, AVPacket *pkt, OutputStream *ost)
 {
     AVBitStreamFilterContext *bsfc = ost->bitstream_filters;
     AVCodecContext          *avctx = ost->encoding_needed ? ost->enc_ctx : ost->st->codec;
+    OutputFile              *f;
     int ret;
 
     /*
@@ -331,7 +332,7 @@ static void write_frame(AVFormatContext *s, AVPacket *pkt, OutputStream *ost)
     pkt->stream_index = ost->index;
     
 #if HAVE_PTHREADS
-    OutputFile *f = output_files[ost->file_index];
+    f = output_files[ost->file_index];
     
     if (f->finished)
         return;
@@ -361,7 +362,8 @@ static void write_frame(AVFormatContext *s, AVPacket *pkt, OutputStream *ost)
 #if HAVE_PTHREADS
 static void *output_thread(void *arg)
 {
-    OutputFile *f = arg;
+    OutputFile      *f = arg;
+    AVFormatContext *s;
     int ret = 0;
     
     while (!transcoding_finished && ret >= 0) {
@@ -370,7 +372,7 @@ static void *output_thread(void *arg)
             AVPacket pkt;
             av_fifo_generic_read(f->fifo, &pkt, sizeof(pkt), NULL);
             
-            AVFormatContext *s = f->ctx;
+            s = f->ctx;
             ret = av_interleaved_write_frame(s, &pkt);
             
             if (ret < 0) {
