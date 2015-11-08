@@ -333,6 +333,9 @@ static void write_frame(AVFormatContext *s, AVPacket *pkt, OutputStream *ost)
 #if HAVE_PTHREADS
     OutputFile *f = output_files[ost->file_index];
     
+    if (f->finished)
+        return;
+    
     pthread_mutex_lock(&f->fifo_lock);
     while (!av_fifo_space(f->fifo))
         pthread_cond_wait(&f->fifo_cond, &f->fifo_lock);
