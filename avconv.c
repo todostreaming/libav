@@ -355,24 +355,26 @@ static void *output_thread(void *arg)
     OutputFile *f = arg;
     int ret = 0;
     
-    pthread_mutex_lock(&f->fifo_lock);
-    while (av_fifo_size(f->fifo)) {
-        AVPacket pkt;
-        av_fifo_generic_read(f->fifo, &pkt, sizeof(pkt), NULL);
-        
-        AVFormatContext *s = f->ctx;
-        ret = av_interleaved_write_frame(s, &pkt);
-        
-        if (ret < 0) {
-            print_error("av_interleaved_write_frame()", ret);
-            exit_program(1);
+    while (!transcoding_finished && ret >= 0) {
+        pthread_mutex_lock(&f->fifo_lock);
+        while (av_fifo_size(f->fifo)) {
+            AVPacket pkt;
+            av_fifo_generic_read(f->fifo, &pkt, sizeof(pkt), NULL);
+            
+            AVFormatContext *s = f->ctx;
+            ret = av_interleaved_write_frame(s, &pkt);
+            
+            if (ret < 0) {
+                print_error("av_interleaved_write_frame()", ret);
+                exit_program(1);
+            }
+            
+            av_packet_unref(&pkt);
         }
         
-        av_packet_unref(&pkt);
+        pthread_cond_signal(&f->fifo_cond);
+        pthread_mutex_unlock(&f->fifo_lock);
     }
-    
-    pthread_cond_signal(&f->fifo_cond);
-    pthread_mutex_unlock(&f->fifo_lock);
     
     f->finished = 1;
     return NULL;
