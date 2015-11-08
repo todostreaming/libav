@@ -374,6 +374,7 @@ static void *output_thread(void *arg)
     pthread_cond_signal(&f->fifo_cond);
     pthread_mutex_unlock(&f->fifo_lock);
     
+    f->finished = 1;
     return NULL;
 }
 
