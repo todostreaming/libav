@@ -329,12 +329,123 @@ static void write_frame(AVFormatContext *s, AVPacket *pkt, OutputStream *ost)
     ost->packets_written++;
 
     pkt->stream_index = ost->index;
+    
+#if HAVE_PTHREADS
+    OutputFile *f = output_files[ost->file_index];
+    
+    if (f->finished)
+        return;
+    
+    pthread_mutex_lock(&f->fifo_lock);
+    while (!av_fifo_space(f->fifo)) {
+        ret = av_fifo_realloc2(f->fifo, av_fifo_size(f->fifo) * 2);
+        
+        if (ret < 0) {
+            print_error("av_fifo_realloc2()", ret);
+            exit_program(1);
+        }
+    }
+    
+    av_fifo_generic_write(f->fifo, &pkt, sizeof(pkt), NULL);
+    
+    pthread_mutex_unlock(&f->fifo_lock);
+#else
     ret = av_interleaved_write_frame(s, pkt);
     if (ret < 0) {
         print_error("av_interleaved_write_frame()", ret);
         exit_program(1);
     }
+#endif
 }
+
+#if HAVE_PTHREADS
+static void *output_thread(void *arg)
+{
+    OutputFile *f = arg;
+    int ret = 0;
+    
+    while (!transcoding_finished && ret >= 0) {
+        pthread_mutex_lock(&f->fifo_lock);
+        while (av_fifo_size(f->fifo)) {
+            AVPacket pkt;
+            av_fifo_generic_read(f->fifo, &pkt, sizeof(pkt), NULL);
+            
+            AVFormatContext *s = f->ctx;
+            ret = av_interleaved_write_frame(s, &pkt);
+            
+            if (ret < 0) {
+                print_error("av_interleaved_write_frame()", ret);
+                exit_program(1);
+            }
+            
+            av_packet_unref(&pkt);
+        }
+        
+        pthread_cond_signal(&f->fifo_cond);
+        pthread_mutex_unlock(&f->fifo_lock);
+    }
+    
+    f->finished = 1;
+    return NULL;
+}
+
+static void free_output_threads(void)
+{
+    int i;
+    
+    if (nb_output_files == 1)
+        return;
+    
+    transcoding_finished = 1;
+    
+    for (i = 0; i < nb_output_files; i++) {
+        OutputFile *f = output_files[i];
+        AVPacket pkt;
+        
+        if (!f->fifo || f->joined)
+            continue;
+        
+        pthread_mutex_lock(&f->fifo_lock);
+        while (av_fifo_size(f->fifo)) {
+            av_fifo_generic_read(f->fifo, &pkt, sizeof(pkt), NULL);
+            av_packet_unref(&pkt);
+        }
+        pthread_cond_signal(&f->fifo_cond);
+        pthread_mutex_unlock(&f->fifo_lock);
+        
+        pthread_join(f->thread, NULL);
+        f->joined = 1;
+        
+        while (av_fifo_size(f->fifo)) {
+            av_fifo_generic_read(f->fifo, &pkt, sizeof(pkt), NULL);
+            av_packet_unref(&pkt);
+        }
+        av_fifo_free(f->fifo);
+    }
+}
+
+static int init_output_threads(void)
+{
+    int i, ret;
+    
+    if (nb_output_files == 1)
+        return 0;
+    
+    for (i = 0; i < nb_output_files; i++) {
+        OutputFile *f = output_files[i];
+        
+        if (!(f->fifo = av_fifo_alloc(8*sizeof(AVPacket))))
+            return AVERROR(ENOMEM);
+        
+        pthread_mutex_init(&f->fifo_lock, NULL);
+        pthread_cond_init (&f->fifo_cond, NULL);
+        
+        if ((ret = pthread_create(&f->thread, NULL, output_thread, f)))
+            return AVERROR(ret);
+    }
+    return 0;
+}
+#endif
 
 static int check_recording_time(OutputStream *ost)
 {
@@ -2512,6 +2623,9 @@ static int transcode(void)
 #if HAVE_PTHREADS
     if ((ret = init_input_threads()) < 0)
         goto fail;
+    
+    if ((ret = init_output_threads()) < 0)
+        goto fail;
 #endif
 
     while (!received_sigterm) {
@@ -2593,6 +2707,7 @@ static int transcode(void)
  fail:
 #if HAVE_PTHREADS
     free_input_threads();
+    free_output_threads();
 #endif
 
     if (output_streams) {
