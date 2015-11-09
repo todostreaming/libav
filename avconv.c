@@ -332,24 +332,28 @@ static void write_frame(AVFormatContext *s, AVPacket *pkt, OutputStream *ost)
     pkt->stream_index = ost->index;
     
 #if HAVE_PTHREADS
-    f = output_files[ost->file_index];
-    
-    if (f->finished)
-        return;
-    
-    pthread_mutex_lock(&f->fifo_lock);
-    while (!av_fifo_space(f->fifo)) {
-        ret = av_fifo_realloc2(f->fifo, av_fifo_size(f->fifo) * 2);
+    if (nb_input_files > 1)
+    {
+        f = output_files[ost->file_index];
+        if (f->finished)
+            return;
         
-        if (ret < 0) {
-            print_error("av_fifo_realloc2()", ret);
-            exit_program(1);
+        pthread_mutex_lock(&f->fifo_lock);
+        while (!av_fifo_space(f->fifo)) {
+            ret = av_fifo_realloc2(f->fifo, av_fifo_size(f->fifo) * 2);
+            
+            if (ret < 0) {
+                print_error("av_fifo_realloc2()", ret);
+                exit_program(1);
+            }
         }
+        
+        av_fifo_generic_write(f->fifo, &pkt, sizeof(pkt), NULL);
+        
+        pthread_mutex_unlock(&f->fifo_lock);
+        
+        return;
     }
-    
-    av_fifo_generic_write(f->fifo, &pkt, sizeof(pkt), NULL);
-    
-    pthread_mutex_unlock(&f->fifo_lock);
 #else
     ret = av_interleaved_write_frame(s, pkt);
     if (ret < 0) {
