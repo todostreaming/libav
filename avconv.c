@@ -332,7 +332,7 @@ static void write_frame(AVFormatContext *s, AVPacket *pkt, OutputStream *ost)
     pkt->stream_index = ost->index;
     
 #if HAVE_PTHREADS
-    if (nb_input_files > 1)
+    if (nb_output_files > 1)
     {
         f = output_files[ost->file_index];
         if (f->finished)
