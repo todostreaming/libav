@@ -354,13 +354,12 @@ static void write_frame(AVFormatContext *s, AVPacket *pkt, OutputStream *ost)
         
         return;
     }
-#else
+#endif
     ret = av_interleaved_write_frame(s, pkt);
     if (ret < 0) {
         print_error("av_interleaved_write_frame()", ret);
         exit_program(1);
     }
-#endif
 }
 
 #if HAVE_PTHREADS
