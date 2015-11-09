@@ -379,8 +379,6 @@ static void *output_thread(void *arg)
                 print_error("av_interleaved_write_frame()", ret);
                 exit_program(1);
             }
-            
-            av_packet_unref(&pkt);
         }
         
         pthread_cond_signal(&f->fifo_cond);
