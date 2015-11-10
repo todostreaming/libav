@@ -189,6 +189,12 @@ end user having AviSynth or AvxSynth installed - they'll only need to be
 installed to use AviSynth scripts (obviously).
 @end float
 
+@section AMD Video Coding Engine
+
+Libav can use the AMD Video Coding Engine (VCE) for accelerated encoding h264.
+To use VCE, the AMD Media Package must be present, download it from
+@url{http://www.amd.com/en-us/innovations/software-technologies/enhanced-media}.
+
 @section Intel QuickSync Video
 
 Libav can use Intel QuickSync Video (QSV) for accelerated encoding and decoding
