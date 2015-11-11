@@ -640,6 +640,8 @@ static int poll_filter(OutputStream *ost)
 #if HAVE_PTHREADS
     if (nb_output_files > 1)
     {
+        AVFrame *new_filtered_frame;
+        
         if (of->finished)
             return AVERROR_EOF;
         
@@ -653,8 +655,11 @@ static int poll_filter(OutputStream *ost)
             }
         }
         
-        filtered_frame->opaque = ost;
-        av_fifo_generic_write(of->fifo, &filtered_frame, sizeof(filtered_frame), NULL);
+        new_filtered_frame = av_frame_clone(filtered_frame);
+        av_frame_unref(filtered_frame);
+        
+        new_filtered_frame->opaque = ost;
+        av_fifo_generic_write(of->fifo, &new_filtered_frame, sizeof(new_filtered_frame), NULL);
         
         pthread_mutex_unlock(&of->fifo_lock);
         
@@ -742,7 +747,7 @@ static void *output_thread(void *arg)
 
             ost = filtered_frame->opaque;
             do_frame_out(ost, filtered_frame);
-            av_frame_unref(filtered_frame);
+            av_frame_free(&filtered_frame);
         }
 
         pthread_cond_signal(&f->fifo_cond);
