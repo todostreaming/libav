@@ -735,7 +735,7 @@ static void *output_thread(void *arg)
     while (!transcoding_finished) {
         pthread_mutex_lock(&f->fifo_lock);
         while (av_fifo_size(f->fifo)) {
-            AVFrame *filtered_frame;
+            AVFrame         *filtered_frame;
             OutputStream    *ost;
 
             av_fifo_generic_read(f->fifo, &filtered_frame, sizeof(filtered_frame), NULL);
