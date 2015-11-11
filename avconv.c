@@ -731,22 +731,24 @@ static int poll_filters(void)
 static void *output_thread(void *arg)
 {
     OutputFile      *f = arg;
-    
+
     while (!transcoding_finished) {
         pthread_mutex_lock(&f->fifo_lock);
         while (av_fifo_size(f->fifo)) {
-            AVFrame *filtered_frame;
+            AVFrame         *filtered_frame;
+            OutputStream    *ost;
+
             av_fifo_generic_read(f->fifo, &filtered_frame, sizeof(filtered_frame), NULL);
-            
-            OutputStream *ost = filtered_frame->opaque;
+
+            ost = filtered_frame->opaque;
             do_frame_out(ost, filtered_frame);
             av_frame_unref(filtered_frame);
         }
-        
+
         pthread_cond_signal(&f->fifo_cond);
         pthread_mutex_unlock(&f->fifo_lock);
     }
-    
+
     f->finished = 1;
     return NULL;
 }
