@@ -653,6 +653,7 @@ static int poll_filter(OutputStream *ost)
             }
         }
         
+        filtered_frame = av_frame_clone(filtered_frame);
         filtered_frame->opaque = ost;
         av_fifo_generic_write(of->fifo, &filtered_frame, sizeof(filtered_frame), NULL);
         
@@ -742,7 +743,7 @@ static void *output_thread(void *arg)
 
             ost = filtered_frame->opaque;
             do_frame_out(ost, filtered_frame);
-            av_frame_unref(filtered_frame);
+            av_frame_free(&filtered_frame);
         }
 
         pthread_cond_signal(&f->fifo_cond);
