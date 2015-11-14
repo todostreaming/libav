@@ -224,6 +224,7 @@ External library support:
   --enable-mmal            enable decoding via MMAL [no]
   --enable-nvenc           enable encoding via NVENC [no]
   --enable-openssl         enable openssl [no]
+  --enable-vce             enable encoding via VCE [no]
   --enable-x11grab         enable X11 grabbing (legacy) [no]
   --enable-zlib            enable zlib [autodetect]
 
@@ -1219,6 +1220,7 @@ EXTERNAL_LIBRARY_LIST="
     mmal
     nvenc
     openssl
+    vce
     x11grab
     zlib
 "
@@ -1833,6 +1835,8 @@ nvenc_deps_any="dlopen LoadLibrary"
 nvenc_extralibs='$ldl'
 qsvdec_select="qsv"
 qsvenc_select="qsv"
+vce_deps="LoadLibrary"
+vce_extralibs='$ld'
 
 # decoders / encoders
 aac_decoder_select="imdct15 mdct sinewin"
@@ -1909,6 +1913,7 @@ h264_qsv_decoder_deps="libmfx"
 h264_qsv_decoder_select="h264_mp4toannexb_bsf h264_parser qsvdec h264_qsv_hwaccel"
 h264_qsv_encoder_deps="libmfx"
 h264_qsv_encoder_select="qsvenc"
+h264_vce_encoder_deps="vce LoadLibrary"
 hap_decoder_select="snappy texturedsp"
 hap_encoder_deps="libsnappy"
 hap_encoder_select="texturedspenc"
@@ -4483,6 +4488,8 @@ enabled openssl           && { check_lib openssl/ssl.h SSL_library_init -lssl -l
                                check_lib openssl/ssl.h SSL_library_init -lssl32 -leay32 ||
                                check_lib openssl/ssl.h SSL_library_init -lssl -lcrypto -lws2_32 -lgdi32 ||
                                die "ERROR: openssl not found"; }
+
+enabled vce && { check_func_headers windows.h LoadLibrary || die "ERROR: LoadLibrary not found"; }
 
 if enabled gnutls; then
     { check_lib2 gmp.h mpz_export -lgmp && enable gmp; } ||
