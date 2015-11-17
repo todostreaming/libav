@@ -30,6 +30,7 @@
 
 #include "libavutil/common.h"
 #include "libavutil/time.h"
+#include "libavutil/thread.h"
 
 #include "avcodec.h"
 #include "amf_capi.h"
@@ -52,24 +53,24 @@ int populateExtraData(AVCodecContext *avcontext, amfData *buffer);
 int trimHeaders(unsigned char *data, int size);
 int vce_encode_frame(AVCodecContext *avctx, AVPacket *avpkt, const AVFrame *frame, int *got_packet_ptr);
 
-static enum AMF_RESULT loaded = AMF_NOT_INITIALIZED;    // Set when the amf_capi dll is loaded
+static enum AMF_RESULT vce_encode_capi_ret = AMF_NOT_INITIALIZED;
+static AVOnce vce_encode_init_once         = AV_ONCE_INIT;
 
-void vce_encode_static_init(struct AVCodec *codec)
+void vce_encode_static_init(void)
 {
-    loaded = amf_capi_init();
+    vce_encode_capi_ret = amf_capi_init();
 }
 
 int vce_encode_init(AVCodecContext *avcontext)
 {
-    enum AMF_RESULT result;
     H264VCEContext *d = (H264VCEContext *)(avcontext->priv_data);
+    enum AMF_RESULT result;
 
-    if (loaded == AMF_NOT_INITIALIZED)
-        vce_encode_static_init(NULL);
+    ff_thread_once(&vce_encode_init_once, vce_encode_static_init);
 
     // Check encoding requirements
 
-    if (loaded != AMF_OK) {
+    if (vce_encode_capi_ret != AMF_OK) {
         av_log(avcontext, AV_LOG_ERROR, "Cannot encode without AMF library\n");
         return -1;
     }
