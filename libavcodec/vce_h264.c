@@ -26,29 +26,23 @@
  * THE SOFTWARE.
  */
 
-#ifndef INT64_C
-#define INT64_C(c) (c ## LL)
-#define UINT64_C(c) (c ## ULL)
-#endif
+#include <inttypes.h>
 
-#include "avcodec.h"
 #include "libavutil/common.h"
 #include "libavutil/time.h"
+
+#include "avcodec.h"
 #include "amf_capi.h"
 
-
-#include <stdio.h>
-
 typedef struct H264VCEContext {
-	amfContext *context;
-	amfComponent *encoder;
+    amfContext *context;
+    amfComponent *encoder;
 
-	amf_int32 width;
-	amf_int32 height;
+    amf_int32 width;
+    amf_int32 height;
 
-	amf_int32 submitted;
-	amf_int32 returned;
-
+    amf_int32 submitted;
+    amf_int32 returned;
 } H264VCEContext;
 
 void vce_encode_static_init(struct AVCodec *codec);
@@ -58,383 +52,378 @@ int populateExtraData(AVCodecContext *avcontext, amfData *buffer);
 int trimHeaders(unsigned char *data, int size);
 int vce_encode_frame(AVCodecContext *avctx, AVPacket *avpkt, const AVFrame *frame, int *got_packet_ptr);
 
-static enum AMF_RESULT loaded = AMF_NOT_INITIALIZED;	// Set when the amf_capi dll is loaded
+static enum AMF_RESULT loaded = AMF_NOT_INITIALIZED;    // Set when the amf_capi dll is loaded
 
 void vce_encode_static_init(struct AVCodec *codec)
 {
-	loaded = amf_capi_init();
+    loaded = amf_capi_init();
 }
 
 int vce_encode_init(AVCodecContext *avcontext)
 {
-	enum AMF_RESULT result;
-	H264VCEContext *d = (H264VCEContext *)(avcontext->priv_data);
+    enum AMF_RESULT result;
+    H264VCEContext *d = (H264VCEContext *)(avcontext->priv_data);
 
-	if (loaded == AMF_NOT_INITIALIZED)
-		vce_encode_static_init(NULL);
+    if (loaded == AMF_NOT_INITIALIZED)
+        vce_encode_static_init(NULL);
 
-	// Check encoding requirements
+    // Check encoding requirements
 
-	if (loaded != AMF_OK) {
-		av_log(avcontext, AV_LOG_ERROR, "Cannot encode without AMF library\n");
-		return -1;
-	}
+    if (loaded != AMF_OK) {
+        av_log(avcontext, AV_LOG_ERROR, "Cannot encode without AMF library\n");
+        return -1;
+    }
 
-	if (avcontext->pix_fmt != AV_PIX_FMT_YUV420P) {
-		av_log(avcontext, AV_LOG_ERROR, "Only YUV420 supported\n");
-		return -1;
-	}
+    if (avcontext->pix_fmt != AV_PIX_FMT_YUV420P) {
+        av_log(avcontext, AV_LOG_ERROR, "Only YUV420 supported\n");
+        return -1;
+    }
 
-	result = amfCreateContext(&d->context);
-	if (result != AMF_OK) {
-		av_log(avcontext, AV_LOG_ERROR, "Failed to create AMFContext\n");
-		return -1;
-	}
+    result = amfCreateContext(&d->context);
+    if (result != AMF_OK) {
+        av_log(avcontext, AV_LOG_ERROR, "Failed to create AMFContext\n");
+        return -1;
+    }
 
-	result = amfCreateComponent(d->context, AMFVideoEncoderVCE_AVC, &d->encoder);
-	if (result != AMF_OK) {
-		av_log(avcontext, AV_LOG_ERROR, "Failed to create AMF VCE Encoder\n");
-		return -1;
-	}
+    result = amfCreateComponent(d->context, AMFVideoEncoderVCE_AVC, &d->encoder);
+    if (result != AMF_OK) {
+        av_log(avcontext, AV_LOG_ERROR, "Failed to create AMF VCE Encoder\n");
+        return -1;
+    }
 
-	avcontext->coded_frame = av_frame_alloc();
-	if (avcontext->coded_frame == NULL) {
-		av_log(avcontext, AV_LOG_ERROR, "Could not allocate frame\n");
-		return AVERROR(ENOMEM);
-	}
+    avcontext->coded_frame = av_frame_alloc();
+    if (avcontext->coded_frame == NULL) {
+        av_log(avcontext, AV_LOG_ERROR, "Could not allocate frame\n");
+        return AVERROR(ENOMEM);
+    }
 
-	{
-		amf_int32 widthIn                  = avcontext->width;
-		amf_int32 heightIn                 = avcontext->height;
-		amf_int64 bitRateIn                = avcontext->bit_rate;
-		amf_int64 bFramePattern            = avcontext->max_b_frames;
-		amf_int32 usage                    = AMF_VIDEO_ENCODER_USAGE_TRANSCONDING;
+    {
+        amf_int32 widthIn       = avcontext->width;
+        amf_int32 heightIn      = avcontext->height;
+        amf_int64 bitRateIn     = avcontext->bit_rate;
+        amf_int64 bFramePattern = avcontext->max_b_frames;
+        amf_int32 usage         = AMF_VIDEO_ENCODER_USAGE_TRANSCONDING;
 
-		struct AMFSize frameSize = { widthIn, heightIn };
-		struct AMFRate frameRate = { avcontext->time_base.den, avcontext->time_base.num };
-		enum AMF_VIDEO_ENCODER_QUALITY_PRESET_ENUM quality = AMF_VIDEO_ENCODER_QUALITY_PRESET_BALANCED;
+        struct AMFSize frameSize                           = { widthIn, heightIn };
+        struct AMFRate frameRate                           = { avcontext->time_base.den, avcontext->time_base.num };
+        enum AMF_VIDEO_ENCODER_QUALITY_PRESET_ENUM quality = AMF_VIDEO_ENCODER_QUALITY_PRESET_BALANCED;
 
-		// env options
-		{
-			char *c;
-			if (c = getenv("AMF_QUALITY")) {
-				int v = atoi(c);
-				v = (v < 0) ? 0 : v;
-				v = (v > 2) ? 2 : v;
-				quality = (enum AMF_VIDEO_ENCODER_QUALITY_PRESET_ENUM)(v);
-				printf("AMF_QUALITY set to %d\n", quality);
-			}
-			if (c = getenv("AMF_BPATTERN")) {
-				int v = atoi(c);
-				v = (v < 0) ? 0 : v;
-				v = (v > 3) ? 3 : v;
-				bFramePattern = v;
-				printf("AMF_BPATTERN set to %lld\n", bFramePattern);
-			}
-		}
+        // env options
+        {
+            char *c;
+            if (c = getenv("AMF_QUALITY")) {
+                int v = atoi(c);
+                v       = (v < 0) ? 0 : v;
+                v       = (v > 2) ? 2 : v;
+                quality = (enum AMF_VIDEO_ENCODER_QUALITY_PRESET_ENUM)(v);
+                printf("AMF_QUALITY set to %d\n", quality);
+            }
+            if (c = getenv("AMF_BPATTERN")) {
+                int v = atoi(c);
+                v             = (v < 0) ? 0 : v;
+                v             = (v > 3) ? 3 : v;
+                bFramePattern = v;
+                printf("AMF_BPATTERN set to %lld\n", bFramePattern);
+            }
+        }
 
-		bFramePattern = (bFramePattern < 0) ? 0 : bFramePattern;
-		bFramePattern = (bFramePattern > 3) ? 3 : bFramePattern;
-		avcontext->has_b_frames = (bFramePattern > 0);
+        bFramePattern           = (bFramePattern < 0) ? 0 : bFramePattern;
+        bFramePattern           = (bFramePattern > 3) ? 3 : bFramePattern;
+        avcontext->has_b_frames = (bFramePattern > 0);
 
-		result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_USAGE, usage);
-		result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_TARGET_BITRATE, bitRateIn);
-		result = amfSetPropertySize(d->encoder, AMF_VIDEO_ENCODER_FRAMESIZE, &frameSize);
-		result = amfSetPropertyRate(d->encoder, AMF_VIDEO_ENCODER_FRAMERATE, &frameRate);
-		result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_B_PIC_PATTERN, bFramePattern);
-		result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_QUALITY_PRESET, quality);
-		result = amfSetPropertyBool(d->encoder, AMF_VIDEO_ENCODER_ENFORCE_HRD, 0);
-		result = amfSetPropertyBool(d->encoder, AMF_VIDEO_ENCODER_FILLER_DATA_ENABLE, 0);
+        result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_USAGE, usage);
+        result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_TARGET_BITRATE, bitRateIn);
+        result = amfSetPropertySize(d->encoder, AMF_VIDEO_ENCODER_FRAMESIZE, &frameSize);
+        result = amfSetPropertyRate(d->encoder, AMF_VIDEO_ENCODER_FRAMERATE, &frameRate);
+        result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_B_PIC_PATTERN, bFramePattern);
+        result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_QUALITY_PRESET, quality);
+        result = amfSetPropertyBool(d->encoder, AMF_VIDEO_ENCODER_ENFORCE_HRD, 0);
+        result = amfSetPropertyBool(d->encoder, AMF_VIDEO_ENCODER_FILLER_DATA_ENABLE, 0);
 
-		if (avcontext->flags & CODEC_FLAG_QSCALE) {
-			amf_int64 quality = (amf_int64) avcontext->global_quality / FF_QP2LAMBDA;
-			quality = (quality < 0) ? 0 : quality;
-			quality = (quality > 51) ? 51 : quality;
-			result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD, AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_CONSTRAINED_QP);
-			result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_QP_I, quality);
-			result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_QP_P, quality);
-			result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_QP_B, quality);
-		}
-		else {
-			result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD, AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_PEAK_CONSTRAINED_VBR);
-		}
+        if (avcontext->flags & CODEC_FLAG_QSCALE) {
+            amf_int64 quality = (amf_int64)avcontext->global_quality / FF_QP2LAMBDA;
+            quality = (quality < 0) ? 0 : quality;
+            quality = (quality > 51) ? 51 : quality;
+            result  = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD, AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_CONSTRAINED_QP);
+            result  = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_QP_I, quality);
+            result  = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_QP_P, quality);
+            result  = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_QP_B, quality);
+        } else {
+            result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD, AMF_VIDEO_ENCODER_RATE_CONTROL_METHOD_PEAK_CONSTRAINED_VBR);
+        }
 
-		switch (avcontext->profile) {
-			case FF_PROFILE_H264_BASELINE:
-				result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_PROFILE, AMF_VIDEO_ENCODER_PROFILE_BASELINE);
-				break;
-			case FF_PROFILE_H264_MAIN:
-				result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_PROFILE, AMF_VIDEO_ENCODER_PROFILE_MAIN);
-				break;
-			case FF_PROFILE_H264_HIGH:
-				result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_PROFILE, AMF_VIDEO_ENCODER_PROFILE_HIGH);
-				break;
-			default:
-				break;
-		}
+        switch (avcontext->profile) {
+        case FF_PROFILE_H264_BASELINE:
+            result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_PROFILE, AMF_VIDEO_ENCODER_PROFILE_BASELINE);
+            break;
+        case FF_PROFILE_H264_MAIN:
+            result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_PROFILE, AMF_VIDEO_ENCODER_PROFILE_MAIN);
+            break;
+        case FF_PROFILE_H264_HIGH:
+            result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_PROFILE, AMF_VIDEO_ENCODER_PROFILE_HIGH);
+            break;
+        default:
+            break;
+        }
 
-		if (avcontext->level != FF_LEVEL_UNKNOWN) {
-			result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_PROFILE_LEVEL, (amf_int64) avcontext->level);
-		}
+        if (avcontext->level != FF_LEVEL_UNKNOWN) {
+            result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_PROFILE_LEVEL, (amf_int64)avcontext->level);
+        }
 
-		result = amfComponentInit(d->encoder, AMF_SURFACE_NV12, widthIn, heightIn);
+        result = amfComponentInit(d->encoder, AMF_SURFACE_NV12, widthIn, heightIn);
 
-		if (result != AMF_OK) {
-			av_log(avcontext, AV_LOG_ERROR, "Failed to initialize AMF VCE Encoder\n");
-			return -1;
-		}
-	}
+        if (result != AMF_OK) {
+            av_log(avcontext, AV_LOG_ERROR, "Failed to initialize AMF VCE Encoder\n");
+            return -1;
+        }
+    }
 
-	d->width = avcontext->width;
-	d->height = avcontext->height;
-	d->submitted = 0;
-	d->returned = 0;
+    d->width     = avcontext->width;
+    d->height    = avcontext->height;
+    d->submitted = 0;
+    d->returned  = 0;
 
-	{
-		// Pull SPS/PPS and put it in extradata
-		amfData *data;
-		result = amfComponentGetExtraData(d->encoder, &data);
-		if (result == AMF_OK) {
-			populateExtraData(avcontext, data);
-			amfReleaseData(data);
-		}
-	}
+    {
+        // Pull SPS/PPS and put it in extradata
+        amfData *data;
+        result = amfComponentGetExtraData(d->encoder, &data);
+        if (result == AMF_OK) {
+            populateExtraData(avcontext, data);
+            amfReleaseData(data);
+        }
+    }
 
-	return 0;
+    return 0;
 }
 
 int vce_encode_close(AVCodecContext *avcontext)
 {
-	H264VCEContext *d = (H264VCEContext *)(avcontext->priv_data);
+    H264VCEContext *d = (H264VCEContext *)(avcontext->priv_data);
 
-	amfComponentTerminate(d->encoder);
-	amfContextTerminate(d->context);
+    amfComponentTerminate(d->encoder);
+    amfContextTerminate(d->context);
 
-	av_freep(&avcontext->coded_frame);
+    av_freep(&avcontext->coded_frame);
 
-	return 0;
+    return 0;
 }
 
 int populateExtraData(AVCodecContext *avcontext, amfData *buffer)
 {
-	int i;
-	unsigned char *data = amfBufferGetNative(buffer);
-	amf_size size = amfBufferGetSize(buffer);
-	unsigned char header[4] = { 0x00, 0x00, 0x00, 0x01 };
-	int headerCount = 0;
-	int headerPositions[80];
-	int ppsPos = -1;
-	int spsPos = -1;
-	int ppsLen = 0;
-	int spsLen = 0;
+    int i;
+    unsigned char *data     = amfBufferGetNative(buffer);
+    amf_size size           = amfBufferGetSize(buffer);
+    unsigned char header[4] = { 0x00, 0x00, 0x00, 0x01 };
+    int headerCount         = 0;
+    int headerPositions[80];
+    int ppsPos = -1;
+    int spsPos = -1;
+    int ppsLen = 0;
+    int spsLen = 0;
 
-	for (i = 0; i + 4 < size; ++i) {
-		if (data[i + 0] == header[0] && data[i + 1] == header[1] && data[i + 2] == header[2] && data[i + 3] == header[3]) {
-			if ((data[i + 4] & 0x1f) == 7)
-				spsPos = headerCount;
-			if ((data[i + 4] & 0x1f) == 8)
-				ppsPos = headerCount;
-			headerPositions[headerCount] = i;
-			++headerCount;
-		}
-	}
-	headerPositions[headerCount] = size;
+    for (i = 0; i + 4 < size; ++i)
+        if (data[i + 0] == header[0] && data[i + 1] == header[1] && data[i + 2] == header[2] && data[i + 3] == header[3]) {
+            if ((data[i + 4] & 0x1f) == 7)
+                spsPos = headerCount;
+            if ((data[i + 4] & 0x1f) == 8)
+                ppsPos = headerCount;
+            headerPositions[headerCount] = i;
+            ++headerCount;
+        }
+    headerPositions[headerCount] = size;
 
-	if (spsPos >= 0)
-		spsLen = headerPositions[spsPos + 1] - headerPositions[spsPos];
-	if (ppsPos >= 0)
-		ppsLen = headerPositions[ppsPos + 1] - headerPositions[ppsPos];
+    if (spsPos >= 0)
+        spsLen = headerPositions[spsPos + 1] - headerPositions[spsPos];
+    if (ppsPos >= 0)
+        ppsLen = headerPositions[ppsPos + 1] - headerPositions[ppsPos];
 
-	if (spsLen + ppsLen > 0) {
-		avcontext->extradata_size = spsLen + ppsLen;
-		avcontext->extradata = av_malloc(avcontext->extradata_size);
-		memcpy(avcontext->extradata, &data[headerPositions[spsPos]], spsLen);
-		memcpy(avcontext->extradata + spsLen, &data[headerPositions[ppsPos]], ppsLen);
-	}
-	return 0;
+    if (spsLen + ppsLen > 0) {
+        avcontext->extradata_size = spsLen + ppsLen;
+        avcontext->extradata      = av_malloc(avcontext->extradata_size);
+        memcpy(avcontext->extradata, &data[headerPositions[spsPos]], spsLen);
+        memcpy(avcontext->extradata + spsLen, &data[headerPositions[ppsPos]], ppsLen);
+    }
+    return 0;
 }
 
 int trimHeaders(unsigned char *data, int size)
 {
-	int state = 0;
-	int headerStart = -1;
-	int i = 0;
-	while (i < size) {
-		switch (state) {
-			case 0:
-				if (*data == 0x00) {
-					headerStart = i;
-					++state;
-				}
-			break;
+    int state       = 0;
+    int headerStart = -1;
+    int i           = 0;
+    while (i < size) {
+        switch (state) {
+        case 0:
+            if (*data == 0x00) {
+                headerStart = i;
+                ++state;
+            }
+            break;
 
-			case 1:
-			case 2:
-				if (*data == 0x00)
-					++state;
-				else
-					state = 0;
-			break;
+        case 1:
+        case 2:
+            if (*data == 0x00)
+                ++state;
+            else
+                state = 0;
+            break;
 
-			case 3:
-				if (*data == 0x01)
-					++state;
-				else
-					state = 0;
-			break;
-			case 4:
-				if  (((*data & 0x1f) == 1) || ((*data & 0x1f) == 5)) {
-					int sliceSize = size - headerStart - 4;
-					*(data - 4) = (sliceSize & 0xff000000) >> 24;
-					*(data - 3) = (sliceSize & 0x00ff0000) >> 16;
-					*(data - 2) = (sliceSize & 0x0000ff00) >> 8;
-					*(data - 1) = (sliceSize & 0x000000ff);
-					return headerStart;
-				}
-				state = 0;
-			break;
-			default:
-				continue;
-		}
-		++i;
-		++data;
-	}
-	return 0;
+        case 3:
+            if (*data == 0x01)
+                ++state;
+            else
+                state = 0;
+            break;
+        case 4:
+            if (((*data & 0x1f) == 1) || ((*data & 0x1f) == 5)) {
+                int sliceSize = size - headerStart - 4;
+                *(data - 4) = (sliceSize & 0xff000000) >> 24;
+                *(data - 3) = (sliceSize & 0x00ff0000) >> 16;
+                *(data - 2) = (sliceSize & 0x0000ff00) >> 8;
+                *(data - 1) = (sliceSize & 0x000000ff);
+                return headerStart;
+            }
+            state = 0;
+            break;
+        default:
+            continue;
+        }
+        ++i;
+        ++data;
+    }
+    return 0;
 }
 
 int vce_encode_frame(AVCodecContext *avcontext, AVPacket *packet, const AVFrame *frame, int *got_packet_ptr)
 {
-	enum AMF_RESULT result;
-	H264VCEContext *d = (H264VCEContext *)(avcontext->priv_data);
-	amfSurface *surface = NULL;
-	amfData *out = NULL;
-	int done = 0;
-	int submitDone = 0;
+    enum AMF_RESULT result;
+    H264VCEContext *d   = (H264VCEContext *)(avcontext->priv_data);
+    amfSurface *surface = NULL;
+    amfData *out        = NULL;
+    int done            = 0;
+    int submitDone      = 0;
 
-	if (frame == NULL) {
-		result = amfComponentDrain(d->encoder);
-	}
+    if (frame == NULL) {
+        result = amfComponentDrain(d->encoder);
+    }
 
-	while (done == 0) {
-		// If there is a frame get it ready and try to submit
-		if ((frame != NULL) && (submitDone == 0)) {
-			if (surface == NULL) {
-				unsigned char *rasters[3];
-				amf_int32 strides[3];
-				result = amfAllocSurface(d->context, AMF_MEMORY_DX9, AMF_SURFACE_NV12, d->width, d->height, &surface);
-				amfDataSetPts(surface, frame->pts);
+    while (done == 0) {
+        // If there is a frame get it ready and try to submit
+        if ((frame != NULL) && (submitDone == 0)) {
+            if (surface == NULL) {
+                unsigned char *rasters[3];
+                amf_int32 strides[3];
+                result = amfAllocSurface(d->context, AMF_MEMORY_DX9, AMF_SURFACE_NV12, d->width, d->height, &surface);
+                amfDataSetPts(surface, frame->pts);
 
-				// copy in pixel data
-				rasters[0] = frame->data[0];
-				rasters[1] = frame->data[1];
-				rasters[2] = frame->data[2];
-				strides[0] = frame->linesize[0];
-				strides[1] = frame->linesize[1];
-				strides[2] = frame->linesize[2];
+                // copy in pixel data
+                rasters[0] = frame->data[0];
+                rasters[1] = frame->data[1];
+                rasters[2] = frame->data[2];
+                strides[0] = frame->linesize[0];
+                strides[1] = frame->linesize[1];
+                strides[2] = frame->linesize[2];
 
-				amfCopyYUV420HostToNV12DX9((unsigned char **)&rasters, (amf_int32*)&strides, surface);
-			}
+                amfCopyYUV420HostToNV12DX9((unsigned char **)&rasters, (amf_int32 *)&strides, surface);
+            }
 
-			result = amfComponentSubmitInput(d->encoder, surface);
-			if (result == AMF_OK) {
-				amfReleaseSurface(surface);
-				surface = NULL;
-				d->submitted++;
-				submitDone = 1;
-				done = 1;
-			}
-			else if (result != AMF_INPUT_FULL)
-				av_log(avcontext, AV_LOG_ERROR, "amfComponentSubmitInput: unexpected return code\n");
-		}
+            result = amfComponentSubmitInput(d->encoder, surface);
+            if (result == AMF_OK) {
+                amfReleaseSurface(surface);
+                surface = NULL;
+                d->submitted++;
+                submitDone = 1;
+                done       = 1;
+            } else if (result != AMF_INPUT_FULL)
+                av_log(avcontext, AV_LOG_ERROR, "amfComponentSubmitInput: unexpected return code\n");
+        }
 
-		// Collect and merge output
-		
-		if (out == NULL) {
-			result = amfComponentQueryOutput(d->encoder, &out);
-			if (result == AMF_OK) {
-				d->returned++;
-				if ((frame == NULL) || (submitDone == 1))
-					done = 1;
-			}
-			if ((frame == NULL) && (d->returned == d->submitted))	// All data flushed - no point waiting for output
-				done = 1;
-		}
-		if (done == 0)
-			av_usleep(1000);	// Poll
-	}
+        // Collect and merge output
 
-	// Package the output packet
+        if (out == NULL) {
+            result = amfComponentQueryOutput(d->encoder, &out);
+            if (result == AMF_OK) {
+                d->returned++;
+                if ((frame == NULL) || (submitDone == 1))
+                    done = 1;
+            }
+            if ((frame == NULL) && (d->returned == d->submitted))    // All data flushed - no point waiting for output
+                done = 1;
+        }
+        if (done == 0)
+            av_usleep(1000);    // Poll
+    }
 
-	if (out == NULL) {
-		*got_packet_ptr = 0;
-	}
-	else {
-		int size = amfBufferGetSize(out);
-		unsigned char *datap = amfBufferGetNative(out);
+    // Package the output packet
 
-		int offset = trimHeaders(datap, size);
-		size -= offset;
-		datap += offset;
+    if (out == NULL) {
+        *got_packet_ptr = 0;
+    } else {
+        int size             = amfBufferGetSize(out);
+        unsigned char *datap = amfBufferGetNative(out);
 
-		if (packet->data != NULL) {
-			if (packet->size < size) {
-				av_log(avcontext, AV_LOG_ERROR, "User provided packet is too small\n");
-				return -1;
-			}
-		}
-		else {
-			// Allocate a buffer, none was provided
-			packet->buf = av_buffer_alloc(size);
-			packet->data = packet->buf->data;
-		}
-		packet->size = size;
-		packet->pts = amfDataGetPts(out);
-		*got_packet_ptr = 1;
+        int offset = trimHeaders(datap, size);
+        size  -= offset;
+        datap += offset;
 
-		memcpy(packet->data, datap, size);
+        if (packet->data != NULL) {
+            if (packet->size < size) {
+                av_log(avcontext, AV_LOG_ERROR, "User provided packet is too small\n");
+                return -1;
+            }
+        } else {
+            // Allocate a buffer, none was provided
+            packet->buf  = av_buffer_alloc(size);
+            packet->data = packet->buf->data;
+        }
+        packet->size    = size;
+        packet->pts     = amfDataGetPts(out);
+        *got_packet_ptr = 1;
 
-		// Set the Frame Type
-		{
-			amf_int64 frameType = 0;
-			result = amfGetPropertyInt64(out, AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE, &frameType);
-			if (result != AMF_OK)
-				av_log(avcontext, AV_LOG_ERROR, "Unable to set frame type\n");
+        memcpy(packet->data, datap, size);
 
-			packet->flags &= ~AV_PKT_FLAG_KEY;
+        // Set the Frame Type
+        {
+            amf_int64 frameType = 0;
+            result = amfGetPropertyInt64(out, AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE, &frameType);
+            if (result != AMF_OK)
+                av_log(avcontext, AV_LOG_ERROR, "Unable to set frame type\n");
 
-			switch ((enum AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE_ENUM) frameType) {
-				case AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE_IDR:
-					avcontext->coded_frame->pict_type = AV_PICTURE_TYPE_I;
-					packet->flags |= AV_PKT_FLAG_KEY;
-					break;
-				case AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE_I:
-					avcontext->coded_frame->pict_type = AV_PICTURE_TYPE_I;
-					break;
-				case AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE_P:
-					avcontext->coded_frame->pict_type = AV_PICTURE_TYPE_P;
-					break;
-				case AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE_B:
-					avcontext->coded_frame->pict_type = AV_PICTURE_TYPE_B;
-					break;
-				default:
-					avcontext->coded_frame->pict_type = 0;
-					break;
-			}
-		}
-		amfReleaseData(out);
-	}
-	return 0;
+            packet->flags &= ~AV_PKT_FLAG_KEY;
+
+            switch ((enum AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE_ENUM)frameType) {
+            case AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE_IDR:
+                avcontext->coded_frame->pict_type = AV_PICTURE_TYPE_I;
+                packet->flags                    |= AV_PKT_FLAG_KEY;
+                break;
+            case AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE_I:
+                avcontext->coded_frame->pict_type = AV_PICTURE_TYPE_I;
+                break;
+            case AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE_P:
+                avcontext->coded_frame->pict_type = AV_PICTURE_TYPE_P;
+                break;
+            case AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE_B:
+                avcontext->coded_frame->pict_type = AV_PICTURE_TYPE_B;
+                break;
+            default:
+                avcontext->coded_frame->pict_type = 0;
+                break;
+            }
+        }
+        amfReleaseData(out);
+    }
+    return 0;
 }
 
 AVCodec ff_h264_vce_encoder = {
-	.name			= "h264_vce",
-	.long_name		= NULL_IF_CONFIG_SMALL("H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 (AMD VCE)"),
-	.type			= AVMEDIA_TYPE_VIDEO,
-	.id				= AV_CODEC_ID_H264,
-	.priv_data_size	= sizeof(H264VCEContext),
-	.init			= vce_encode_init,
-	.close			= vce_encode_close,
-	.encode2		= vce_encode_frame,
-    .pix_fmts       = (const enum AVPixelFormat[]) { AV_PIX_FMT_YUV420P, AV_PIX_FMT_NONE },
-	.capabilities	= CODEC_CAP_DELAY
+    .name           = "h264_vce",
+    .long_name      = NULL_IF_CONFIG_SMALL("H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 (AMD VCE)"),
+    .type           = AVMEDIA_TYPE_VIDEO,
+    .id             = AV_CODEC_ID_H264,
+    .priv_data_size = sizeof(H264VCEContext),
+    .init           = vce_encode_init,
+    .close          = vce_encode_close,
+    .encode2        = vce_encode_frame,
+    .pix_fmts       = (const enum AVPixelFormat[]) { AV_PIX_FMT_YUV420P,                          AV_PIX_FMT_NONE},
+    .capabilities   = CODEC_CAP_DELAY
 };
