@@ -92,12 +92,6 @@ int vce_encode_init(AVCodecContext *avcontext)
         return -1;
     }
 
-    avcontext->coded_frame = av_frame_alloc();
-    if (avcontext->coded_frame == NULL) {
-        av_log(avcontext, AV_LOG_ERROR, "Could not allocate frame\n");
-        return AVERROR(ENOMEM);
-    }
-
     {
         amf_int32 widthIn       = avcontext->width;
         amf_int32 heightIn      = avcontext->height;
@@ -203,8 +197,6 @@ int vce_encode_close(AVCodecContext *avcontext)
 
     amfComponentTerminate(d->encoder);
     amfContextTerminate(d->context);
-
-    av_freep(&avcontext->coded_frame);
 
     return 0;
 }
@@ -394,8 +386,10 @@ int vce_encode_frame(AVCodecContext *avcontext, AVPacket *packet, const AVFrame 
 
             switch ((enum AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE_ENUM)frameType) {
             case AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE_IDR:
-                avcontext->coded_frame->pict_type = AV_PICTURE_TYPE_I;
                 packet->flags                    |= AV_PKT_FLAG_KEY;
+#if FF_API_CODED_FRAME
+FF_DISABLE_DEPRECATION_WARNINGS
+                avcontext->coded_frame->pict_type = AV_PICTURE_TYPE_I;
                 break;
             case AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE_I:
                 avcontext->coded_frame->pict_type = AV_PICTURE_TYPE_I;
@@ -409,6 +403,8 @@ int vce_encode_frame(AVCodecContext *avcontext, AVPacket *packet, const AVFrame 
             default:
                 avcontext->coded_frame->pict_type = 0;
                 break;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
             }
         }
         amfReleaseData(out);
