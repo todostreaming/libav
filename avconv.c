@@ -87,7 +87,7 @@ static FILE *vstats_file;
 
 static int nb_frames_drop = 0;
 
-
+pthread_mutex_t filter_lock;
 
 #if HAVE_PTHREADS
 /* signal to input threads that they should exit; set by the main thread */
@@ -580,29 +580,6 @@ FF_ENABLE_DEPRECATION_WARNINGS
     }
 }
 
-static void do_frame_out(OutputStream *ost, AVFrame *filtered_frame)
-{
-    OutputFile    *of = output_files[ost->file_index];
-    int frame_size;
-    
-    switch (ost->filter->filter->inputs[0]->type) {
-        case AVMEDIA_TYPE_VIDEO:
-            if (!ost->frame_aspect_ratio)
-                ost->enc_ctx->sample_aspect_ratio = filtered_frame->sample_aspect_ratio;
-            
-            do_video_out(of->ctx, ost, filtered_frame, &frame_size);
-            if (vstats_filename && frame_size)
-                do_video_stats(ost, frame_size);
-            break;
-        case AVMEDIA_TYPE_AUDIO:
-            do_audio_out(of->ctx, ost, filtered_frame);
-            break;
-        default:
-            // TODO support subtitle filters
-            av_assert0(0);
-    }
-}
-
 /*
  * Read one frame for lavfi output for ost and encode it.
  */
@@ -610,23 +587,43 @@ static int poll_filter(OutputStream *ost)
 {
     OutputFile    *of = output_files[ost->file_index];
     AVFrame *filtered_frame = NULL;
-    int ret;
+    int frame_size, ret;
+    
+    printf("Poll filter start for %s\n", of->ctx->filename);
 
     if (!ost->filtered_frame && !(ost->filtered_frame = av_frame_alloc())) {
+        printf("AVERROR(ENOMEM)\n");
         return AVERROR(ENOMEM);
     }
     filtered_frame = ost->filtered_frame;
 
+    printf("after filtered_frame %s\n", of->ctx->filename);
+    
+#ifdef HAVE_PTHREAD
+    pthread_mutex_lock(filter_lock);
+#endif
+    
     if (ost->enc->type == AVMEDIA_TYPE_AUDIO &&
         !(ost->enc->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE))
         ret = av_buffersink_get_samples(ost->filter->filter, filtered_frame,
                                          ost->enc_ctx->frame_size);
     else
         ret = av_buffersink_get_frame(ost->filter->filter, filtered_frame);
+        
+#ifdef HAVE_PTHREAD
+        pthread_mutex_unlock(filter_lock);
+#endif
+    
+    printf("after av_buffersink_get_samples %s\n", of->ctx->filename);
 
     if (ret < 0)
+    {
+        printf("ret < 0\n");
         return ret;
+    }
 
+    printf("before av_rescale_q %s\n", of->ctx->filename);
+    
     if (filtered_frame->pts != AV_NOPTS_VALUE) {
         int64_t start_time = (of->start_time == AV_NOPTS_VALUE) ? 0 : of->start_time;
         filtered_frame->pts = av_rescale_q(filtered_frame->pts,
@@ -637,38 +634,30 @@ static int poll_filter(OutputStream *ost)
                                            ost->enc_ctx->time_base);
     }
 
-#if HAVE_PTHREADS
-    if (nb_output_files > 1)
-    {
-        AVFrame *new_filtered_frame;
-        
-        if (of->finished)
-            return AVERROR_EOF;
-        
-        pthread_mutex_lock(&of->fifo_lock);
-        while (!av_fifo_space(of->fifo)) {
-            ret = av_fifo_realloc2(of->fifo, av_fifo_size(of->fifo) * 2);
-            
-            if (ret < 0) {
-                print_error("av_fifo_realloc2()", ret);
-                exit_program(1);
-            }
-        }
-        
-        new_filtered_frame = av_frame_clone(filtered_frame);
-        av_frame_unref(filtered_frame);
-        
-        new_filtered_frame->opaque = ost;
-        av_fifo_generic_write(of->fifo, &new_filtered_frame, sizeof(new_filtered_frame), NULL);
-        
-        pthread_mutex_unlock(&of->fifo_lock);
-        
-        return 0;
-    }
-#endif
+    printf("before switch %s\n", of->ctx->filename);
     
-    do_frame_out(ost, filtered_frame);
+    switch (ost->filter->filter->inputs[0]->type) {
+    case AVMEDIA_TYPE_VIDEO:
+        if (!ost->frame_aspect_ratio)
+            ost->enc_ctx->sample_aspect_ratio = filtered_frame->sample_aspect_ratio;
+
+        do_video_out(of->ctx, ost, filtered_frame, &frame_size);
+        if (vstats_filename && frame_size)
+            do_video_stats(ost, frame_size);
+        break;
+    case AVMEDIA_TYPE_AUDIO:
+        do_audio_out(of->ctx, ost, filtered_frame);
+        break;
+    default:
+        // TODO support subtitle filters
+        av_assert0(0);
+    }
+
+    printf("before av_frame_unref %s\n", of->ctx->filename);
     av_frame_unref(filtered_frame);
+    printf("after av_frame_unref %s\n", of->ctx->filename);
+    
+    printf("Poll filter end for %s\n", of->ctx->filename);
 
     return 0;
 }
@@ -719,7 +708,7 @@ static int poll_filters(void)
 
         if (!ost)
             break;
-
+            
         ret = poll_filter(ost);
 
         if (ret == AVERROR_EOF) {
@@ -738,20 +727,15 @@ static void *output_thread(void *arg)
     OutputFile      *f = arg;
 
     while (!transcoding_finished) {
-        pthread_mutex_lock(&f->fifo_lock);
-        while (av_fifo_size(f->fifo)) {
-            AVFrame         *filtered_frame;
-            OutputStream    *ost;
-
-            av_fifo_generic_read(f->fifo, &filtered_frame, sizeof(filtered_frame), NULL);
-
-            ost = filtered_frame->opaque;
-            do_frame_out(ost, filtered_frame);
-            av_frame_free(&filtered_frame);
+        OutputStream    *ost = output_streams[f->ost_index];
+        int              ret;
+        
+        ret = poll_filter(ost);
+        
+        if (ret == AVERROR_EOF) {
+            finish_output_stream(ost);
+            break;
         }
-
-        pthread_cond_signal(&f->fifo_cond);
-        pthread_mutex_unlock(&f->fifo_lock);
     }
 
     f->finished = 1;
@@ -769,27 +753,12 @@ static void free_output_threads(void)
     
     for (i = 0; i < nb_output_files; i++) {
         OutputFile *f = output_files[i];
-        AVPacket pkt;
         
-        if (!f->fifo || f->joined)
+        if (f->joined)
             continue;
-        
-        pthread_mutex_lock(&f->fifo_lock);
-        while (av_fifo_size(f->fifo)) {
-            av_fifo_generic_read(f->fifo, &pkt, sizeof(pkt), NULL);
-            av_packet_unref(&pkt);
-        }
-        pthread_cond_signal(&f->fifo_cond);
-        pthread_mutex_unlock(&f->fifo_lock);
         
         pthread_join(f->thread, NULL);
         f->joined = 1;
-        
-        while (av_fifo_size(f->fifo)) {
-            av_fifo_generic_read(f->fifo, &pkt, sizeof(pkt), NULL);
-            av_packet_unref(&pkt);
-        }
-        av_fifo_free(f->fifo);
     }
 }
 
@@ -803,15 +772,30 @@ static int init_output_threads(void)
     for (i = 0; i < nb_output_files; i++) {
         OutputFile *f = output_files[i];
         
-        if (!(f->fifo = av_fifo_alloc(8*sizeof(AVPacket))))
-            return AVERROR(ENOMEM);
-        
-        pthread_mutex_init(&f->fifo_lock, NULL);
-        pthread_cond_init (&f->fifo_cond, NULL);
-        
         if ((ret = pthread_create(&f->thread, NULL, output_thread, f)))
             return AVERROR(ret);
     }
+    return 0;
+}
+
+static int init_filtergraph_locks(void)
+{
+    int ret;
+    
+    if ((ret = pthread_mutex_init(&filter_lock, NULL)))
+        return AVERROR(ret);
+    
+    for (int i = 0; i < nb_filtergraphs; i++) {
+        FilterGraph *filtergraph = filtergraphs[i];
+        
+        for (int n = 0; n < filtergraph->nb_inputs; n++) {
+            InputFilter *input = filtergraph->inputs[n];
+            
+            if ((ret = pthread_mutex_init(&input->lock, NULL)))
+                return AVERROR(ret);
+        }
+    }
+    
     return 0;
 }
 #endif
@@ -1295,9 +1279,17 @@ static int decode_audio(InputStream *ist, AVPacket *pkt, int *got_output)
         } else
             f = decoded_frame;
 
+#ifdef HAVE_PTHREAD
+        pthread_mutex_lock(filter_lock);
+#endif
+
         err = av_buffersrc_add_frame(ist->filters[i]->filter, f);
         if (err < 0)
             break;
+            
+#ifdef HAVE_PTHREAD
+        pthread_mutex_unlock(filter_lock);
+#endif
     }
 
     av_frame_unref(ist->filter_frame);
@@ -1347,6 +1339,10 @@ static int decode_video(InputStream *ist, AVPacket *pkt, int *got_output)
                ist->resample_width,  ist->resample_height,  av_get_pix_fmt_name(ist->resample_pix_fmt),
                decoded_frame->width, decoded_frame->height, av_get_pix_fmt_name(decoded_frame->format));
 
+#ifdef HAVE_PTHREADS
+        if (nb_output_files > 1)
+        {
+#endif
         ret = poll_filters();
         if (ret < 0 && (ret != AVERROR_EOF && ret != AVERROR(EAGAIN))) {
             char errbuf[128];
@@ -1354,6 +1350,9 @@ static int decode_video(InputStream *ist, AVPacket *pkt, int *got_output)
 
             av_log(NULL, AV_LOG_ERROR, "Error while filtering: %s\n", errbuf);
         }
+#ifdef HAVE_PTHREADS
+        }
+#endif
 
         ist->resample_width   = decoded_frame->width;
         ist->resample_height  = decoded_frame->height;
@@ -1376,9 +1375,17 @@ static int decode_video(InputStream *ist, AVPacket *pkt, int *got_output)
         } else
             f = decoded_frame;
 
+#ifdef HAVE_PTHREAD
+        pthread_mutex_lock(filter_lock);
+#endif
+
         err = av_buffersrc_add_frame(ist->filters[i]->filter, f);
         if (err < 0)
             break;
+
+#ifdef HAVE_PTHREAD
+        pthread_mutex_unlock(filter_lock);
+#endif
     }
 
 fail:
@@ -1416,9 +1423,15 @@ static int send_filter_eof(InputStream *ist)
 {
     int i, ret;
     for (i = 0; i < ist->nb_filters; i++) {
+#ifdef HAVE_PTHREAD
+        pthread_mutex_lock(filter_lock);
+#endif
         ret = av_buffersrc_add_frame(ist->filters[i]->filter, NULL);
         if (ret < 0)
             return ret;
+#ifdef HAVE_PTHREAD
+        pthread_mutex_unlock(filter_lock);
+#endif
     }
     return 0;
 }
@@ -2637,6 +2650,9 @@ static int transcode(void)
     
     if ((ret = init_output_threads()) < 0)
         goto fail;
+      
+    if ((ret = init_filtergraph_locks()) < 0)
+        goto fail;
 #endif
 
     while (!received_sigterm) {
@@ -2653,6 +2669,11 @@ static int transcode(void)
                 need_input = 0;
         }
 
+#ifdef HAVE_PTHREADS
+        if (nb_output_files > 1) {
+            continue;
+        }
+#endif
         ret = poll_filters();
         if (ret < 0) {
             if (ret == AVERROR_EOF || ret == AVERROR(EAGAIN)) {
