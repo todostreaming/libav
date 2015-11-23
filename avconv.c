@@ -588,7 +588,11 @@ static int poll_filter(OutputStream *ost)
     OutputFile    *of = output_files[ost->file_index];
     AVFrame *filtered_frame = NULL;
     int frame_size, ret;
-    
+
+#ifdef HAVE_PTHREAD
+    pthread_mutex_lock(filter_lock);
+#endif    
+
     printf("Poll filter start for %s\n", of->ctx->filename);
 
     if (!ost->filtered_frame && !(ost->filtered_frame = av_frame_alloc())) {
@@ -599,20 +603,12 @@ static int poll_filter(OutputStream *ost)
 
     printf("after filtered_frame %s\n", of->ctx->filename);
     
-#ifdef HAVE_PTHREAD
-    pthread_mutex_lock(filter_lock);
-#endif
-    
     if (ost->enc->type == AVMEDIA_TYPE_AUDIO &&
         !(ost->enc->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE))
         ret = av_buffersink_get_samples(ost->filter->filter, filtered_frame,
                                          ost->enc_ctx->frame_size);
     else
         ret = av_buffersink_get_frame(ost->filter->filter, filtered_frame);
-        
-#ifdef HAVE_PTHREAD
-        pthread_mutex_unlock(filter_lock);
-#endif
     
     printf("after av_buffersink_get_samples %s\n", of->ctx->filename);
 
@@ -658,6 +654,10 @@ static int poll_filter(OutputStream *ost)
     printf("after av_frame_unref %s\n", of->ctx->filename);
     
     printf("Poll filter end for %s\n", of->ctx->filename);
+    
+#ifdef HAVE_PTHREAD
+    pthread_mutex_unlock(filter_lock);
+#endif
 
     return 0;
 }
@@ -729,6 +729,9 @@ static void *output_thread(void *arg)
     while (!transcoding_finished) {
         OutputStream    *ost = output_streams[f->ost_index];
         int              ret;
+        
+        if (!ost->filter || ost->finished)
+            continue;
         
         ret = poll_filter(ost);
         
