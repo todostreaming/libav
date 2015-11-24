@@ -201,7 +201,6 @@ static void avconv_cleanup(int ret)
     for (i = 0; i < nb_input_streams; i++) {
         InputStream *ist = input_streams[i];
 
-        av_frame_free(&ist->filter_frame);
         av_dict_free(&ist->decoder_opts);
         av_freep(&ist->filters);
         av_freep(&ist->hwaccel_device);
@@ -587,7 +586,7 @@ static int poll_filter(OutputStream *ost)
     OutputFile    *of = output_files[ost->file_index];
     AVFrame *filtered_frame = NULL;
     int frame_size, ret;
-    
+
     printf("Poll filter start for %s\n", of->ctx->filename);
 
     if (!ost->filtered_frame && !(ost->filtered_frame = av_frame_alloc())) {
@@ -597,22 +596,22 @@ static int poll_filter(OutputStream *ost)
     filtered_frame = ost->filtered_frame;
 
     printf("after filtered_frame %s\n", of->ctx->filename);
-    
+
 #ifdef HAVE_PTHREAD
     pthread_mutex_lock(filter_lock);
 #endif
-    
+
     if (ost->enc->type == AVMEDIA_TYPE_AUDIO &&
         !(ost->enc->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE))
         ret = av_buffersink_get_samples(ost->filter->filter, filtered_frame,
                                          ost->enc_ctx->frame_size);
     else
         ret = av_buffersink_get_frame(ost->filter->filter, filtered_frame);
-        
+
 #ifdef HAVE_PTHREAD
         pthread_mutex_unlock(filter_lock);
 #endif
-    
+
     printf("after av_buffersink_get_samples %s\n", of->ctx->filename);
 
     if (ret < 0)
@@ -622,7 +621,7 @@ static int poll_filter(OutputStream *ost)
     }
 
     printf("before av_rescale_q %s\n", of->ctx->filename);
-    
+
     if (filtered_frame->pts != AV_NOPTS_VALUE) {
         int64_t start_time = (of->start_time == AV_NOPTS_VALUE) ? 0 : of->start_time;
         filtered_frame->pts = av_rescale_q(filtered_frame->pts,
@@ -634,7 +633,7 @@ static int poll_filter(OutputStream *ost)
     }
 
     printf("before switch %s\n", of->ctx->filename);
-    
+
     switch (ost->filter->filter->inputs[0]->type) {
     case AVMEDIA_TYPE_VIDEO:
         if (!ost->frame_aspect_ratio)
@@ -655,7 +654,7 @@ static int poll_filter(OutputStream *ost)
     printf("before av_frame_unref %s, %p->%p\n", of->ctx->filename, filtered_frame, *filtered_frame->buf);
     av_frame_unref(filtered_frame);
     printf("after av_frame_unref %s, %p\n", of->ctx->filename, filtered_frame);
-    
+
     printf("Poll filter end for %s\n", of->ctx->filename);
 
     return 0;
@@ -707,7 +706,7 @@ static int poll_filters(void)
 
         if (!ost)
             break;
-            
+
         ret = poll_filter(ost);
 
         if (ret == AVERROR_EOF) {
@@ -728,9 +727,9 @@ static void *output_thread(void *arg)
     while (!transcoding_finished) {
         OutputStream    *ost = output_streams[f->ost_index];
         int              ret;
-        
+
         ret = poll_filter(ost);
-        
+
         if (ret == AVERROR_EOF) {
             finish_output_stream(ost);
             break;
@@ -744,18 +743,18 @@ static void *output_thread(void *arg)
 static void free_output_threads(void)
 {
     int i;
-    
+
     if (nb_output_files == 1)
         return;
-    
+
     transcoding_finished = 1;
-    
+
     for (i = 0; i < nb_output_files; i++) {
         OutputFile *f = output_files[i];
-        
+
         if (f->joined)
             continue;
-        
+
         pthread_join(f->thread, NULL);
         f->joined = 1;
     }
@@ -764,13 +763,13 @@ static void free_output_threads(void)
 static int init_output_threads(void)
 {
     int i, ret;
-    
+
     if (nb_output_files == 1)
         return 0;
-    
+
     for (i = 0; i < nb_output_files; i++) {
         OutputFile *f = output_files[i];
-        
+
         if ((ret = pthread_create(&f->thread, NULL, output_thread, f)))
             return AVERROR(ret);
     }
@@ -780,21 +779,21 @@ static int init_output_threads(void)
 static int init_filtergraph_locks(void)
 {
     int ret;
-    
+
     if ((ret = pthread_mutex_init(&filter_lock, NULL)))
         return AVERROR(ret);
-    
+
     for (int i = 0; i < nb_filtergraphs; i++) {
         FilterGraph *filtergraph = filtergraphs[i];
-        
+
         for (int n = 0; n < filtergraph->nb_inputs; n++) {
             InputFilter *input = filtergraph->inputs[n];
-            
+
             if ((ret = pthread_mutex_init(&input->lock, NULL)))
                 return AVERROR(ret);
         }
     }
-    
+
     return 0;
 }
 #endif
@@ -1198,13 +1197,13 @@ int guess_input_channel_layout(InputStream *ist)
 
 static int decode_audio(InputStream *ist, AVPacket *pkt, int *got_output)
 {
-    AVFrame *decoded_frame, *f;
+    AVFrame *decoded_frame, *f, *filter_frame;
     AVCodecContext *avctx = ist->dec_ctx;
     int i, ret, err = 0, resample_changed;
 
     if (!(decoded_frame = av_frame_alloc()))
         return AVERROR(ENOMEM);
-    if (!ist->filter_frame && !(ist->filter_frame = av_frame_alloc()))
+    if (!(filter_frame = av_frame_alloc()))
         return AVERROR(ENOMEM);
 
     ret = avcodec_decode_audio4(avctx, decoded_frame, got_output, pkt);
@@ -1270,7 +1269,7 @@ static int decode_audio(InputStream *ist, AVPacket *pkt, int *got_output)
     ist->nb_samples = decoded_frame->nb_samples;
     for (i = 0; i < ist->nb_filters; i++) {
         if (i < ist->nb_filters - 1) {
-            f = ist->filter_frame;
+            f = filter_frame;
             err = av_frame_ref(f, decoded_frame);
             if (err < 0)
                 break;
@@ -1284,25 +1283,25 @@ static int decode_audio(InputStream *ist, AVPacket *pkt, int *got_output)
         err = av_buffersrc_add_frame(ist->filters[i]->filter, f);
         if (err < 0)
             break;
-            
+
 #ifdef HAVE_PTHREAD
         pthread_mutex_unlock(filter_lock);
 #endif
     }
 
-    av_frame_unref(ist->filter_frame);
+    av_frame_unref(filter_frame);
     av_frame_unref(decoded_frame);
     return err < 0 ? err : ret;
 }
 
 static int decode_video(InputStream *ist, AVPacket *pkt, int *got_output)
 {
-    AVFrame *decoded_frame, *f;
+    AVFrame *decoded_frame, *f, *filter_frame;
     int i, ret = 0, err = 0, resample_changed;
 
     if (!(decoded_frame = av_frame_alloc()))
         return AVERROR(ENOMEM);
-    if (!ist->filter_frame && !(ist->filter_frame = av_frame_alloc()))
+    if (!(filter_frame = av_frame_alloc()))
         return AVERROR(ENOMEM);
 
     ret = avcodec_decode_video2(ist->dec_ctx,
@@ -1365,7 +1364,7 @@ static int decode_video(InputStream *ist, AVPacket *pkt, int *got_output)
 
     for (i = 0; i < ist->nb_filters; i++) {
         if (i < ist->nb_filters - 1) {
-            f = ist->filter_frame;
+            f = filter_frame;
             err = av_frame_ref(f, decoded_frame);
             if (err < 0)
                 break;
@@ -1386,7 +1385,7 @@ static int decode_video(InputStream *ist, AVPacket *pkt, int *got_output)
     }
 
 fail:
-    av_frame_unref(ist->filter_frame);
+    av_frame_unref(filter_frame);
     av_frame_unref(decoded_frame);
     return err < 0 ? err : ret;
 }
@@ -2644,10 +2643,10 @@ static int transcode(void)
 #if HAVE_PTHREADS
     if ((ret = init_input_threads()) < 0)
         goto fail;
-    
+
     if ((ret = init_output_threads()) < 0)
         goto fail;
-      
+
     if ((ret = init_filtergraph_locks()) < 0)
         goto fail;
 #endif
