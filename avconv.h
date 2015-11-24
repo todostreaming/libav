@@ -194,6 +194,9 @@ typedef struct InputFilter {
     struct InputStream *ist;
     struct FilterGraph *graph;
     uint8_t            *name;
+#ifdef HAVE_PTHREADS
+    pthread_mutex_t lock;  /* lock for access to filter */
+#endif
 } InputFilter;
 
 typedef struct OutputFilter {
@@ -226,7 +229,6 @@ typedef struct InputStream {
     int decoding_needed;     /* true if the packets must be decoded in 'raw_fifo' */
     AVCodecContext *dec_ctx;
     AVCodec *dec;
-    AVFrame *decoded_frame;
     AVFrame *filter_frame; /* a ref of decoded_frame, to be sent to filters */
 
     int64_t       start;     /* time when read started */
@@ -387,6 +389,12 @@ typedef struct OutputFile {
     uint64_t limit_filesize;
 
     int shortest;
+    
+#if HAVE_PTHREADS
+    pthread_t thread;           /* thread writing to this file */
+    int finished;               /* the thread has exited */
+    int joined;                 /* the thread has been joined */
+#endif
 } OutputFile;
 
 extern InputStream **input_streams;
