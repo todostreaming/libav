@@ -194,9 +194,6 @@ typedef struct InputFilter {
     struct InputStream *ist;
     struct FilterGraph *graph;
     uint8_t            *name;
-#ifdef HAVE_PTHREADS
-    pthread_mutex_t lock;  /* lock for access to filter */
-#endif
 } InputFilter;
 
 typedef struct OutputFilter {
@@ -390,12 +387,6 @@ typedef struct OutputFile {
     uint64_t limit_filesize;
 
     int shortest;
-    
-#if HAVE_PTHREADS
-    pthread_t thread;           /* thread writing to this file */
-    int finished;               /* the thread has exited */
-    int joined;                 /* the thread has been joined */
-#endif
 } OutputFile;
 
 extern InputStream **input_streams;
