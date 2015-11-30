@@ -46,22 +46,53 @@ typedef struct H264VCEContext {
     amf_int32 returned;
 } H264VCEContext;
 
-void vce_encode_static_init(struct AVCodec *codec);
-int vce_encode_init(AVCodecContext *context);
-int vce_encode_close(AVCodecContext *context);
-int populateExtraData(AVCodecContext *avcontext, amfData *buffer);
-int trimHeaders(unsigned char *data, int size);
-int vce_encode_frame(AVCodecContext *avctx, AVPacket *avpkt, const AVFrame *frame, int *got_packet_ptr);
-
 static enum AMF_RESULT vce_encode_capi_ret = AMF_NOT_INITIALIZED;
 static AVOnce vce_encode_init_once         = AV_ONCE_INIT;
 
-void vce_encode_static_init(void)
+static void vce_encode_static_init(void)
 {
     vce_encode_capi_ret = amf_capi_init();
 }
 
-int vce_encode_init(AVCodecContext *avcontext)
+static int populateExtraData(AVCodecContext *avcontext, amfData *buffer)
+{
+    int i;
+    unsigned char *data     = amfBufferGetNative(buffer);
+    amf_size size           = amfBufferGetSize(buffer);
+    unsigned char header[4] = { 0x00, 0x00, 0x00, 0x01 };
+    int headerCount         = 0;
+    int headerPositions[80];
+    int ppsPos = -1;
+    int spsPos = -1;
+    int ppsLen = 0;
+    int spsLen = 0;
+
+    for (i = 0; i + 4 < size; ++i)
+        if (data[i + 0] == header[0] && data[i + 1] == header[1] && data[i + 2] == header[2] && data[i + 3] == header[3]) {
+            if ((data[i + 4] & 0x1f) == 7)
+                spsPos = headerCount;
+            if ((data[i + 4] & 0x1f) == 8)
+                ppsPos = headerCount;
+            headerPositions[headerCount] = i;
+            ++headerCount;
+        }
+    headerPositions[headerCount] = size;
+
+    if (spsPos >= 0)
+        spsLen = headerPositions[spsPos + 1] - headerPositions[spsPos];
+    if (ppsPos >= 0)
+        ppsLen = headerPositions[ppsPos + 1] - headerPositions[ppsPos];
+
+    if (spsLen + ppsLen > 0) {
+        avcontext->extradata_size = spsLen + ppsLen;
+        avcontext->extradata      = av_malloc(avcontext->extradata_size);
+        memcpy(avcontext->extradata, &data[headerPositions[spsPos]], spsLen);
+        memcpy(avcontext->extradata + spsLen, &data[headerPositions[ppsPos]], ppsLen);
+    }
+    return 0;
+}
+
+static int vce_encode_init(AVCodecContext *avcontext)
 {
     H264VCEContext *d = (H264VCEContext *)(avcontext->priv_data);
     enum AMF_RESULT result;
@@ -191,7 +222,7 @@ int vce_encode_init(AVCodecContext *avcontext)
     return 0;
 }
 
-int vce_encode_close(AVCodecContext *avcontext)
+static int vce_encode_close(AVCodecContext *avcontext)
 {
     H264VCEContext *d = (H264VCEContext *)(avcontext->priv_data);
 
@@ -201,45 +232,7 @@ int vce_encode_close(AVCodecContext *avcontext)
     return 0;
 }
 
-int populateExtraData(AVCodecContext *avcontext, amfData *buffer)
-{
-    int i;
-    unsigned char *data     = amfBufferGetNative(buffer);
-    amf_size size           = amfBufferGetSize(buffer);
-    unsigned char header[4] = { 0x00, 0x00, 0x00, 0x01 };
-    int headerCount         = 0;
-    int headerPositions[80];
-    int ppsPos = -1;
-    int spsPos = -1;
-    int ppsLen = 0;
-    int spsLen = 0;
-
-    for (i = 0; i + 4 < size; ++i)
-        if (data[i + 0] == header[0] && data[i + 1] == header[1] && data[i + 2] == header[2] && data[i + 3] == header[3]) {
-            if ((data[i + 4] & 0x1f) == 7)
-                spsPos = headerCount;
-            if ((data[i + 4] & 0x1f) == 8)
-                ppsPos = headerCount;
-            headerPositions[headerCount] = i;
-            ++headerCount;
-        }
-    headerPositions[headerCount] = size;
-
-    if (spsPos >= 0)
-        spsLen = headerPositions[spsPos + 1] - headerPositions[spsPos];
-    if (ppsPos >= 0)
-        ppsLen = headerPositions[ppsPos + 1] - headerPositions[ppsPos];
-
-    if (spsLen + ppsLen > 0) {
-        avcontext->extradata_size = spsLen + ppsLen;
-        avcontext->extradata      = av_malloc(avcontext->extradata_size);
-        memcpy(avcontext->extradata, &data[headerPositions[spsPos]], spsLen);
-        memcpy(avcontext->extradata + spsLen, &data[headerPositions[ppsPos]], ppsLen);
-    }
-    return 0;
-}
-
-int trimHeaders(unsigned char *data, int size)
+static int trimHeaders(unsigned char *data, int size)
 {
     int state       = 0;
     int headerStart = -1;
@@ -287,7 +280,7 @@ int trimHeaders(unsigned char *data, int size)
     return 0;
 }
 
-int vce_encode_frame(AVCodecContext *avcontext, AVPacket *packet, const AVFrame *frame, int *got_packet_ptr)
+static int vce_encode_frame(AVCodecContext *avcontext, AVPacket *packet, const AVFrame *frame, int *got_packet_ptr)
 {
     enum AMF_RESULT result;
     H264VCEContext *d   = (H264VCEContext *)(avcontext->priv_data);
