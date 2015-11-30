@@ -1836,7 +1836,7 @@ nvenc_extralibs='$ldl'
 qsvdec_select="qsv"
 qsvenc_select="qsv"
 vce_deps="LoadLibrary"
-vce_extralibs='$ld'
+vce_extralibs='$ldl'
 
 # decoders / encoders
 aac_decoder_select="imdct15 mdct sinewin"
