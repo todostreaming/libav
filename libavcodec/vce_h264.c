@@ -429,5 +429,5 @@ AVCodec ff_h264_vce_encoder = {
     .encode2        = vce_encode_frame,
     .pix_fmts       = (const enum AVPixelFormat[]) { AV_PIX_FMT_YUV420P,                          AV_PIX_FMT_NONE},
     .defaults       = vce_h264_defaults,
-    .capabilities   = CODEC_CAP_DELAY
+    .capabilities   = AV_CODEC_CAP_DELAY
 };
