@@ -412,6 +412,12 @@ FF_ENABLE_DEPRECATION_WARNINGS
     return 0;
 }
 
+static const AVCodecDefault vce_h264_defaults[] = {
+    { "b",                "0" },
+    { "bf",               "-1" },
+    { "g",                "-1" },
+}
+
 AVCodec ff_h264_vce_encoder = {
     .name           = "h264_vce",
     .long_name      = NULL_IF_CONFIG_SMALL("H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 (AMD VCE)"),
@@ -422,5 +428,6 @@ AVCodec ff_h264_vce_encoder = {
     .close          = vce_encode_close,
     .encode2        = vce_encode_frame,
     .pix_fmts       = (const enum AVPixelFormat[]) { AV_PIX_FMT_YUV420P,                          AV_PIX_FMT_NONE},
+    .defaults       = vce_h264_defaults,
     .capabilities   = CODEC_CAP_DELAY
 };
