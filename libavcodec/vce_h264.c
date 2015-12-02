@@ -36,6 +36,7 @@
 #include "amf_capi.h"
 
 typedef struct H264VCEContext {
+    AVClass *class;
     amfContext *context;
     amfComponent *encoder;
 
@@ -44,6 +45,8 @@ typedef struct H264VCEContext {
 
     amf_int32 submitted;
     amf_int32 returned;
+
+    int quality_preset;
 } H264VCEContext;
 
 static enum AMF_RESULT vce_encode_capi_ret = AMF_NOT_INITIALIZED;
@@ -132,26 +135,6 @@ static int vce_encode_init(AVCodecContext *avcontext)
 
         struct AMFSize frameSize                           = { widthIn, heightIn };
         struct AMFRate frameRate                           = { avcontext->time_base.den, avcontext->time_base.num };
-        enum AMF_VIDEO_ENCODER_QUALITY_PRESET_ENUM quality = AMF_VIDEO_ENCODER_QUALITY_PRESET_BALANCED;
-
-        // env options
-        {
-            char *c;
-            if (c = getenv("AMF_QUALITY")) {
-                int v = atoi(c);
-                v       = (v < 0) ? 0 : v;
-                v       = (v > 2) ? 2 : v;
-                quality = (enum AMF_VIDEO_ENCODER_QUALITY_PRESET_ENUM)(v);
-                printf("AMF_QUALITY set to %d\n", quality);
-            }
-            if (c = getenv("AMF_BPATTERN")) {
-                int v = atoi(c);
-                v             = (v < 0) ? 0 : v;
-                v             = (v > 3) ? 3 : v;
-                bFramePattern = v;
-                printf("AMF_BPATTERN set to %lld\n", bFramePattern);
-            }
-        }
 
         bFramePattern           = (bFramePattern < 0) ? 0 : bFramePattern;
         bFramePattern           = (bFramePattern > 3) ? 3 : bFramePattern;
@@ -162,7 +145,7 @@ static int vce_encode_init(AVCodecContext *avcontext)
         result = amfSetPropertySize(d->encoder, AMF_VIDEO_ENCODER_FRAMESIZE, &frameSize);
         result = amfSetPropertyRate(d->encoder, AMF_VIDEO_ENCODER_FRAMERATE, &frameRate);
         result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_B_PIC_PATTERN, bFramePattern);
-        result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_QUALITY_PRESET, quality);
+        result = amfSetPropertyInt64(d->encoder, AMF_VIDEO_ENCODER_QUALITY_PRESET, (enum AMF_VIDEO_ENCODER_QUALITY_PRESET_ENUM) d->quality_preset);
         result = amfSetPropertyBool(d->encoder, AMF_VIDEO_ENCODER_ENFORCE_HRD, 0);
         result = amfSetPropertyBool(d->encoder, AMF_VIDEO_ENCODER_FILLER_DATA_ENABLE, 0);
 
@@ -411,6 +394,30 @@ static const AVCodecDefault vce_h264_defaults[] = {
     { "g",                "-1" },
 }
 
+static const AVOption vce_h264_options[] = {
+    { "preset", "Use encoder preset (balanced, speed, quality)"
+        , offsetof(H264VCEContext, quality_preset), AV_OPT_TYPE_INT
+        , { .i64 = AMF_VIDEO_ENCODER_QUALITY_PRESET_BALANCED }, 0 , 0
+        , AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_ENCODING_PARAM, "preset" },
+    { "balanced", NULL, 0, AV_OPT_TYPE_CONST
+        , { .i64 = AMF_VIDEO_ENCODER_QUALITY_PRESET_BALANCED }, 0, 0
+        , AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_ENCODING_PARAM, "preset" }
+    { "speed", NULL, 0, AV_OPT_TYPE_CONST
+        , { .i64 = AMF_VIDEO_ENCODER_QUALITY_PRESET_SPEED }, 0, 0
+        , AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_ENCODING_PARAM, "preset" }
+    { "quality", NULL, 0, AV_OPT_TYPE_CONST
+        , { .i64 = AMF_VIDEO_ENCODER_QUALITY_PRESET_QUALITY }, 0, 0
+        , AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_ENCODING_PARAM, "preset" }
+    { NULL },
+};
+
+static const AVClass vce_h264_class = {
+    .class_name = "vce_h264",
+    .item_name = av_default_item_name,
+    .option = vce_h264_options,
+    .version = LIBAVUTIL_VERSION_INT,
+};
+
 AVCodec ff_h264_vce_encoder = {
     .name           = "h264_vce",
     .long_name      = NULL_IF_CONFIG_SMALL("H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 (AMD VCE)"),
@@ -423,4 +430,5 @@ AVCodec ff_h264_vce_encoder = {
     .pix_fmts       = (const enum AVPixelFormat[]) { AV_PIX_FMT_YUV420P,                          AV_PIX_FMT_NONE},
     .defaults       = vce_h264_defaults,
     .capabilities   = AV_CODEC_CAP_DELAY
+    .priv_class     = &vce_h264_class;
 };
