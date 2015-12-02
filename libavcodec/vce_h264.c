@@ -29,6 +29,7 @@
 #include <inttypes.h>
 
 #include "libavutil/common.h"
+#include "libavutil/opt.h"
 #include "libavutil/time.h"
 #include "libavutil/thread.h"
 
@@ -402,13 +403,13 @@ static const AVOption vce_h264_options[] = {
         , AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_ENCODING_PARAM, "preset" },
     { "balanced", NULL, 0, AV_OPT_TYPE_CONST
         , { .i64 = AMF_VIDEO_ENCODER_QUALITY_PRESET_BALANCED }, 0, 0
-        , AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_ENCODING_PARAM, "preset" }
+        , AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_ENCODING_PARAM, "preset" },
     { "speed", NULL, 0, AV_OPT_TYPE_CONST
         , { .i64 = AMF_VIDEO_ENCODER_QUALITY_PRESET_SPEED }, 0, 0
-        , AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_ENCODING_PARAM, "preset" }
+        , AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_ENCODING_PARAM, "preset" },
     { "quality", NULL, 0, AV_OPT_TYPE_CONST
         , { .i64 = AMF_VIDEO_ENCODER_QUALITY_PRESET_QUALITY }, 0, 0
-        , AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_ENCODING_PARAM, "preset" }
+        , AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_ENCODING_PARAM, "preset" },
     { NULL },
 };
 
@@ -430,6 +431,6 @@ AVCodec ff_h264_vce_encoder = {
     .encode2        = vce_encode_frame,
     .pix_fmts       = (const enum AVPixelFormat[]) { AV_PIX_FMT_YUV420P,                          AV_PIX_FMT_NONE},
     .defaults       = vce_h264_defaults,
-    .capabilities   = AV_CODEC_CAP_DELAY
-    .priv_class     = &vce_h264_class;
+    .capabilities   = AV_CODEC_CAP_DELAY,
+    .priv_class     = &vce_h264_class,
 };
