@@ -33,6 +33,7 @@
 #include "libavutil/thread.h"
 
 #include "avcodec.h"
+#include "internal.h"
 #include "amf_capi.h"
 
 typedef struct H264VCEContext {
@@ -392,7 +393,7 @@ static const AVCodecDefault vce_h264_defaults[] = {
     { "b",                "0" },
     { "bf",               "-1" },
     { "g",                "-1" },
-}
+};
 
 static const AVOption vce_h264_options[] = {
     { "preset", "Use encoder preset (balanced, speed, quality)"
