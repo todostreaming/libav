@@ -365,24 +365,8 @@ static int vce_encode_frame(AVCodecContext *avcontext, AVPacket *packet, const A
             switch ((enum AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE_ENUM)frameType) {
             case AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE_IDR:
                 packet->flags                    |= AV_PKT_FLAG_KEY;
-#if FF_API_CODED_FRAME
-FF_DISABLE_DEPRECATION_WARNINGS
-                avcontext->coded_frame->pict_type = AV_PICTURE_TYPE_I;
-                break;
-            case AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE_I:
-                avcontext->coded_frame->pict_type = AV_PICTURE_TYPE_I;
-                break;
-            case AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE_P:
-                avcontext->coded_frame->pict_type = AV_PICTURE_TYPE_P;
-                break;
-            case AMF_VIDEO_ENCODER_OUTPUT_DATA_TYPE_B:
-                avcontext->coded_frame->pict_type = AV_PICTURE_TYPE_B;
-                break;
             default:
-                avcontext->coded_frame->pict_type = 0;
                 break;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
             }
         }
         amfReleaseData(out);
