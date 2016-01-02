@@ -255,10 +255,6 @@ typedef struct VP9Block {
     VP56mv mv[4 /* b_idx */][2 /* ref */];
     enum BlockSize bs;
     enum TxfmMode tx, uvtx;
-
-    int row, row7, col, col7;
-    uint8_t *dst[3];
-    ptrdiff_t y_stride, uv_stride;
 } VP9Block;
 
 typedef struct VP9Context {
@@ -269,6 +265,11 @@ typedef struct VP9Context {
     VP56RangeCoder *c_b;
     unsigned c_b_size;
     VP9Block b;
+
+    // state trackers
+    int row, row7, col, col7;
+    uint8_t *dst[3];
+    ptrdiff_t y_stride, uv_stride;
 
     // bitstream header
     uint8_t profile;

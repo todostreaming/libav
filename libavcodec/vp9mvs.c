@@ -65,7 +65,7 @@ static void find_ref_mvs(VP9Context *s,
                        { -2,  0 }, { -1, -2 }, { -2, -1 }, { -2, -2 } },
     };
     VP9Block *const b = &s->b;
-    int row = b->row, col = b->col, row7 = b->row7;
+    int row = s->row, col = s->col, row7 = s->row7;
     const int8_t (*p)[2] = mv_ref_blk_off[b->bs];
 #define INVALID_MV 0x80008000U
     uint32_t mem = INVALID_MV;
