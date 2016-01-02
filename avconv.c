@@ -653,52 +653,6 @@ static void finish_output_stream(OutputStream *ost)
     }
 }
 
-/*
- * Read as many frames from possible from lavfi and encode them.
- *
- * Always read from the active stream with the lowest timestamp. If no frames
- * are available for it then return EAGAIN and wait for more input. This way we
- * can use lavfi sources that generate unlimited amount of frames without memory
- * usage exploding.
- */
-static int poll_filters(void)
-{
-    int i, ret = 0;
-
-    while (ret >= 0 && !received_sigterm) {
-        OutputStream *ost = NULL;
-        int64_t min_pts = INT64_MAX;
-
-        /* choose output stream with the lowest timestamp */
-        for (i = 0; i < nb_output_streams; i++) {
-            int64_t pts = output_streams[i]->sync_opts;
-
-            if (!output_streams[i]->filter || output_streams[i]->finished)
-                continue;
-
-            pts = av_rescale_q(pts, output_streams[i]->enc_ctx->time_base,
-                               AV_TIME_BASE_Q);
-            if (pts < min_pts) {
-                min_pts = pts;
-                ost = output_streams[i];
-            }
-        }
-
-        if (!ost)
-            break;
-
-        ret = poll_filter(ost);
-
-        if (ret == AVERROR_EOF) {
-            finish_output_stream(ost);
-            ret = 0;
-        } else if (ret == AVERROR(EAGAIN))
-            return 0;
-    }
-
-    return ret;
-}
-
 static void print_final_stats(int64_t total_size)
 {
     uint64_t video_size = 0, audio_size = 0, extra_size = 0, other_size = 0;
@@ -802,7 +756,7 @@ static void print_final_stats(int64_t total_size)
     }
 }
 
-static void print_report(int is_last_report, int64_t timer_start)
+static void print_report(int is_last_report)
 {
     char buf[1024];
     OutputStream *ost;
@@ -812,6 +766,7 @@ static void print_report(int is_last_report, int64_t timer_start)
     int frame_number, vid, i;
     double bitrate, ti1, pts;
     static int64_t last_time = -1;
+    static int64_t timer_start = -1;
     static int qp_histogram[52];
 
     if (!print_stats && !is_last_report)
@@ -822,7 +777,8 @@ static void print_report(int is_last_report, int64_t timer_start)
         /* display the report every 0.5 seconds */
         cur_time = av_gettime_relative();
         if (last_time == -1) {
-            last_time = cur_time;
+            last_time   = cur_time;
+            timer_start = av_gettime_relative();
             return;
         }
         if ((cur_time - last_time) < 500000)
@@ -927,6 +883,55 @@ FF_ENABLE_DEPRECATION_WARNINGS
     if (is_last_report)
         print_final_stats(total_size);
 
+}
+
+/*
+ * Read as many frames from possible from lavfi and encode them.
+ *
+ * Always read from the active stream with the lowest timestamp. If no frames
+ * are available for it then return EAGAIN and wait for more input. This way we
+ * can use lavfi sources that generate unlimited amount of frames without memory
+ * usage exploding.
+ */
+static int poll_filters(void)
+{
+    int i, ret = 0;
+
+    while (ret >= 0 && !received_sigterm) {
+        OutputStream *ost = NULL;
+        int64_t min_pts = INT64_MAX;
+
+        /* choose output stream with the lowest timestamp */
+        for (i = 0; i < nb_output_streams; i++) {
+            int64_t pts = output_streams[i]->sync_opts;
+
+            if (!output_streams[i]->filter || output_streams[i]->finished)
+                continue;
+
+            pts = av_rescale_q(pts, output_streams[i]->enc_ctx->time_base,
+                               AV_TIME_BASE_Q);
+            if (pts < min_pts) {
+                min_pts = pts;
+                ost = output_streams[i];
+            }
+        }
+
+        if (!ost)
+            break;
+
+        ret = poll_filter(ost);
+
+        /* dump report by using the output first video and audio streams */
+        print_report(0);
+
+        if (ret == AVERROR_EOF) {
+            finish_output_stream(ost);
+            ret = 0;
+        } else if (ret == AVERROR(EAGAIN))
+            return 0;
+    }
+
+    return ret;
 }
 
 static void flush_encoders(void)
@@ -2525,7 +2530,6 @@ static int transcode(void)
     AVFormatContext *os;
     OutputStream *ost;
     InputStream *ist;
-    int64_t timer_start;
 
     ret = transcode_init();
     if (ret < 0)
@@ -2533,8 +2537,6 @@ static int transcode(void)
 
     av_log(NULL, AV_LOG_INFO, "Press ctrl-c to stop encoding\n");
     term_init();
-
-    timer_start = av_gettime_relative();
 
 #if HAVE_PTHREADS
     if ((ret = init_input_threads()) < 0)
@@ -2563,9 +2565,6 @@ static int transcode(void)
             av_log(NULL, AV_LOG_ERROR, "Error while filtering: %s\n", errbuf);
             break;
         }
-
-        /* dump report by using the output first video and audio streams */
-        print_report(0, timer_start);
     }
 #if HAVE_PTHREADS
     free_input_threads();
@@ -2590,7 +2589,7 @@ static int transcode(void)
     }
 
     /* dump report by using the first video and audio streams */
-    print_report(1, timer_start);
+    print_report(1);
 
     /* close each encoder */
     for (i = 0; i < nb_output_streams; i++) {
