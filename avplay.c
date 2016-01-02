@@ -1204,7 +1204,7 @@ retry:
     }
 }
 
-static void stream_close(VideoState *is)
+static void player_close(VideoState *is)
 {
     VideoPicture *vp;
     int i;
@@ -1235,7 +1235,7 @@ static void stream_close(VideoState *is)
 static void do_exit(void)
 {
     if (cur_stream) {
-        stream_close(cur_stream);
+        player_close(cur_stream);
         cur_stream = NULL;
     }
     uninit_opts();
@@ -2256,16 +2256,28 @@ static int decode_interrupt_cb(void *ctx)
     return global_video_state && global_video_state->abort_request;
 }
 
-/* this thread gets the stream from the disk or the network */
-static int decode_thread(void *arg)
+static void stream_close(VideoState *is)
 {
-    VideoState *is = arg;
+    /* disable interrupting */
+    global_video_state = NULL;
+
+    /* close each stream */
+    if (is->audio_stream >= 0)
+        stream_component_close(is, is->audio_stream);
+    if (is->video_stream >= 0)
+        stream_component_close(is, is->video_stream);
+    if (is->subtitle_stream >= 0)
+        stream_component_close(is, is->subtitle_stream);
+    if (is->ic) {
+        avformat_close_input(&is->ic);
+    }
+}
+
+static int stream_setup(VideoState *is)
+{
     AVFormatContext *ic = NULL;
     int err, i, ret;
     int st_index[AVMEDIA_TYPE_NB];
-    AVPacket pkt1, *pkt = &pkt1;
-    int eof = 0;
-    int pkt_in_play_range = 0;
     AVDictionaryEntry *t;
     AVDictionary **opts;
     int orig_nb_streams;
@@ -2369,7 +2381,6 @@ static int decode_thread(void *arg)
     if (st_index[AVMEDIA_TYPE_VIDEO] >= 0) {
         ret = stream_component_open(is, st_index[AVMEDIA_TYPE_VIDEO]);
     }
-    is->refresh_tid = SDL_CreateThread(refresh_thread, is);
     if (ret < 0) {
         if (!display_disable)
             is->show_audio = 2;
@@ -2384,6 +2395,23 @@ static int decode_thread(void *arg)
         ret = -1;
         goto fail;
     }
+
+    return 0;
+
+fail:
+    stream_close(is);
+
+    return ret;
+}
+
+/* this thread gets the stream from the disk or the network */
+static int decode_thread(void *arg)
+{
+    VideoState *is        = arg;
+    AVPacket pkt1, *pkt   = &pkt1;
+    AVFormatContext *ic   = is->ic;
+    int pkt_in_play_range = 0;
+    int ret, eof          = 0;
 
     for (;;) {
         if (is->abort_request)
@@ -2499,20 +2527,9 @@ static int decode_thread(void *arg)
     }
 
     ret = 0;
- fail:
-    /* disable interrupting */
-    global_video_state = NULL;
 
-    /* close each stream */
-    if (is->audio_stream >= 0)
-        stream_component_close(is, is->audio_stream);
-    if (is->video_stream >= 0)
-        stream_component_close(is, is->video_stream);
-    if (is->subtitle_stream >= 0)
-        stream_component_close(is, is->subtitle_stream);
-    if (is->ic) {
-        avformat_close_input(&is->ic);
-    }
+fail:
+    stream_close(is);
 
     if (ret != 0) {
         SDL_Event event;
@@ -2536,6 +2553,11 @@ static VideoState *stream_open(const char *filename, AVInputFormat *iformat)
     is->ytop    = 0;
     is->xleft   = 0;
 
+    if (stream_setup(is) < 0) {
+        av_free(is);
+        return NULL;
+    }
+
     /* start video display */
     is->pictq_mutex = SDL_CreateMutex();
     is->pictq_cond  = SDL_CreateCond();
@@ -2544,6 +2566,7 @@ static VideoState *stream_open(const char *filename, AVInputFormat *iformat)
     is->subpq_cond  = SDL_CreateCond();
 
     is->av_sync_type = av_sync_type;
+    is->refresh_tid  = SDL_CreateThread(refresh_thread, is);
     is->parse_tid    = SDL_CreateThread(decode_thread, is);
     if (!is->parse_tid) {
         av_free(is);
