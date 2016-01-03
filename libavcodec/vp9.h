@@ -262,6 +262,8 @@ typedef struct VP9Block {
     enum FilterMode filter;
     VP56mv mv[4 /* b_idx */][2 /* ref */];
     enum BlockSize bs;
+    enum BlockLevel bl;
+    enum BlockPartition bp;
     enum TxfmMode tx, uvtx;
 } VP9Block;
 
@@ -272,7 +274,10 @@ typedef struct VP9Context {
     VP56RangeCoder c;
     VP56RangeCoder *c_b;
     unsigned c_b_size;
-    VP9Block b;
+    VP9Block *b_base, *b;
+
+    // decoding mode
+    int pass, uses_2pass, last_uses_2pass;
 
     // state trackers
     int row, row7, col, col7;
@@ -407,10 +412,11 @@ typedef struct VP9Context {
     DECLARE_ALIGNED(32, uint8_t, edge_emu_buffer)[71 * 80];
 
     // block reconstruction intermediates
-    DECLARE_ALIGNED(32, int16_t, block)[4096];
-    DECLARE_ALIGNED(32, int16_t, uvblock)[2][1024];
-    uint8_t eob[256];
-    uint8_t uveob[2][64];
+    int16_t *block_base, *block;
+    int16_t *uvblock_base[2], *uvblock[2];
+    uint8_t *eob_base, *eob;
+    uint8_t *uveob_base[2], *uveob[2];
+
     VP56mv min_mv, max_mv;
     DECLARE_ALIGNED(32, uint8_t, tmp_y)[64 * 64];
     DECLARE_ALIGNED(32, uint8_t, tmp_uv)[2][32 * 32];

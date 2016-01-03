@@ -42,7 +42,7 @@ static const uint8_t bwh_tab[2][N_BS_SIZES][2] = {
 };
 
 // differential forward probability updates
-static void decode_mode(VP9Context *s, VP9Block *const b)
+static void decode_mode(VP9Context *s, VP9Block *b)
 {
     static const uint8_t left_ctx[N_BS_SIZES] = {
         0x0, 0x8, 0x0, 0x8, 0xc, 0x8, 0xc, 0xe, 0xc, 0xe, 0xf, 0xe, 0xf
@@ -74,6 +74,9 @@ static void decode_mode(VP9Context *s, VP9Block *const b)
         uint8_t *segmap = s->frames[LAST_FRAME].segmentation_map;
         int pred = MAX_SEGMENT - 1;
         int x;
+
+        if (!s->last_uses_2pass)
+            ff_thread_await_progress(&s->frames[LAST_FRAME].tf, row >> 3, 0);
 
         for (y = 0; y < h4; y++)
             for (x = 0; x < w4; x++)
@@ -823,7 +826,7 @@ skip_eob:
 static int decode_coeffs(AVCodecContext *avctx)
 {
     VP9Context *s = avctx->priv_data;
-    VP9Block *const b = &s->b;
+    VP9Block *b = s->b;
     int row = s->row, col = s->col;
     uint8_t (*p)[6][11] = s->prob.coef[b->tx][0 /* y */][!b->intra];
     unsigned (*c)[6][3] = s->counts.coef[b->tx][0 /* y */][!b->intra];
@@ -1074,7 +1077,7 @@ static av_always_inline int check_intra_mode(VP9Context *s, int mode,
 static void intra_recon(AVCodecContext *avctx, ptrdiff_t y_off, ptrdiff_t uv_off)
 {
     VP9Context *s = avctx->priv_data;
-    VP9Block *const b = &s->b;
+    VP9Block *b = s->b;
     int row = s->row, col = s->col;
     int w4 = bwh_tab[1][b->bs][0] << 1, step1d = 1 << b->tx, n;
     int h4 = bwh_tab[1][b->bs][1] << 1, x, y, step = 1 << (b->tx * 2);
@@ -1149,17 +1152,25 @@ static av_always_inline void mc_luma_dir(VP9Context *s, vp9_mc_func(*mc)[2],
                                          uint8_t *dst, ptrdiff_t dst_stride,
                                          const uint8_t *ref,
                                          ptrdiff_t ref_stride,
+                                         ThreadFrame *ref_frame,
                                          ptrdiff_t y, ptrdiff_t x,
                                          const VP56mv *mv,
                                          int bw, int bh, int w, int h)
 {
     int mx = mv->x, my = mv->y;
+    int th;
 
     y   += my >> 3;
     x   += mx >> 3;
     ref += y * ref_stride + x;
     mx  &= 7;
     my  &= 7;
+
+    // we use +7 because the last 7 pixels of each sbrow can be changed in
+    // the longest loopfilter of the next sbrow
+    th = (y + bh + 4 * !!my + 7) >> 6;
+    ff_thread_await_progress(ref_frame, FFMAX(th, 0), 0);
+
     // FIXME bilinear filter only needs 0/1 pixels, not 3/4
     if (x < !!mx * 3 || y < !!my * 3 ||
         x + !!mx * 4 > w - bw || y + !!my * 4 > h - bh) {
@@ -1182,11 +1193,13 @@ static av_always_inline void mc_chroma_dir(VP9Context *s, vp9_mc_func(*mc)[2],
                                            ptrdiff_t src_stride_u,
                                            const uint8_t *ref_v,
                                            ptrdiff_t src_stride_v,
+                                           ThreadFrame *ref_frame,
                                            ptrdiff_t y, ptrdiff_t x,
                                            const VP56mv *mv,
                                            int bw, int bh, int w, int h)
 {
     int mx = mv->x, my = mv->y;
+    int th;
 
     y     += my >> 4;
     x     += mx >> 4;
@@ -1194,6 +1207,12 @@ static av_always_inline void mc_chroma_dir(VP9Context *s, vp9_mc_func(*mc)[2],
     ref_v += y * src_stride_v + x;
     mx    &= 15;
     my    &= 15;
+
+    // we use +7 because the last 7 pixels of each sbrow can be changed in
+    // the longest loopfilter of the next sbrow
+    th = (y + bh + 4 * !!my + 7) >> 5;
+    ff_thread_await_progress(ref_frame, FFMAX(th, 0), 0);
+
     // FIXME bilinear filter only needs 0/1 pixels, not 3/4
     if (x < !!mx * 3 || y < !!my * 3 ||
         x + !!mx * 4 > w - bw || y + !!my * 4 > h - bh) {
@@ -1227,7 +1246,7 @@ static int inter_recon(AVCodecContext *avctx)
         { 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 4 },
     };
     VP9Context *s = avctx->priv_data;
-    VP9Block *const b = &s->b;
+    VP9Block *b = s->b;
     int row = s->row, col = s->col;
     ThreadFrame *tref1 = &s->refs[s->refidx[b->ref[0]]];
     ThreadFrame *tref2 = b->comp ? &s->refs[s->refidx[b->ref[1]]] : NULL;
@@ -1243,36 +1262,36 @@ static int inter_recon(AVCodecContext *avctx)
     if (b->bs > BS_8x8) {
         if (b->bs == BS_8x4) {
             mc_luma_dir(s, s->dsp.mc[3][b->filter][0], s->dst[0], ls_y,
-                        ref1->data[0], ref1->linesize[0],
+                        ref1->data[0], ref1->linesize[0], tref1,
                         row << 3, col << 3, &b->mv[0][0], 8, 4, w, h);
             mc_luma_dir(s, s->dsp.mc[3][b->filter][0],
                         s->dst[0] + 4 * ls_y, ls_y,
-                        ref1->data[0], ref1->linesize[0],
+                        ref1->data[0], ref1->linesize[0], tref1,
                         (row << 3) + 4, col << 3, &b->mv[2][0], 8, 4, w, h);
 
             if (b->comp) {
                 mc_luma_dir(s, s->dsp.mc[3][b->filter][1], s->dst[0], ls_y,
-                            ref2->data[0], ref2->linesize[0],
+                            ref2->data[0], ref2->linesize[0], tref2,
                             row << 3, col << 3, &b->mv[0][1], 8, 4, w, h);
                 mc_luma_dir(s, s->dsp.mc[3][b->filter][1],
                             s->dst[0] + 4 * ls_y, ls_y,
-                            ref2->data[0], ref2->linesize[0],
+                            ref2->data[0], ref2->linesize[0], tref2,
                             (row << 3) + 4, col << 3, &b->mv[2][1], 8, 4, w, h);
             }
         } else if (b->bs == BS_4x8) {
             mc_luma_dir(s, s->dsp.mc[4][b->filter][0], s->dst[0], ls_y,
-                        ref1->data[0], ref1->linesize[0],
+                        ref1->data[0], ref1->linesize[0], tref1,
                         row << 3, col << 3, &b->mv[0][0], 4, 8, w, h);
             mc_luma_dir(s, s->dsp.mc[4][b->filter][0], s->dst[0] + 4, ls_y,
-                        ref1->data[0], ref1->linesize[0],
+                        ref1->data[0], ref1->linesize[0], tref1,
                         row << 3, (col << 3) + 4, &b->mv[1][0], 4, 8, w, h);
 
             if (b->comp) {
                 mc_luma_dir(s, s->dsp.mc[4][b->filter][1], s->dst[0], ls_y,
-                            ref2->data[0], ref2->linesize[0],
+                            ref2->data[0], ref2->linesize[0], tref2,
                             row << 3, col << 3, &b->mv[0][1], 4, 8, w, h);
                 mc_luma_dir(s, s->dsp.mc[4][b->filter][1], s->dst[0] + 4, ls_y,
-                            ref2->data[0], ref2->linesize[0],
+                            ref2->data[0], ref2->linesize[0], tref2,
                             row << 3, (col << 3) + 4, &b->mv[1][1], 4, 8, w, h);
             }
         } else {
@@ -1281,34 +1300,34 @@ static int inter_recon(AVCodecContext *avctx)
             // FIXME if two horizontally adjacent blocks have the same MV,
             // do a w8 instead of a w4 call
             mc_luma_dir(s, s->dsp.mc[4][b->filter][0], s->dst[0], ls_y,
-                        ref1->data[0], ref1->linesize[0],
+                        ref1->data[0], ref1->linesize[0], tref1,
                         row << 3, col << 3, &b->mv[0][0], 4, 4, w, h);
             mc_luma_dir(s, s->dsp.mc[4][b->filter][0], s->dst[0] + 4, ls_y,
-                        ref1->data[0], ref1->linesize[0],
+                        ref1->data[0], ref1->linesize[0], tref1,
                         row << 3, (col << 3) + 4, &b->mv[1][0], 4, 4, w, h);
             mc_luma_dir(s, s->dsp.mc[4][b->filter][0],
                         s->dst[0] + 4 * ls_y, ls_y,
-                        ref1->data[0], ref1->linesize[0],
+                        ref1->data[0], ref1->linesize[0], tref1,
                         (row << 3) + 4, col << 3, &b->mv[2][0], 4, 4, w, h);
             mc_luma_dir(s, s->dsp.mc[4][b->filter][0],
                         s->dst[0] + 4 * ls_y + 4, ls_y,
-                        ref1->data[0], ref1->linesize[0],
+                        ref1->data[0], ref1->linesize[0], tref1,
                         (row << 3) + 4, (col << 3) + 4, &b->mv[3][0], 4, 4, w, h);
 
             if (b->comp) {
                 mc_luma_dir(s, s->dsp.mc[4][b->filter][1], s->dst[0], ls_y,
-                            ref2->data[0], ref2->linesize[0],
+                            ref2->data[0], ref2->linesize[0], tref2,
                             row << 3, col << 3, &b->mv[0][1], 4, 4, w, h);
                 mc_luma_dir(s, s->dsp.mc[4][b->filter][1], s->dst[0] + 4, ls_y,
-                            ref2->data[0], ref2->linesize[0],
+                            ref2->data[0], ref2->linesize[0], tref2,
                             row << 3, (col << 3) + 4, &b->mv[1][1], 4, 4, w, h);
                 mc_luma_dir(s, s->dsp.mc[4][b->filter][1],
                             s->dst[0] + 4 * ls_y, ls_y,
-                            ref2->data[0], ref2->linesize[0],
+                            ref2->data[0], ref2->linesize[0], tref2,
                             (row << 3) + 4, col << 3, &b->mv[2][1], 4, 4, w, h);
                 mc_luma_dir(s, s->dsp.mc[4][b->filter][1],
                             s->dst[0] + 4 * ls_y + 4, ls_y,
-                            ref2->data[0], ref2->linesize[0],
+                            ref2->data[0], ref2->linesize[0], tref2,
                             (row << 3) + 4, (col << 3) + 4, &b->mv[3][1], 4, 4, w, h);
             }
         }
@@ -1318,12 +1337,12 @@ static int inter_recon(AVCodecContext *avctx)
         int bh  = bwh_tab[0][b->bs][1] * 4;
 
         mc_luma_dir(s, s->dsp.mc[bwl][b->filter][0], s->dst[0], ls_y,
-                    ref1->data[0], ref1->linesize[0],
+                    ref1->data[0], ref1->linesize[0], tref1,
                     row << 3, col << 3, &b->mv[0][0], bw, bh, w, h);
 
         if (b->comp)
             mc_luma_dir(s, s->dsp.mc[bwl][b->filter][1], s->dst[0], ls_y,
-                        ref2->data[0], ref2->linesize[0],
+                        ref2->data[0], ref2->linesize[0], tref2,
                         row << 3, col << 3, &b->mv[0][1], bw, bh, w, h);
     }
 
@@ -1347,7 +1366,7 @@ static int inter_recon(AVCodecContext *avctx)
         mc_chroma_dir(s, s->dsp.mc[bwl][b->filter][0],
                       s->dst[1], s->dst[2], ls_uv,
                       ref1->data[1], ref1->linesize[1],
-                      ref1->data[2], ref1->linesize[2],
+                      ref1->data[2], ref1->linesize[2], tref1,
                       row << 2, col << 2, &mvuv, bw, bh, w, h);
 
         if (b->comp) {
@@ -1362,7 +1381,7 @@ static int inter_recon(AVCodecContext *avctx)
             mc_chroma_dir(s, s->dsp.mc[bwl][b->filter][1],
                           s->dst[1], s->dst[2], ls_uv,
                           ref2->data[1], ref2->linesize[1],
-                          ref2->data[2], ref2->linesize[2],
+                          ref2->data[2], ref2->linesize[2], tref2,
                           row << 2, col << 2, &mvuv, bw, bh, w, h);
         }
     }
@@ -1548,12 +1567,23 @@ static av_always_inline void mask_edges(VP9Filter *lflvl, int is_uv,
     }
 }
 
+static void next_block(VP9Context *s, int w4, int h4)
+{
+    s->b++;
+    s->block      += w4 * h4 * 64;
+    s->uvblock[0] += w4 * h4 * 16;
+    s->uvblock[1] += w4 * h4 * 16;
+    s->eob        += w4 * h4 *  4;
+    s->uveob[0]   += w4 * h4;
+    s->uveob[1]   += w4 * h4;
+}
+
 int ff_vp9_decode_block(AVCodecContext *avctx, int row, int col,
                         VP9Filter *lflvl, ptrdiff_t yoff, ptrdiff_t uvoff,
                         enum BlockLevel bl, enum BlockPartition bp)
 {
     VP9Context *s = avctx->priv_data;
-    VP9Block *const b = &s->b;
+    VP9Block *b = s->b;
     AVFrame *cur_frame = s->frames[CUR_FRAME].tf.f;
     enum BlockSize bs = bl * 3 + bp;
     int ret, y, w4 = bwh_tab[1][bs][0], h4 = bwh_tab[1][bs][1], lvl;
@@ -1569,21 +1599,31 @@ int ff_vp9_decode_block(AVCodecContext *avctx, int row, int col,
     s->max_mv.x = 128 + (s->cols - col - w4) * 64;
     s->max_mv.y = 128 + (s->rows - row - h4) * 64;
 
-    b->bs = bs;
-    decode_mode(s, b);
-    b->uvtx = b->tx - (w4 * 2 == (1 << b->tx) || h4 * 2 == (1 << b->tx));
+    if (s->pass < 2) {
+        b->bs = bs;
+        b->bl = bl;
+        b->bp = bp;
 
-    if (!b->skip) {
-        if ((ret = decode_coeffs(avctx)) < 0)
-            return ret;
-    } else {
-        int pl;
+        decode_mode(s, b);
 
-        memset(&s->above_y_nnz_ctx[col * 2], 0, w4 * 2);
-        memset(&s->left_y_nnz_ctx[(row & 7) << 1], 0, h4 * 2);
-        for (pl = 0; pl < 2; pl++) {
-            memset(&s->above_uv_nnz_ctx[pl][col], 0, w4);
-            memset(&s->left_uv_nnz_ctx[pl][row & 7], 0, h4);
+        b->uvtx = b->tx - (w4 * 2 == (1 << b->tx) || h4 * 2 == (1 << b->tx));
+
+        if (!b->skip) {
+            if ((ret = decode_coeffs(avctx)) < 0)
+                return ret;
+        } else {
+            int pl;
+
+            memset(&s->above_y_nnz_ctx[col * 2], 0, w4 * 2);
+            memset(&s->left_y_nnz_ctx[(row & 7) << 1], 0, h4 * 2);
+            for (pl = 0; pl < 2; pl++) {
+                memset(&s->above_uv_nnz_ctx[pl][col], 0, w4);
+                memset(&s->left_uv_nnz_ctx[pl][row & 7], 0, h4);
+            }
+        }
+        if (s->pass == 1) {
+            next_block(s, w4, h4);
+            return 0;
         }
     }
 
@@ -1687,6 +1727,9 @@ int ff_vp9_decode_block(AVCodecContext *avctx, int row, int col,
             s->filter.mblim_lut[lvl] = 2 * (lvl + 2) + limit;
         }
     }
+
+    if (s->pass == 2)
+        next_block(s, w4, h4);
 
     return 0;
 }

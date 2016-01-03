@@ -70,7 +70,7 @@ static void find_ref_mvs(VP9Context *s,
         [BS_4x4]   = { {  0, -1 }, { -1,  0 }, { -1, -1 }, {  0, -2 },
                        { -2,  0 }, { -1, -2 }, { -2, -1 }, { -2, -2 } },
     };
-    VP9Block *const b = &s->b;
+    VP9Block *b = s->b;
     int row = s->row, col = s->col, row7 = s->row7;
     const int8_t (*p)[2] = mv_ref_blk_off[b->bs];
 #define INVALID_MV 0x80008000U
@@ -170,6 +170,9 @@ static void find_ref_mvs(VP9Context *s,
     if (s->use_last_frame_mvs) {
         VP9MVRefPair *mv = get_mv(s, &s->frames[LAST_FRAME], row, col);
 
+        if (!s->last_uses_2pass)
+            ff_thread_await_progress(&s->frames[LAST_FRAME].tf, row >> 3, 0);
+
         if (mv->ref[0] == ref)
             RETURN_MV(mv->mv[0]);
         else if (mv->ref[1] == ref)
@@ -211,6 +214,7 @@ static void find_ref_mvs(VP9Context *s,
     if (s->use_last_frame_mvs) {
         VP9MVRefPair *mv = get_mv(s, &s->frames[LAST_FRAME], row, col);
 
+        // no need to await_progress, because we already did that above
         if (mv->ref[0] != ref && mv->ref[0] >= 0)
             RETURN_SCALE_MV(mv->mv[0],
                             s->signbias[mv->ref[0]] != s->signbias[ref]);
@@ -285,7 +289,7 @@ static av_always_inline int read_mv_component(VP9Context *s, int idx, int hp)
 
 void ff_vp9_fill_mv(VP9Context *s, VP56mv *mv, int mode, int sb)
 {
-    VP9Block *const b = &s->b;
+    VP9Block *b = s->b;
 
     if (mode == ZEROMV) {
         memset(mv, 0, sizeof(*mv) * 2);
