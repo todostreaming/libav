@@ -180,6 +180,10 @@ OBJS-$(CONFIG_COMFORTNOISE_DECODER)    += cngdec.o celp_filters.o
 OBJS-$(CONFIG_COMFORTNOISE_ENCODER)    += cngenc.o
 OBJS-$(CONFIG_CSCD_DECODER)            += cscd.o
 OBJS-$(CONFIG_CYUV_DECODER)            += cyuv.o
+OBJS-$(CONFIG_DCA2_DECODER)            += dcadec2.o dca.o dcadsp2_float.o       \
+                                          dcadsp2_fixed.o dcadata.o dcadata2.o  \
+                                          dca2_exss.o dca2_xll.o dca2_core.o    \
+                                          synth_filter.o
 OBJS-$(CONFIG_DCA_DECODER)             += dcadec.o dca.o dcadsp.o      \
                                           dcadata.o dca_exss.o         \
                                           dca_xll.o synth_filter.o
