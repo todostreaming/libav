@@ -33,6 +33,12 @@ static av_always_inline void clamp_mv(VP56mv *dst, const VP56mv *src,
     dst->y = av_clip(src->y, s->min_mv.y, s->max_mv.y);
 }
 
+static av_always_inline VP9MVRefPair *get_mv(VP9Context *s,
+                                             VP9Frame *f, int row, int col)
+{
+    return &f->mv[row * s->sb_cols * 8 + col];
+}
+
 static void find_ref_mvs(VP9Context *s,
                          VP56mv *pmv, int ref, int z, int idx, int sb)
 {
@@ -125,7 +131,7 @@ static void find_ref_mvs(VP9Context *s,
     } while (0)
 
         if (row > 0) {
-            VP9MVRefPair *mv = &s->mv[0][(row - 1) * s->sb_cols * 8 + col];
+            VP9MVRefPair *mv = get_mv(s, &s->frames[CUR_FRAME], row - 1, col);
 
             if (mv->ref[0] == ref)
                 RETURN_MV(s->above_mv_ctx[2 * col + (sb & 1)][0]);
@@ -133,7 +139,7 @@ static void find_ref_mvs(VP9Context *s,
                 RETURN_MV(s->above_mv_ctx[2 * col + (sb & 1)][1]);
         }
         if (col > s->tiling.tile_col_start) {
-            VP9MVRefPair *mv = &s->mv[0][row * s->sb_cols * 8 + col - 1];
+            VP9MVRefPair *mv = get_mv(s, &s->frames[CUR_FRAME], row, col - 1);
 
             if (mv->ref[0] == ref)
                 RETURN_MV(s->left_mv_ctx[2 * row7 + (sb >> 1)][0]);
@@ -151,7 +157,7 @@ static void find_ref_mvs(VP9Context *s,
 
         if (c >= s->tiling.tile_col_start && c < s->cols &&
             r >= 0 && r < s->rows) {
-            VP9MVRefPair *mv = &s->mv[0][r * s->sb_cols * 8 + c];
+            VP9MVRefPair *mv = get_mv(s, &s->frames[CUR_FRAME], r, c);
 
             if (mv->ref[0] == ref)
                 RETURN_MV(mv->mv[0]);
@@ -162,7 +168,7 @@ static void find_ref_mvs(VP9Context *s,
 
     // MV at this position in previous frame, using same reference frame
     if (s->use_last_frame_mvs) {
-        VP9MVRefPair *mv = &s->mv[1][row * s->sb_cols * 8 + col];
+        VP9MVRefPair *mv = get_mv(s, &s->frames[LAST_FRAME], row, col);
 
         if (mv->ref[0] == ref)
             RETURN_MV(mv->mv[0]);
@@ -186,7 +192,7 @@ static void find_ref_mvs(VP9Context *s,
 
         if (c >= s->tiling.tile_col_start && c < s->cols &&
             r >= 0 && r < s->rows) {
-            VP9MVRefPair *mv = &s->mv[0][r * s->sb_cols * 8 + c];
+            VP9MVRefPair *mv = get_mv(s, &s->frames[CUR_FRAME], r, c);
 
             if (mv->ref[0] != ref && mv->ref[0] >= 0)
                 RETURN_SCALE_MV(mv->mv[0],
@@ -203,7 +209,7 @@ static void find_ref_mvs(VP9Context *s,
 
     // MV at this position in previous frame, using different reference frame
     if (s->use_last_frame_mvs) {
-        VP9MVRefPair *mv = &s->mv[1][row * s->sb_cols * 8 + col];
+        VP9MVRefPair *mv = get_mv(s, &s->frames[LAST_FRAME], row, col);
 
         if (mv->ref[0] != ref && mv->ref[0] >= 0)
             RETURN_SCALE_MV(mv->mv[0],
