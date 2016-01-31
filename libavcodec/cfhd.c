@@ -758,7 +758,7 @@ end:
     return avpkt->size;
 }
 
-static av_cold int cfhd_close_decoder(AVCodecContext *avctx)
+static av_cold int cfhd_decode_close(AVCodecContext *avctx)
 {
     CFHDContext *s = avctx->priv_data;
 
@@ -779,7 +779,7 @@ AVCodec ff_cfhd_decoder = {
     .id             = AV_CODEC_ID_CFHD,
     .priv_data_size = sizeof(CFHDContext),
     .init           = cfhd_decode_init,
-    .close          = cfhd_close_decoder,
+    .close          = cfhd_decode_close,
     .decode         = cfhd_decode,
     .capabilities   = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_FRAME_THREADS,
     .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE | FF_CODEC_CAP_INIT_CLEANUP,
