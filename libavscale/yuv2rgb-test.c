@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     src->height      = h;
     src->formaton    = av_pixformaton_from_pixfmt(AV_PIX_FMT_YUV420P);
     src->data[0]     = av_malloc(src->width * src->height);
-    src->linesize[0] = src->width * 2;
+    src->linesize[0] = src->width;
     src->data[1]     = av_malloc(src->width * src->height / 4);
     src->linesize[1] = src->width / 2;
     src->data[2]     = av_malloc(src->width * src->height / 4);
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     if (!src->data[0] || !src->data[1] || !src->data[2])
         goto end;
 
-    fread(src->data[0], src->linesize[0], h / 2, in);
+    fread(src->data[0], src->linesize[0], h, in);
     for (i = 0; i < h / 2; i++) {
         fread(src->data[1] + i * src->linesize[1], w / 2, 1, in);
         fread(src->data[2] + i * src->linesize[2], w / 2, 1, in);
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
     dst->height = h;
     if (copy) {
         dst->data[0]     = av_malloc(dst->width * dst->height);
-        dst->linesize[0] = dst->width * 2;
+        dst->linesize[0] = dst->width;
         dst->data[1]     = av_malloc(dst->width * dst->height / 4);
         dst->linesize[1] = dst->width / 2;
         dst->data[2]     = av_malloc(dst->width * dst->height / 4);
