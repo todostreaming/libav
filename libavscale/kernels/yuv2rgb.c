@@ -46,15 +46,7 @@ static int yuv2rgb_kernel_init(AVScaleContext *ctx,
         stage->do_common = yuv2rgb;
     else
         return AVERROR(ENOSYS);
-    /* only works for intermedia stages, not final */
-    int dstride = (ctx->dst_w + 31) & ~31;
 
-    for (int i = 0; i < ctx->dst_fmt->nb_components; i++) {
-        stage->dst[i] = av_mallocz(ctx->dst_h * dstride);
-        if (!stage->dst[i])
-            return AVERROR(ENOMEM);
-        stage->dst_stride[i] = dstride;
-    }
 
     return 0;
 }
