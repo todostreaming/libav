@@ -15,11 +15,12 @@
  * License along with Libav; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+
 #include "config.h"
 
 #include "avscale.h"
 
-unsigned avscale_version(void)
+unsigned int avscale_version(void)
 {
     return LIBAVUTIL_VERSION_INT;
 }
@@ -31,6 +32,6 @@ const char *avscale_configuration(void)
 
 const char *avscale_license(void)
 {
-#define LICENSE_PREFIX "libavutil license: "
+#define LICENSE_PREFIX "libavscale license: "
     return LICENSE_PREFIX LIBAV_LICENSE + sizeof(LICENSE_PREFIX) - 1;
 }

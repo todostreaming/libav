@@ -95,7 +95,7 @@ int avscale_process_frame(AVScaleContext *c, AVFrame *dst, AVFrame *src);
 /**
  * Return the LIBAVSCALE_VERSION_INT constant.
  */
-unsigned avscale_version(void);
+unsigned int avscale_version(void);
 
 /**
  * Return the libavscale build-time configuration.
