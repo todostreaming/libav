@@ -55,7 +55,7 @@ static int prepare_next_stage(AVScaleContext *ctx, AVScaleFilterStage **stage,
      * all intermediate processing is done in planar form after all
      * (because I say so). */
     if (*stage) {
-        for (i = 0; i < ctx->dst_fmt->nb_components; i++) {
+        for (i = 0; i < ctx->cur_fmt->nb_components; i++) {
             int w = AV_CEIL_RSHIFT(ctx->dst_w,
                                    ctx->cur_fmt->component[i].h_sub);
             int h = AV_CEIL_RSHIFT(ctx->dst_h,
@@ -145,7 +145,6 @@ int avscale_build_chain(AVScaleContext *ctx, AVFrame *src, AVFrame *dst)
         if ((ctx->src_fmt->pixel_size != ctx->dst_fmt->pixel_size) ||
             (ctx->cur_w != ctx->dst_w || ctx->cur_h != ctx->dst_h)) {
             if (ctx->cur_w != ctx->dst_w || ctx->cur_h != ctx->dst_h)
-                // scale does not seem to work for yuv
                 if ((ret = prepare_next_stage(ctx, &stage, "scale")) < 0)
                     goto end;
         /* Same format */
