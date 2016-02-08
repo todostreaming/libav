@@ -286,7 +286,7 @@ int avscale_process_frame(AVScaleContext *ctx, AVFrame *srcf, AVFrame *dstf)
                              src2, sstride, dst2, dstride,
                              stage->w[0], stage->h[0]);
 
-        /* copy pointers since do_common might have changed them */
+        /* copy pointers again since do_common might have changed them */
         memcpy(src2, src, sizeof(src2));
         memcpy(dst2, dst, sizeof(dst2));
 
