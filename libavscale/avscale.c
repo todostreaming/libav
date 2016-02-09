@@ -90,7 +90,7 @@ err:
 int avscale_supported_input(AVPixelFormaton *fmt)
 {
 
-    if (fmt->model != AVCOL_MODEL_RGB ||
+    if (fmt->model != AVCOL_MODEL_RGB &&
         fmt->model != AVCOL_MODEL_YUV ||
         fmt->pixel_size > 16) {
         return 0;
@@ -102,7 +102,7 @@ int avscale_supported_input(AVPixelFormaton *fmt)
 int avscale_supported_output(AVPixelFormaton *fmt)
 {
 
-    if (fmt->model != AVCOL_MODEL_RGB ||
+    if (fmt->model != AVCOL_MODEL_RGB &&
         fmt->model != AVCOL_MODEL_YUV ||
         fmt->pixel_size > 16) {
         return 0;
