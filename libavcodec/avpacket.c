@@ -96,6 +96,25 @@ int av_new_packet(AVPacket *pkt, int size)
     return 0;
 }
 
+AVPacket *av_packet_new(int size)
+{
+    AVBufferRef *buf = NULL;
+    AVPacket *pkt    = av_packet_alloc();
+    int ret          = packet_alloc(&buf, size);
+
+    if (ret < 0 || !pkt) {
+        av_packet_free(&pkt);
+        av_buffer_unref(&buf);
+        return NULL;
+    }
+
+    pkt->buf      = buf;
+    pkt->data     = buf->data;
+    pkt->size     = size;
+
+    return pkt;
+}
+
 void av_shrink_packet(AVPacket *pkt, int size)
 {
     if (pkt->size <= size)

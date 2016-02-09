@@ -3509,6 +3509,18 @@ void avsubtitle_free(AVSubtitle *sub);
 AVPacket *av_packet_alloc(void);
 
 /**
+ * Allocate an AVPacket and set its fields to default values and
+ * prepare a buffer suitable to store size bytes of playload.
+ *
+ * The resulting struct must be freed using av_packet_free().
+ *
+ * @return An AVPacket filled with default values or NULL on failure.
+ *
+ * @see av_packet_alloc
+ */
+AVPacket *av_packet_new(int size);
+
+/**
  * Create a new packet that references the same data as src.
  *
  * This is a shortcut for av_packet_alloc()+av_packet_ref().
