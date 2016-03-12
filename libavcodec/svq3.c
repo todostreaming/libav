@@ -780,6 +780,9 @@ static int svq3_decode_slice_header(AVCodecContext *avctx)
     int i, header;
     unsigned slice_id;
 
+    av_log(avctx, AV_LOG_INFO|AV_LOG_C(111), "slice start at %d/%d ",
+           get_bits_count(&h->gb) / 8, get_bits_count(&h->gb) % 8);
+
     header = get_bits(&h->gb, 8);
 
     if (((header & 0x9F) != 1 && (header & 0x9F) != 2) || (header & 0x60) == 0) {
@@ -792,6 +795,8 @@ static int svq3_decode_slice_header(AVCodecContext *avctx)
         s->next_slice_index = get_bits_count(&h->gb) +
                               8 * show_bits(&h->gb, 8 * length) +
                               8 * length;
+
+        av_log(avctx, AV_LOG_INFO|AV_LOG_C(121), "next %d/%d\n", s->next_slice_index / 8, s->next_slice_index % 8);
 
         if (s->next_slice_index > h->gb.size_in_bits) {
             av_log(avctx, AV_LOG_ERROR, "slice after bitstream end\n");
@@ -1153,6 +1158,7 @@ static int svq3_decode_frame(AVCodecContext *avctx, void *data,
         return 0;
     }
 
+    av_log(avctx, AV_LOG_INFO|AV_LOG_C(123), "Frame Start\n");
     init_get_bits(&h->gb, buf, 8 * buf_size);
 
     sl->mb_x = sl->mb_y = sl->mb_xy = 0;
@@ -1269,15 +1275,19 @@ static int svq3_decode_frame(AVCodecContext *avctx, void *data,
             unsigned mb_type;
             sl->mb_xy = sl->mb_x + sl->mb_y * h->mb_stride;
 
-            if ((get_bits_count(&h->gb) + 7) >= h->gb.size_in_bits &&
-                ((get_bits_count(&h->gb) & 7) == 0 ||
-                 show_bits(&h->gb, -get_bits_count(&h->gb) & 7) == 0)) {
-                skip_bits(&h->gb, s->next_slice_index - get_bits_count(&h->gb));
-                h->gb.size_in_bits = 8 * buf_size;
+            if ((get_bits_left(&h->gb)) <= 7) {
+                av_log(avctx, AV_LOG_INFO|AV_LOG_C(143), "count %d left %d pad %d\n",
+                       get_bits_count(&h->gb) & 7, get_bits_left(&h->gb),
+                       show_bits(&h->gb, get_bits_left(&h->gb) & 7));
 
-                if (svq3_decode_slice_header(avctx))
-                    return -1;
+                if (((get_bits_count(&h->gb) & 7) == 0 ||
+                    show_bits(&h->gb, get_bits_left(&h->gb) & 7) == 0)) {
+                    skip_bits(&h->gb, s->next_slice_index - get_bits_count(&h->gb));
+                    h->gb.size_in_bits = 8 * buf_size;
 
+                    if (svq3_decode_slice_header(avctx))
+                        return -1;
+                }
                 /* TODO: support s->mb_skip_run */
             }
 
@@ -1323,6 +1333,8 @@ static int svq3_decode_frame(AVCodecContext *avctx, void *data,
     } else {
         av_frame_unref(s->cur_pic->f);
     }
+
+    av_log(avctx, AV_LOG_INFO|AV_LOG_C(123), "Frame End\n");
 
     return buf_size;
 }
