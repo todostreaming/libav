@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavutil/avstring.h"
 #include "libavutil/internal.h"
 #include "libavutil/opt.h"
 #include "libavutil/mem.h"
@@ -85,6 +86,9 @@ typedef struct X264Context {
     int noise_reduction;
 
     char *x264_params;
+    char *x264_quant_offsets;
+    float *quant_offsets;
+    int nb_quant_offsets;
 } X264Context;
 
 static void X264_log(void *p, int level, const char *fmt, va_list args)
@@ -259,6 +263,11 @@ static int X264_frame(AVCodecContext *ctx, AVPacket *pkt, const AVFrame *frame,
             break;
         }
         reconfig_encoder(ctx, frame);
+        if (x4->nb_quant_offsets) {
+            int nb_mb = FFALIGN(ctx->width, 16) * FFALIGN(ctx->height, 16) / (16 * 16);
+            if (x4->nb_quant_offsets >= nb_mb)
+                x4->pic.prop.quant_offsets = x4->quant_offsets;
+        }
     }
     do {
         if (x264_encoder_encode(x4->enc, &nal, &nnal, frame? &x4->pic: NULL, &pic_out) < 0)
@@ -345,6 +354,32 @@ static int convert_pix_fmt(enum AVPixelFormat pix_fmt)
     case AV_PIX_FMT_NV21:      return X264_CSP_NV21;
 #endif
     };
+    return 0;
+}
+
+static int parse_quant(X264Context *x4, const char *offsets)
+{
+    int nb_quant = 0;
+    int size     = 0;
+    int ret;
+    while (*offsets) {
+        char *buf = av_get_token(&offsets, ":");
+        if (!buf)
+            return AVERROR(ENOMEM);
+        nb_quant++;
+        if (size < nb_quant * sizeof(*x4->quant_offsets)) {
+            size = 2 * nb_quant * sizeof(*x4->quant_offsets);
+            if ((ret = av_reallocp(&x4->quant_offsets, size)) < 0) {
+                av_freep(&buf);
+                return ret;
+            }
+
+        }
+        x4->quant_offsets[nb_quant - 1] = strtof(buf, NULL);
+        if (*offsets)
+            offsets++;
+    }
+    x4->nb_quant_offsets = nb_quant;
     return 0;
 }
 
@@ -660,6 +695,12 @@ FF_ENABLE_DEPRECATION_WARNINGS
     cpb_props->max_bitrate = x4->params.rc.i_vbv_max_bitrate * 1000;
     cpb_props->avg_bitrate = x4->params.rc.i_bitrate         * 1000;
 
+    if (x4->x264_quant_offsets) {
+        int ret = parse_quant(x4, x4->x264_quant_offsets);
+        if (ret < 0)
+            return ret;
+    }
+
     return 0;
 }
 
@@ -769,6 +810,7 @@ static const AVOption options[] = {
     { "noise_reduction", "Noise reduction",                               OFFSET(noise_reduction), AV_OPT_TYPE_INT, { .i64 = -1 }, INT_MIN, INT_MAX, VE },
 
     { "x264-params",  "Override the x264 configuration using a :-separated list of key=value parameters", OFFSET(x264_params), AV_OPT_TYPE_STRING, { 0 }, 0, 0, VE },
+    { "qpoffsets", "Per-macroblock quantizer offsets :-separated", OFFSET(x264_quant_offsets), AV_OPT_TYPE_STRING, { 0 }, 0, 0, VE },
     { NULL },
 };
 
