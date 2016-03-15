@@ -75,6 +75,9 @@ typedef struct SVQ3Context {
     H264Picture *cur_pic;
     H264Picture *next_pic;
     H264Picture *last_pic;
+    GetBitContext gb;
+    uint8_t *slice_buf;
+    int slice_size;
     int halfpel_flag;
     int thirdpel_flag;
     int unknown_flag;
@@ -781,41 +784,49 @@ static int svq3_decode_slice_header(AVCodecContext *avctx)
     unsigned slice_id;
 
     av_log(avctx, AV_LOG_INFO|AV_LOG_C(111), "slice start at %d/%d ",
-           get_bits_count(&h->gb) / 8, get_bits_count(&h->gb) % 8);
+           get_bits_count(&s->gb) / 8, get_bits_count(&s->gb) % 8);
 
-    header = get_bits(&h->gb, 8);
+    header = get_bits(&s->gb, 8);
 
     if (((header & 0x9F) != 1 && (header & 0x9F) != 2) || (header & 0x60) == 0) {
         /* TODO: what? */
         av_log(avctx, AV_LOG_ERROR, "unsupported slice header (%02X)\n", header);
         return -1;
     } else {
+        int slice_size;
         int length = header >> 5 & 3;
 
-        s->next_slice_index = get_bits_count(&h->gb) +
-                              8 * show_bits(&h->gb, 8 * length) +
+        s->next_slice_index = get_bits_count(&s->gb) +
+                              8 * show_bits(&s->gb, 8 * length) +
                               8 * length;
 
         av_log(avctx, AV_LOG_INFO|AV_LOG_C(121), "next %d/%d\n", s->next_slice_index / 8, s->next_slice_index % 8);
 
-        if (s->next_slice_index > h->gb.size_in_bits) {
+        if (s->next_slice_index > s->gb.size_in_bits) {
             av_log(avctx, AV_LOG_ERROR, "slice after bitstream end\n");
             return -1;
         }
 
-        h->gb.size_in_bits = s->next_slice_index - 8 * (length - 1);
-        skip_bits(&h->gb, 8);
+        // TODO make it simpler
+        slice_size = (7 + s->next_slice_index - 8 * (length - 1)) / 8;
+        skip_bits(&s->gb, 8);
+
+        av_fast_malloc(&s->slice_buf, &s->slice_size, slice_size + AV_INPUT_BUFFER_PADDING_SIZE);
+        if (!s->slice_buf)
+            return AVERROR(ENOMEM);
+        memcpy(s->slice_buf, s->gb.buffer + s->gb.index / 8, s->slice_size);
+
+        init_get_bits(&h->gb, s->slice_buf, slice_size);
 
         if (s->watermark_key) {
-            uint32_t header = AV_RL32(&h->gb.buffer[(get_bits_count(&h->gb) >> 3) + 1]);
-            AV_WL32(&h->gb.buffer[(get_bits_count(&h->gb) >> 3) + 1],
-                    header ^ s->watermark_key);
+            uint32_t header = AV_RL32(&s->gb.buffer[(get_bits_count(&s->gb) >> 3) + 1]);
+            AV_WL32(&h->gb.buffer[1], header ^ s->watermark_key);
         }
         if (length > 0) {
-            memcpy((uint8_t *) &h->gb.buffer[get_bits_count(&h->gb) >> 3],
-                   &h->gb.buffer[h->gb.size_in_bits >> 3], length - 1);
+            memcpy(&h->gb.buffer,
+                   &s->gb.buffer[slice_size], length - 1);
         }
-        skip_bits_long(&h->gb, 0);
+        skip_bits_long(&s->gb, s->next_slice_index * 8);
     }
 
     if ((slice_id = svq3_get_ue_golomb(&h->gb)) >= 3) {
@@ -1159,7 +1170,9 @@ static int svq3_decode_frame(AVCodecContext *avctx, void *data,
     }
 
     av_log(avctx, AV_LOG_INFO|AV_LOG_C(123), "Frame Start\n");
-    init_get_bits(&h->gb, buf, 8 * buf_size);
+    ret = init_get_bits(&s->gb, buf, 8 * buf_size);
+    if (ret < 0)
+        return ret;
 
     sl->mb_x = sl->mb_y = sl->mb_xy = 0;
 
@@ -1282,8 +1295,6 @@ static int svq3_decode_frame(AVCodecContext *avctx, void *data,
 
                 if (((get_bits_count(&h->gb) & 7) == 0 ||
                     show_bits(&h->gb, get_bits_left(&h->gb) & 7) == 0)) {
-                    skip_bits(&h->gb, s->next_slice_index - get_bits_count(&h->gb));
-                    h->gb.size_in_bits = 8 * buf_size;
 
                     if (svq3_decode_slice_header(avctx))
                         return -1;
@@ -1353,6 +1364,7 @@ static av_cold int svq3_decode_end(AVCodecContext *avctx)
     av_freep(&s->cur_pic);
     av_freep(&s->next_pic);
     av_freep(&s->last_pic);
+    av_freep(&s->slice_buf);
 
     memset(&h->cur_pic, 0, sizeof(h->cur_pic));
 
