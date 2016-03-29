@@ -23,39 +23,39 @@
 
 #include "aac_ac3_parser.h"
 #include "aacadtsdec.h"
-#include "get_bits.h"
+#include "bitstream.h"
 #include "mpeg4audio.h"
 
-int avpriv_aac_parse_header(GetBitContext *gbc, AACADTSHeaderInfo *hdr)
+int avpriv_aac_parse_header(BitstreamContext *bc, AACADTSHeaderInfo *hdr)
 {
     int size, rdb, ch, sr;
     int aot, crc_abs;
 
-    if (get_bits(gbc, 12) != 0xfff)
+    if (bitstream_read(bc, 12) != 0xfff)
         return AAC_AC3_PARSE_ERROR_SYNC;
 
-    skip_bits1(gbc);             /* id */
-    skip_bits(gbc, 2);           /* layer */
-    crc_abs = get_bits1(gbc);    /* protection_absent */
-    aot     = get_bits(gbc, 2);  /* profile_objecttype */
-    sr      = get_bits(gbc, 4);  /* sample_frequency_index */
+    bitstream_skip(bc, 1);             /* id */
+    bitstream_skip(bc, 2);             /* layer */
+    crc_abs = bitstream_read_bit(bc);  /* protection_absent */
+    aot     = bitstream_read(bc, 2);   /* profile_objecttype */
+    sr      = bitstream_read(bc, 4);   /* sample_frequency_index */
     if (!avpriv_mpeg4audio_sample_rates[sr])
         return AAC_AC3_PARSE_ERROR_SAMPLE_RATE;
-    skip_bits1(gbc);             /* private_bit */
-    ch = get_bits(gbc, 3);       /* channel_configuration */
+    bitstream_skip(bc, 1);             /* private_bit */
+    ch = bitstream_read(bc, 3);        /* channel_configuration */
 
-    skip_bits1(gbc);             /* original/copy */
-    skip_bits1(gbc);             /* home */
+    bitstream_skip(bc, 1);             /* original/copy */
+    bitstream_skip(bc, 1);             /* home */
 
     /* adts_variable_header */
-    skip_bits1(gbc);             /* copyright_identification_bit */
-    skip_bits1(gbc);             /* copyright_identification_start */
-    size = get_bits(gbc, 13);    /* aac_frame_length */
+    bitstream_skip(bc, 1);              /* copyright_identification_bit */
+    bitstream_skip(bc, 1);              /* copyright_identification_start */
+    size = bitstream_read(bc, 13);      /* aac_frame_length */
     if (size < AAC_ADTS_HEADER_SIZE)
         return AAC_AC3_PARSE_ERROR_FRAME_SIZE;
 
-    skip_bits(gbc, 11);          /* adts_buffer_fullness */
-    rdb = get_bits(gbc, 2);      /* number_of_raw_data_blocks_in_frame */
+    bitstream_skip(bc, 11);             /* adts_buffer_fullness */
+    rdb = bitstream_read(bc, 2);        /* number_of_raw_data_blocks_in_frame */
 
     hdr->object_type    = aot + 1;
     hdr->chan_config    = ch;
