@@ -257,10 +257,19 @@ static int is_upscale(AVScaleContext *ctx)
     return ctx->cur_w * ctx->cur_h < ctx->dst_w * ctx->dst_h;
 }
 
+
+// TODO use a lookup table
+static int prepare_conversion_stage(AVScaleContext *ctx,
+                                    AVScaleFilterStage **stage)
+{
+    return AVERROR_PATCHWELCOME;
+
+}
+
 int avscale_build_chain(AVScaleContext *ctx, AVFrame *dst, const AVFrame *src)
 {
     AVScaleFilterStage *stage = 0;
-    int ret = 0;
+    int ret = 0, need_scaling = 0, need_upscaling = 0;
     AVPixelFormatonRef *src_fmt_ref = av_pixformaton_ref(src->formaton);
     AVPixelFormatonRef *dst_fmt_ref = av_pixformaton_ref(dst->formaton);
 
@@ -278,23 +287,44 @@ int avscale_build_chain(AVScaleContext *ctx, AVFrame *dst, const AVFrame *src)
     ctx->cur_fmt = ctx->src_fmt;
 
     if (is_matching_all(ctx)) {
-
+        if ((ret = prepare_next_stage(ctx, &stage, "murder")) < 0)
+            goto fail;
+        goto out;
     }
 
     if (!is_planar(ctx->src_fmt)) {
-
+        if ((ret = prepare_next_stage(ctx, &stage, "rgbunpack")) < 0)
+            goto fail;
     }
 
-    if (!is_matching_dimension(ctx)) {
-
-    }
+    need_scaling = !is_matching_dimension(ctx);
+    if (need_scaling)
+        need_upscaling = is_upscale(ctx);
 
     if (!need_conversion(ctx)) {
-
+        if (need_scaling) {
+            if (need_upscaling) {
+                if ((ret = prepare_conversion_stage(ctx, &stage)) < 0)
+                    goto fail;
+                if ((ret = prepare_next_stage(ctx, &stage, "scale")) < 0)
+                    goto fail;
+            } else {
+                if ((ret = prepare_next_stage(ctx, &stage, "scale")) < 0)
+                    goto fail;
+                if ((ret = prepare_conversion_stage(ctx, &stage)) < 0)
+                    goto fail;
+            }
+        }
+    } else {
+        if (need_scaling) {
+            if ((ret = prepare_next_stage(ctx, &stage, "scale")) < 0)
+                    goto fail;
+        }
     }
 
     if (!is_planar(ctx->dst_fmt)) {
-
+        if ((ret = prepare_next_stage(ctx, &stage, "rgbpack")) < 0)
+            goto fail;
     }
 
 out:
