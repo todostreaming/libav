@@ -198,7 +198,7 @@ static int is_matching_all(AVScaleContext *ctx)
     size_t off = offsetof(AVPixelFormaton, model);
     size_t len = sizeof(*src) - off;
 
-    return !!memcmp(src + off, dst + off, len);
+    return !memcmp(src + off, dst + off, len);
 }
 
 static int is_planar(const AVPixelFormaton *fmt)
