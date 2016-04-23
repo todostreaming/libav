@@ -21,11 +21,14 @@
 #define AVCODEC_H263_H
 
 #include <stdint.h>
+
 #include "libavutil/rational.h"
-#include "get_bits.h"
+
+#include "bitstream.h"
 #include "mpegvideo.h"
 #include "h263data.h"
 #include "rl.h"
+#include "vlc.h"
 
 #if !FF_API_ASPECT_EXTENDED
 #define FF_ASPECT_EXTENDED 15

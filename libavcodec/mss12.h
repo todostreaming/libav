@@ -27,8 +27,9 @@
 #define AVCODEC_MSS12_H
 
 #include "libavutil/intreadwrite.h"
+
 #include "avcodec.h"
-#include "get_bits.h"
+#include "bitstream.h"
 #include "bytestream.h"
 
 #define MODEL_MIN_SYMS    2
@@ -48,7 +49,7 @@ typedef struct Model {
 typedef struct ArithCoder {
     int low, high, value;
     union {
-        GetBitContext *gb;
+        BitstreamContext *bc;
         GetByteContext *gB;
     } gbc;
     int (*get_model_sym)(struct ArithCoder *c, Model *m);
