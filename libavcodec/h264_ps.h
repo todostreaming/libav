@@ -31,7 +31,7 @@
 #include "libavutil/rational.h"
 
 #include "avcodec.h"
-#include "get_bits.h"
+#include "bitstream.h"
 #include "h264.h"
 
 #define MAX_SPS_COUNT          32
@@ -142,13 +142,13 @@ typedef struct H264ParamSets {
 /**
  * Decode SPS
  */
-int ff_h264_decode_seq_parameter_set(GetBitContext *gb, AVCodecContext *avctx,
+int ff_h264_decode_seq_parameter_set(BitstreamContext *bc, AVCodecContext *avctx,
                                      H264ParamSets *ps);
 
 /**
  * Decode PPS
  */
-int ff_h264_decode_picture_parameter_set(GetBitContext *gb, AVCodecContext *avctx,
+int ff_h264_decode_picture_parameter_set(BitstreamContext *bc, AVCodecContext *avctx,
                                          H264ParamSets *ps, int bit_length);
 
 #endif /* AVCODEC_H264_PS_H */

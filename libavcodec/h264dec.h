@@ -32,6 +32,7 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/thread.h"
 
+#include "bitstream.h"
 #include "cabac.h"
 #include "error_resilience.h"
 #include "h264_parse.h"
@@ -173,7 +174,7 @@ typedef struct H264Ref {
 
 typedef struct H264SliceContext {
     struct H264Context *h264;
-    GetBitContext gb;
+    BitstreamContext bc;
     ERContext er;
 
     int slice_num;
@@ -542,7 +543,7 @@ void ff_h264_remove_all_refs(H264Context *h);
  */
 int ff_h264_execute_ref_pic_marking(H264Context *h);
 
-int ff_h264_decode_ref_pic_marking(H264SliceContext *sl, GetBitContext *gb,
+int ff_h264_decode_ref_pic_marking(H264SliceContext *sl, BitstreamContext *bc,
                                    const H2645NAL *nal, void *logctx);
 
 void ff_h264_hl_decode_mb(const H264Context *h, H264SliceContext *sl);

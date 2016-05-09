@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "golomb_legacy.h"
+#include "golomb.h"
 #include "hevc.h"
 #include "put_bits.h"
 

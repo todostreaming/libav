@@ -24,7 +24,7 @@
 #ifndef AVCODEC_H264_PARSE_H
 #define AVCODEC_H264_PARSE_H
 
-#include "get_bits.h"
+#include "bitstream.h"
 #include "h264_ps.h"
 
 typedef struct H264PredWeightTable {
@@ -53,7 +53,7 @@ typedef struct H264POCContext {
     int prev_frame_num;         ///< frame_num of the last pic for POC type 1/2
 } H264POCContext;
 
-int ff_h264_pred_weight_table(GetBitContext *gb, const SPS *sps,
+int ff_h264_pred_weight_table(BitstreamContext *bc, const SPS *sps,
                               const int *ref_count, int slice_type_nos,
                               H264PredWeightTable *pwt);
 
@@ -73,7 +73,7 @@ int ff_h264_check_intra_pred_mode(void *logctx, int top_samples_available,
                                   int mode, int is_chroma);
 
 int ff_h264_parse_ref_count(int *plist_count, int ref_count[2],
-                            GetBitContext *gb, const PPS *pps,
+                            BitstreamContext *bc, const PPS *pps,
                             int slice_type_nos, int picture_structure);
 
 int ff_h264_init_poc(int pic_field_poc[2], int *pic_poc,

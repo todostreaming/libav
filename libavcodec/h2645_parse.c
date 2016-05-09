@@ -26,6 +26,7 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/mem.h"
 
+#include "bitstream.h"
 #include "h2645_parse.h"
 
 int ff_h2645_extract_rbsp(const uint8_t *src, int length,
@@ -158,16 +159,15 @@ static int get_bit_length(H2645NAL *nal, int skip_trailing_zeros)
  */
 static int hevc_parse_nal_header(H2645NAL *nal, void *logctx)
 {
-    GetBitContext *gb = &nal->gb;
+    BitstreamContext *bc = &nal->bc;
     int nuh_layer_id;
 
-    if (get_bits1(gb) != 0)
+    if (bitstream_read_bit(bc) != 0)
         return AVERROR_INVALIDDATA;
 
-    nal->type = get_bits(gb, 6);
-
-    nuh_layer_id   = get_bits(gb, 6);
-    nal->temporal_id = get_bits(gb, 3) - 1;
+    nal->type        = bitstream_read(bc, 6);
+    nuh_layer_id     = bitstream_read(bc, 6);
+    nal->temporal_id = bitstream_read(bc, 3) - 1;
     if (nal->temporal_id < 0)
         return AVERROR_INVALIDDATA;
 
@@ -180,13 +180,13 @@ static int hevc_parse_nal_header(H2645NAL *nal, void *logctx)
 
 static int h264_parse_nal_header(H2645NAL *nal, void *logctx)
 {
-    GetBitContext *gb = &nal->gb;
+    BitstreamContext *bc = &nal->bc;
 
-    if (get_bits1(gb) != 0)
+    if (bitstream_read_bit(bc) != 0)
         return AVERROR_INVALIDDATA;
 
-    nal->ref_idc = get_bits(gb, 2);
-    nal->type    = get_bits(gb, 5);
+    nal->ref_idc = bitstream_read(bc, 2);
+    nal->type    = bitstream_read(bc, 5);
 
     av_log(logctx, AV_LOG_DEBUG,
            "nal_unit_type: %d, nal_ref_idc: %d\n",
@@ -257,7 +257,7 @@ int ff_h2645_packet_split(H2645Packet *pkt, const uint8_t *buf, int length,
 
         nal->size_bits = get_bit_length(nal, skip_trailing_zeros);
 
-        ret = init_get_bits(&nal->gb, nal->data, nal->size_bits);
+        ret = bitstream_init(&nal->bc, nal->data, nal->size_bits);
         if (ret < 0)
             return ret;
 
