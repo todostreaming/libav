@@ -710,7 +710,6 @@ int ff_msmpeg4_decode_block(MpegEncContext * s, int16_t * block,
             scan_table = s->inter_scantable.permutated;
         rl_vlc= rl->rl_vlc[s->qscale];
     }
-  {
     for(;;) {
         BITSTREAM_RL_VLC(level, run, &s->bc, rl_vlc, TEX_VLC_BITS, 2);
         if (level==0) {
@@ -804,7 +803,6 @@ int ff_msmpeg4_decode_block(MpegEncContext * s, int16_t * block,
 
         block[scan_table[i]] = level;
     }
-  }
  not_coded:
     if (s->mb_intra) {
         ff_mpeg4_pred_ac(s, block, n, dc_pred_dir);

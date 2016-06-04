@@ -1026,125 +1026,123 @@ static inline int mpeg4_decode_block(Mpeg4DecContext *ctx, int16_t *block,
                 rl_vlc = ff_h263_rl_inter.rl_vlc[s->qscale];
         }
     }
-    {
-        for (;;) {
-            BITSTREAM_RL_VLC(level, run, &s->bc, rl_vlc, TEX_VLC_BITS, 2);
-            if (level == 0) {
-                /* escape */
-                if (rvlc) {
-                    if (bitstream_read_bit(&s->bc) == 0) {
-                        av_log(s->avctx, AV_LOG_ERROR,
-                               "1. marker bit missing in rvlc esc\n");
-                        return -1;
-                    }
+    for (;;) {
+        BITSTREAM_RL_VLC(level, run, &s->bc, rl_vlc, TEX_VLC_BITS, 2);
+        if (level == 0) {
+            /* escape */
+            if (rvlc) {
+                if (bitstream_read_bit(&s->bc) == 0) {
+                    av_log(s->avctx, AV_LOG_ERROR,
+                           "1. marker bit missing in rvlc esc\n");
+                    return -1;
+                }
 
-                    last = bitstream_read_bit(&s->bc);
-                    run  = bitstream_read(&s->bc, 6);
+                last = bitstream_read_bit(&s->bc);
+                run  = bitstream_read(&s->bc, 6);
 
-                    if (bitstream_read_bit(&s->bc) == 0) {
-                        av_log(s->avctx, AV_LOG_ERROR,
-                               "2. marker bit missing in rvlc esc\n");
-                        return -1;
-                    }
+                if (bitstream_read_bit(&s->bc) == 0) {
+                    av_log(s->avctx, AV_LOG_ERROR,
+                           "2. marker bit missing in rvlc esc\n");
+                    return -1;
+                }
 
-                    level = bitstream_read(&s->bc, 11);
+                level = bitstream_read(&s->bc, 11);
 
-                    if (bitstream_read(&s->bc, 5) != 0x10) {
-                        av_log(s->avctx, AV_LOG_ERROR, "reverse esc missing\n");
-                        return -1;
-                    }
+                if (bitstream_read(&s->bc, 5) != 0x10) {
+                    av_log(s->avctx, AV_LOG_ERROR, "reverse esc missing\n");
+                    return -1;
+                }
 
-                    level = level * qmul + qadd;
-                    level = bitstream_apply_sign(&s->bc, level);
+                level = level * qmul + qadd;
+                level = bitstream_apply_sign(&s->bc, level);
+
+                i += run + 1;
+                if (last)
+                    i += 192;
+            } else {
+                int cache = bitstream_peek(&s->bc, 32);
+
+                if (IS_3IV1)
+                    cache ^= 0xC0000000;
+
+                if (cache & 0x80000000) {
+                    if (cache & 0x40000000) {
+                        /* third escape */
+                        bitstream_skip(&s->bc, 2);
+                        last = bitstream_read_bit(&s->bc);
+                        run = bitstream_read(&s->bc, 6);
+
+                        if (IS_3IV1) {
+                            level = bitstream_read_signed(&s->bc, 12);
+                        } else {
+                            if (bitstream_read(&s->bc, 1) == 0) {
+                                av_log(s->avctx, AV_LOG_ERROR,
+                                       "1. marker bit missing in 3. esc\n");
+                                return -1;
+                            }
+
+                            level = bitstream_read_signed(&s->bc, 12);
+
+                            if (bitstream_read(&s->bc, 1) == 0) {
+                                av_log(s->avctx, AV_LOG_ERROR,
+                                       "2. marker bit missing in 3. esc\n");
+                                return -1;
+                            }
+                        }
+
+                        if (level > 0)
+                            level = level * qmul + qadd;
+                        else
+                            level = level * qmul - qadd;
+
+                        if ((unsigned)(level + 2048) > 4095) {
+                            if (s->avctx->err_recognition & AV_EF_BITSTREAM) {
+                                if (level > 2560 || level < -2560) {
+                                    av_log(s->avctx, AV_LOG_ERROR,
+                                           "|level| overflow in 3. esc, qp=%d\n",
+                                           s->qscale);
+                                    return -1;
+                                }
+                            }
+                            level = level < 0 ? -2048 : 2047;
+                        }
 
                     i += run + 1;
                     if (last)
                         i += 192;
-                } else {
-                    int cache = bitstream_peek(&s->bc, 32);
-
-                    if (IS_3IV1)
-                        cache ^= 0xC0000000;
-
-                    if (cache & 0x80000000) {
-                        if (cache & 0x40000000) {
-                            /* third escape */
-                            bitstream_skip(&s->bc, 2);
-                            last = bitstream_read_bit(&s->bc);
-                            run  = bitstream_read(&s->bc, 6);
-
-                            if (IS_3IV1) {
-                                level = bitstream_read_signed(&s->bc, 12);
-                            } else {
-                                if (bitstream_read(&s->bc, 1) == 0) {
-                                    av_log(s->avctx, AV_LOG_ERROR,
-                                           "1. marker bit missing in 3. esc\n");
-                                    return -1;
-                                }
-
-                                level = bitstream_read_signed(&s->bc, 12);
-
-                                if (bitstream_read(&s->bc, 1) == 0) {
-                                    av_log(s->avctx, AV_LOG_ERROR,
-                                           "2. marker bit missing in 3. esc\n");
-                                    return -1;
-                                }
-                            }
-
-                            if (level > 0)
-                                level = level * qmul + qadd;
-                            else
-                                level = level * qmul - qadd;
-
-                            if ((unsigned)(level + 2048) > 4095) {
-                                if (s->avctx->err_recognition & AV_EF_BITSTREAM) {
-                                    if (level > 2560 || level < -2560) {
-                                        av_log(s->avctx, AV_LOG_ERROR,
-                                               "|level| overflow in 3. esc, qp=%d\n",
-                                               s->qscale);
-                                        return -1;
-                                    }
-                                }
-                                level = level < 0 ? -2048 : 2047;
-                            }
-
-                            i += run + 1;
-                            if (last)
-                                i += 192;
-                        } else {
-                            /* second escape */
-                            bitstream_skip(&s->bc, 2);
-                            BITSTREAM_RL_VLC(level, run, &s->bc, rl_vlc, TEX_VLC_BITS, 2);
-                            i    += run + rl->max_run[run >> 7][level / qmul] + 1;  // FIXME opt indexing
-                            level = bitstream_apply_sign(&s->bc, level);
-                        }
                     } else {
-                        /* first escape */
-                        bitstream_skip(&s->bc, 1);
+                        /* second escape */
+                        bitstream_skip(&s->bc, 2);
                         BITSTREAM_RL_VLC(level, run, &s->bc, rl_vlc, TEX_VLC_BITS, 2);
-                        i    += run;
-                        level = level + rl->max_level[run >> 7][(run - 1) & 63] * qmul;  // FIXME opt indexing
+                        i    += run + rl->max_run[run >> 7][level / qmul] + 1;  // FIXME opt indexing
                         level = bitstream_apply_sign(&s->bc, level);
                     }
+                } else {
+                    /* first escape */
+                    bitstream_skip(&s->bc, 1);
+                    BITSTREAM_RL_VLC(level, run, &s->bc, rl_vlc, TEX_VLC_BITS, 2);
+                    i    += run;
+                    level = level + rl->max_level[run >> 7][(run - 1) & 63] * qmul; // FIXME opt indexing
+                    level = bitstream_apply_sign(&s->bc, level);
                 }
-            } else {
-                i    += run;
-                level = bitstream_apply_sign(&s->bc, level);
             }
-            if (i > 62) {
-                i -= 192;
-                if (i & (~63)) {
-                    av_log(s->avctx, AV_LOG_ERROR,
-                           "ac-tex damaged at %d %d\n", s->mb_x, s->mb_y);
-                    return -1;
-                }
-
-                block[scan_table[i]] = level;
-                break;
+        } else {
+            i    += run;
+            level = bitstream_apply_sign(&s->bc, level);
+        }
+        if (i > 62) {
+            i -= 192;
+            if (i & (~63)) {
+                av_log(s->avctx, AV_LOG_ERROR,
+                       "ac-tex damaged at %d %d\n", s->mb_x, s->mb_y);
+                return -1;
             }
 
             block[scan_table[i]] = level;
+            break;
         }
+
+        block[scan_table[i]] = level;
     }
 
 not_coded:

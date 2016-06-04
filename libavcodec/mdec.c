@@ -77,47 +77,45 @@ static inline int mdec_decode_block_intra(MDECContext *a, int16_t *block, int n)
     }
 
     i = 0;
-    {
-        /* now quantify & encode AC coefficients */
-        for (;;) {
-            BITSTREAM_RL_VLC(level, run, &a->bc, rl->rl_vlc[0], TEX_VLC_BITS, 2);
+    /* now quantify & encode AC coefficients */
+    for (;;) {
+        BITSTREAM_RL_VLC(level, run, &a->bc, rl->rl_vlc[0], TEX_VLC_BITS, 2);
 
-            if (level == 127) {
-                break;
-            } else if (level != 0) {
-                i += run;
-                if (i > 63) {
-                    av_log(a->avctx, AV_LOG_ERROR,
-                           "ac-tex damaged at %d %d\n", a->mb_x, a->mb_y);
-                    return AVERROR_INVALIDDATA;
-                }
-                j     = scantable[i];
-                level = (level * qscale * quant_matrix[j]) >> 3;
-                level = bitstream_apply_sign(&a->bc, level);
-            } else {
-                /* escape */
-                run = bitstream_read(&a->bc, 6) + 1;
-                level = bitstream_read_signed(&a->bc, 10);
-                i += run;
-                if (i > 63) {
-                    av_log(a->avctx, AV_LOG_ERROR,
-                           "ac-tex damaged at %d %d\n", a->mb_x, a->mb_y);
-                    return AVERROR_INVALIDDATA;
-                }
-                j = scantable[i];
-                if (level < 0) {
-                    level = -level;
-                    level = (level * qscale * quant_matrix[j]) >> 3;
-                    level = (level - 1) | 1;
-                    level = -level;
-                } else {
-                    level = (level * qscale * quant_matrix[j]) >> 3;
-                    level = (level - 1) | 1;
-                }
+        if (level == 127) {
+            break;
+        } else if (level != 0) {
+            i += run;
+            if (i > 63) {
+                av_log(a->avctx, AV_LOG_ERROR,
+                       "ac-tex damaged at %d %d\n", a->mb_x, a->mb_y);
+                return AVERROR_INVALIDDATA;
             }
-
-            block[j] = level;
+            j     = scantable[i];
+            level = (level * qscale * quant_matrix[j]) >> 3;
+            level = bitstream_apply_sign(&a->bc, level);
+        } else {
+            /* escape */
+            run = bitstream_read(&a->bc, 6) + 1;
+            level = bitstream_read_signed(&a->bc, 10);
+            i += run;
+            if (i > 63) {
+                av_log(a->avctx, AV_LOG_ERROR,
+                       "ac-tex damaged at %d %d\n", a->mb_x, a->mb_y);
+                return AVERROR_INVALIDDATA;
+            }
+            j = scantable[i];
+            if (level < 0) {
+                level = -level;
+                level = (level * qscale * quant_matrix[j]) >> 3;
+                level = (level - 1) | 1;
+                level = -level;
+            } else {
+                level = (level * qscale * quant_matrix[j]) >> 3;
+                level = (level - 1) | 1;
+            }
         }
+
+        block[j] = level;
     }
     a->block_last_index[n] = i;
     return 0;

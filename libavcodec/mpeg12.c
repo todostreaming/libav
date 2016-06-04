@@ -263,53 +263,51 @@ int ff_mpeg1_decode_block_intra(BitstreamContext *bc,
 
     block[0] = dc * quant_matrix[0];
 
-    {
-        /* now quantify & encode AC coefficients */
-        while (1) {
-            int level, run, j;
+    /* now quantify & encode AC coefficients */
+    while (1) {
+        int level, run, j;
 
-            BITSTREAM_RL_VLC(level, run, bc, rl->rl_vlc[0], TEX_VLC_BITS, 2);
+        BITSTREAM_RL_VLC(level, run, bc, rl->rl_vlc[0], TEX_VLC_BITS, 2);
 
-            if (level == 127) {
+        if (level == 127) {
+            break;
+        } else if (level != 0) {
+            i += run;
+            if (i > MAX_INDEX)
                 break;
-            } else if (level != 0) {
-                i += run;
-                if (i > MAX_INDEX)
-                    break;
 
-                j = scantable[i];
-                level = (level * qscale * quant_matrix[j]) >> 4;
-                level = (level - 1) | 1;
-                level = bitstream_apply_sign(bc, level);
-            } else {
-                /* escape */
-                run = bitstream_read(bc, 6) + 1;
-                level = bitstream_read_signed(bc, 8);
+            j = scantable[i];
+            level = (level * qscale * quant_matrix[j]) >> 4;
+            level = (level - 1) | 1;
+            level = bitstream_apply_sign(bc, level);
+        } else {
+            /* escape */
+            run = bitstream_read(bc, 6) + 1;
+            level = bitstream_read_signed(bc, 8);
 
-                if (level == -128) {
-                    level = bitstream_read(bc, 8) - 256;
-                } else if (level == 0) {
-                    level = bitstream_read(bc, 8);
-                }
-
-                i += run;
-                if (i > MAX_INDEX)
-                    break;
-
-                j = scantable[i];
-                if (level < 0) {
-                    level = -level;
-                    level = (level * qscale * quant_matrix[j]) >> 4;
-                    level = (level - 1) | 1;
-                    level = -level;
-                } else {
-                    level = (level * qscale * quant_matrix[j]) >> 4;
-                    level = (level - 1) | 1;
-                }
+            if (level == -128) {
+                level = bitstream_read(bc, 8) - 256;
+            } else if (level == 0) {
+                level = bitstream_read(bc, 8);
             }
 
-            block[j] = level;
+            i += run;
+            if (i > MAX_INDEX)
+                break;
+
+            j = scantable[i];
+            if (level < 0) {
+                level = -level;
+                level = (level * qscale * quant_matrix[j]) >> 4;
+                level = (level - 1) | 1;
+                level = -level;
+            } else {
+                level = (level * qscale * quant_matrix[j]) >> 4;
+                level = (level - 1) | 1;
+            }
         }
+
+        block[j] = level;
     }
 
     if (i > MAX_INDEX)

@@ -149,63 +149,61 @@ static inline int mpeg1_decode_block_inter(MpegEncContext *s,
     const uint16_t *quant_matrix = s->inter_matrix;
     const int qscale             = s->qscale;
 
-    {
-        i = -1;
-        // special case for first coefficient, no need to add second VLC table
-        if (bitstream_peek_signed(&s->bc, 32) < 0) {
-            level = (3 * qscale * quant_matrix[0]) >> 5;
-            level = (level - 1) | 1;
-            if (bitstream_peek(&s->bc, 32) & 0x40000000)
-                level = -level;
-            block[0] = level;
-            i++;
-            bitstream_skip(&s->bc, 2);
-            if (bitstream_peek_signed(&s->bc, 32) <= (int) 0xBFFFFFFF)
-                goto end;
-        }
-        /* now quantify & encode AC coefficients */
-        for (;;) {
-            BITSTREAM_RL_VLC(level, run, &s->bc, rl->rl_vlc[0], TEX_VLC_BITS, 2);
+    i = -1;
+    // special case for first coefficient, no need to add second VLC table
+    if (bitstream_peek_signed(&s->bc, 32) < 0) {
+        level = (3 * qscale * quant_matrix[0]) >> 5;
+        level = (level - 1) | 1;
+        if (bitstream_peek(&s->bc, 32) & 0x40000000)
+            level = -level;
+        block[0] = level;
+        i++;
+        bitstream_skip(&s->bc, 2);
+        if (bitstream_peek_signed(&s->bc, 32) <= (int) 0xBFFFFFFF)
+            goto end;
+    }
+    /* now quantify & encode AC coefficients */
+    for (;;) {
+        BITSTREAM_RL_VLC(level, run, &s->bc, rl->rl_vlc[0], TEX_VLC_BITS, 2);
 
-            if (level != 0) {
-                i += run;
-                if (i > MAX_INDEX)
-                    break;
-                j = scantable[i];
+        if (level != 0) {
+            i += run;
+            if (i > MAX_INDEX)
+                break;
+            j = scantable[i];
+            level = ((level * 2 + 1) * qscale * quant_matrix[j]) >> 5;
+            level = (level - 1) | 1;
+            level = bitstream_apply_sign(&s->bc, level);
+        } else {
+            /* escape */
+            run = bitstream_read(&s->bc, 6) + 1;
+            level = bitstream_read_signed(&s->bc, 8);
+            if (level == -128) {
+                level = bitstream_read(&s->bc, 8) - 256;
+            } else if (level == 0) {
+                level = bitstream_read(&s->bc, 8);
+            }
+            i += run;
+            if (i > MAX_INDEX)
+                break;
+            j = scantable[i];
+            if (level < 0) {
+                level = -level;
                 level = ((level * 2 + 1) * qscale * quant_matrix[j]) >> 5;
                 level = (level - 1) | 1;
-                level = bitstream_apply_sign(&s->bc, level);
+                level = -level;
             } else {
-                /* escape */
-                run   = bitstream_read(&s->bc, 6) + 1;
-                level = bitstream_read_signed(&s->bc, 8);
-                if (level == -128) {
-                    level = bitstream_read(&s->bc, 8) - 256;
-                } else if (level == 0) {
-                    level = bitstream_read(&s->bc, 8);
-                }
-                i += run;
-                if (i > MAX_INDEX)
-                    break;
-                j = scantable[i];
-                if (level < 0) {
-                    level = -level;
-                    level = ((level * 2 + 1) * qscale * quant_matrix[j]) >> 5;
-                    level = (level - 1) | 1;
-                    level = -level;
-                } else {
-                    level = ((level * 2 + 1) * qscale * quant_matrix[j]) >> 5;
-                    level = (level - 1) | 1;
-                }
+                level = ((level * 2 + 1) * qscale * quant_matrix[j]) >> 5;
+                level = (level - 1) | 1;
             }
-
-            block[j] = level;
-            if (bitstream_peek_signed(&s->bc, 32) <= (int) 0xBFFFFFFF)
-                break;
         }
-end:
-        bitstream_skip(&s->bc, 2);
+
+        block[j] = level;
+        if (bitstream_peek_signed(&s->bc, 32) <= (int) 0xBFFFFFFF)
+            break;
     }
+end:
+    bitstream_skip(&s->bc, 2);
 
     check_scantable_index(s, i);
 
@@ -221,64 +219,62 @@ static inline int mpeg1_fast_decode_block_inter(MpegEncContext *s,
     uint8_t *const scantable = s->intra_scantable.permutated;
     const int qscale         = s->qscale;
 
-    {
-        i = -1;
-        // Special case for first coefficient, no need to add second VLC table.
-        if (bitstream_peek_signed(&s->bc, 32) < 0) {
-            level = (3 * qscale) >> 1;
+    i = -1;
+    // Special case for first coefficient, no need to add second VLC table.
+    if (bitstream_peek_signed(&s->bc, 32) < 0) {
+        level = (3 * qscale) >> 1;
+        level = (level - 1) | 1;
+        if (bitstream_peek(&s->bc, 32) & 0x40000000)
+            level = -level;
+        block[0] = level;
+        i++;
+        bitstream_skip(&s->bc, 2);
+        if (bitstream_peek_signed(&s->bc, 32) <= (int) 0xBFFFFFFF)
+            goto end;
+    }
+
+    /* now quantify & encode AC coefficients */
+    for (;;) {
+        BITSTREAM_RL_VLC(level, run, &s->bc, rl->rl_vlc[0], TEX_VLC_BITS, 2);
+
+        if (level != 0) {
+            i += run;
+            if (i > MAX_INDEX)
+                break;
+            j = scantable[i];
+            level = ((level * 2 + 1) * qscale) >> 1;
             level = (level - 1) | 1;
-            if (bitstream_peek(&s->bc, 32) & 0x40000000)
+            level = bitstream_apply_sign(&s->bc, level);
+        } else {
+            /* escape */
+            run   = bitstream_read(&s->bc, 6) + 1;
+            level = bitstream_read_signed(&s->bc, 8);
+            if (level == -128) {
+                level = bitstream_read(&s->bc, 8) - 256;
+            } else if (level == 0) {
+                level = bitstream_read(&s->bc, 8);
+            }
+            i += run;
+            if (i > MAX_INDEX)
+                break;
+            j = scantable[i];
+            if (level < 0) {
                 level = -level;
-            block[0] = level;
-            i++;
-            bitstream_skip(&s->bc, 2);
-            if (bitstream_peek_signed(&s->bc, 32) <= (int) 0xBFFFFFFF)
-                goto end;
-        }
-
-        /* now quantify & encode AC coefficients */
-        for (;;) {
-            BITSTREAM_RL_VLC(level, run, &s->bc, rl->rl_vlc[0], TEX_VLC_BITS, 2);
-
-            if (level != 0) {
-                i += run;
-                if (i > MAX_INDEX)
-                    break;
-                j = scantable[i];
                 level = ((level * 2 + 1) * qscale) >> 1;
                 level = (level - 1) | 1;
-                level = bitstream_apply_sign(&s->bc, level);
+                level = -level;
             } else {
-                /* escape */
-                run   = bitstream_read(&s->bc, 6) + 1;
-                level = bitstream_read_signed(&s->bc, 8);
-                if (level == -128) {
-                    level = bitstream_read(&s->bc, 8) - 256;
-                } else if (level == 0) {
-                    level = bitstream_read(&s->bc, 8);
-                }
-                i += run;
-                if (i > MAX_INDEX)
-                    break;
-                j = scantable[i];
-                if (level < 0) {
-                    level = -level;
-                    level = ((level * 2 + 1) * qscale) >> 1;
-                    level = (level - 1) | 1;
-                    level = -level;
-                } else {
-                    level = ((level * 2 + 1) * qscale) >> 1;
-                    level = (level - 1) | 1;
-                }
+                level = ((level * 2 + 1) * qscale) >> 1;
+                level = (level - 1) | 1;
             }
-
-            block[j] = level;
-            if (bitstream_peek_signed(&s->bc, 32) <= (int) 0xBFFFFFFF)
-                break;
         }
-end:
-        bitstream_skip(&s->bc, 2);
+
+        block[j] = level;
+        if (bitstream_peek_signed(&s->bc, 32) <= (int) 0xBFFFFFFF)
+            break;
     }
+end:
+    bitstream_skip(&s->bc, 2);
 
     check_scantable_index(s, i);
 
@@ -297,63 +293,60 @@ static inline int mpeg2_decode_block_non_intra(MpegEncContext *s,
     int mismatch;
 
     mismatch = 1;
+    i = -1;
+    if (n < 4)
+        quant_matrix = s->inter_matrix;
+    else
+        quant_matrix = s->chroma_inter_matrix;
 
-    {
-        i = -1;
-        if (n < 4)
-            quant_matrix = s->inter_matrix;
-        else
-            quant_matrix = s->chroma_inter_matrix;
-
-        // Special case for first coefficient, no need to add second VLC table.
-        if (bitstream_peek_signed(&s->bc, 32) < 0) {
-            level = (3 * qscale * quant_matrix[0]) >> 5;
-            if (bitstream_peek(&s->bc, 32) & 0x40000000)
-                level = -level;
-            block[0]  = level;
-            mismatch ^= level;
-            i++;
-            bitstream_skip(&s->bc, 2);
-            if (bitstream_peek_signed(&s->bc, 32) <= (int) 0xBFFFFFFF)
-                goto end;
-        }
-
-        /* now quantify & encode AC coefficients */
-        for (;;) {
-            BITSTREAM_RL_VLC(level, run, &s->bc, rl->rl_vlc[0], TEX_VLC_BITS, 2);
-
-            if (level != 0) {
-                i += run;
-                if (i > MAX_INDEX)
-                    break;
-                j = scantable[i];
-                level = ((level * 2 + 1) * qscale * quant_matrix[j]) >> 5;
-                level = bitstream_apply_sign(&s->bc, level);
-            } else {
-                /* escape */
-                run   = bitstream_read(&s->bc, 6) + 1;
-                level = bitstream_read_signed(&s->bc, 12);
-
-                i += run;
-                if (i > MAX_INDEX)
-                    break;
-                j = scantable[i];
-                if (level < 0) {
-                    level = ((-level * 2 + 1) * qscale * quant_matrix[j]) >> 5;
-                    level = -level;
-                } else {
-                    level = ((level * 2 + 1) * qscale * quant_matrix[j]) >> 5;
-                }
-            }
-
-            mismatch ^= level;
-            block[j]  = level;
-            if (bitstream_peek_signed(&s->bc, 32) <= (int) 0xBFFFFFFF)
-                break;
-        }
-end:
+    // Special case for first coefficient, no need to add second VLC table.
+    if (bitstream_peek_signed(&s->bc, 32) < 0) {
+        level = (3 * qscale * quant_matrix[0]) >> 5;
+        if (bitstream_peek(&s->bc, 32) & 0x40000000)
+            level = -level;
+        block[0]  = level;
+        mismatch ^= level;
+        i++;
         bitstream_skip(&s->bc, 2);
+        if (bitstream_peek_signed(&s->bc, 32) <= (int) 0xBFFFFFFF)
+            goto end;
     }
+
+    /* now quantify & encode AC coefficients */
+    for (;;) {
+        BITSTREAM_RL_VLC(level, run, &s->bc, rl->rl_vlc[0], TEX_VLC_BITS, 2);
+
+        if (level != 0) {
+            i += run;
+            if (i > MAX_INDEX)
+                break;
+            j = scantable[i];
+            level = ((level * 2 + 1) * qscale * quant_matrix[j]) >> 5;
+            level = bitstream_apply_sign(&s->bc, level);
+        } else {
+            /* escape */
+            run = bitstream_read(&s->bc, 6) + 1;
+            level = bitstream_read_signed(&s->bc, 12);
+
+            i += run;
+            if (i > MAX_INDEX)
+                break;
+            j = scantable[i];
+            if (level < 0) {
+                level = ((-level * 2 + 1) * qscale * quant_matrix[j]) >> 5;
+                level = -level;
+            } else {
+                level = ((level * 2 + 1) * qscale * quant_matrix[j]) >> 5;
+            }
+        }
+
+        mismatch ^= level;
+        block[j]  = level;
+        if (bitstream_peek_signed(&s->bc, 32) <= (int) 0xBFFFFFFF)
+            break;
+    }
+end:
+    bitstream_skip(&s->bc, 2);
     block[63] ^= (mismatch & 1);
 
     check_scantable_index(s, i);
@@ -458,39 +451,37 @@ static inline int mpeg2_decode_block_intra(MpegEncContext *s,
     else
         rl = &ff_rl_mpeg1;
 
-    {
-        /* now quantify & encode AC coefficients */
-        for (;;) {
-            BITSTREAM_RL_VLC(level, run, &s->bc, rl->rl_vlc[0], TEX_VLC_BITS, 2);
+    /* now quantify & encode AC coefficients */
+    for (;;) {
+        BITSTREAM_RL_VLC(level, run, &s->bc, rl->rl_vlc[0], TEX_VLC_BITS, 2);
 
-            if (level == 127) {
+        if (level == 127) {
+            break;
+        } else if (level != 0) {
+            i += run;
+            if (i > MAX_INDEX)
                 break;
-            } else if (level != 0) {
-                i += run;
-                if (i > MAX_INDEX)
-                    break;
-                j = scantable[i];
-                level = (level * qscale * quant_matrix[j]) >> 4;
-                level = bitstream_apply_sign(&s->bc, level);
+            j = scantable[i];
+            level = (level * qscale * quant_matrix[j]) >> 4;
+            level = bitstream_apply_sign(&s->bc, level);
+        } else {
+            /* escape */
+            run = bitstream_read(&s->bc, 6) + 1;
+            level = bitstream_read_signed(&s->bc, 12);
+            i += run;
+            if (i > MAX_INDEX)
+                break;
+            j = scantable[i];
+            if (level < 0) {
+                level = (-level * qscale * quant_matrix[j]) >> 4;
+                level = -level;
             } else {
-                /* escape */
-                run   = bitstream_read(&s->bc, 6) + 1;
-                level = bitstream_read_signed(&s->bc, 12);
-                i += run;
-                if (i > MAX_INDEX)
-                    break;
-                j = scantable[i];
-                if (level < 0) {
-                    level = (-level * qscale * quant_matrix[j]) >> 4;
-                    level = -level;
-                } else {
-                    level = (level * qscale * quant_matrix[j]) >> 4;
-                }
+                level = (level * qscale * quant_matrix[j]) >> 4;
             }
-
-            mismatch ^= level;
-            block[j]  = level;
         }
+
+        mismatch ^= level;
+        block[j]  = level;
     }
     block[63] ^= mismatch & 1;
 
@@ -531,38 +522,36 @@ static inline int mpeg2_fast_decode_block_intra(MpegEncContext *s,
     else
         rl = &ff_rl_mpeg1;
 
-    {
-        /* now quantify & encode AC coefficients */
-        for (;;) {
-            BITSTREAM_RL_VLC(level, run, &s->bc, rl->rl_vlc[0], TEX_VLC_BITS, 2);
+    /* now quantify & encode AC coefficients */
+    for (;;) {
+        BITSTREAM_RL_VLC(level, run, &s->bc, rl->rl_vlc[0], TEX_VLC_BITS, 2);
 
-            if (level == 127) {
+        if (level == 127) {
+            break;
+        } else if (level != 0) {
+            i += run;
+            if (i > MAX_INDEX)
                 break;
-            } else if (level != 0) {
-                i += run;
-                if (i > MAX_INDEX)
-                    break;
-                j = scantable[i];
-                level = (level * qscale * quant_matrix[j]) >> 4;
-                level = bitstream_apply_sign(&s->bc, level);
+            j = scantable[i];
+            level = (level * qscale * quant_matrix[j]) >> 4;
+            level = bitstream_apply_sign(&s->bc, level);
+        } else {
+            /* escape */
+            run = bitstream_read(&s->bc, 6) + 1;
+            level = bitstream_read_signed(&s->bc, 12);
+            i += run;
+            if (i > MAX_INDEX)
+                break;
+            j = scantable[i];
+            if (level < 0) {
+                level = (-level * qscale * quant_matrix[j]) >> 4;
+                level = -level;
             } else {
-                /* escape */
-                run   = bitstream_read(&s->bc, 6) + 1;
-                level = bitstream_read_signed(&s->bc, 12);
-                i += run;
-                if (i > MAX_INDEX)
-                    break;
-                j = scantable[i];
-                if (level < 0) {
-                    level = (-level * qscale * quant_matrix[j]) >> 4;
-                    level = -level;
-                } else {
-                    level = (level * qscale * quant_matrix[j]) >> 4;
-                }
+                level = (level * qscale * quant_matrix[j]) >> 4;
             }
-
-            block[j] = level;
         }
+
+        block[j] = level;
     }
 
     check_scantable_index(s, i);
