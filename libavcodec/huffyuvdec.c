@@ -188,7 +188,7 @@ static int read_huffman_tables(HYuvContext *s, const uint8_t *src, int length)
     BitstreamContext bc;
     int i, ret;
 
-    if ((ret = bitstream_init(&bc, src, length * 8)) < 0)
+    if ((ret = bitstream_init8(&bc, src, length)) < 0)
         return ret;
 
     for (i = 0; i < 3; i++) {
@@ -213,14 +213,14 @@ static int read_old_huffman_tables(HYuvContext *s)
     BitstreamContext bc;
     int i, ret;
 
-    if ((ret = bitstream_init(&bc, classic_shift_luma,
-                              classic_shift_luma_table_size * 8)) < 0)
+    if ((ret = bitstream_init8(&bc, classic_shift_luma,
+                               classic_shift_luma_table_size)) < 0)
         return ret;
     if ((ret = read_len_table(s->len[0], &bc)) < 0)
         return ret;
 
-    if ((ret = bitstream_init(&bc, classic_shift_chroma,
-                              classic_shift_chroma_table_size * 8)) < 0)
+    if ((ret = bitstream_init8(&bc, classic_shift_chroma,
+                               classic_shift_chroma_table_size)) < 0)
         return ret;
     if ((ret = read_len_table(s->len[1], &bc)) < 0)
         return ret;
@@ -533,8 +533,8 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     if ((unsigned) (buf_size - table_size) >= INT_MAX / 8)
         return AVERROR_INVALIDDATA;
 
-    if ((ret = bitstream_init(&s->bc, s->bitstream_buffer + table_size,
-                              (buf_size - table_size) * 8)) < 0)
+    if ((ret = bitstream_init8(&s->bc, s->bitstream_buffer + table_size,
+                               buf_size - table_size)) < 0)
         return ret;
 
     fake_ystride = s->interlaced ? p->linesize[0] * 2 : p->linesize[0];

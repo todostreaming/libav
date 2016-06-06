@@ -1029,7 +1029,7 @@ static av_cold int vorbis_decode_init(AVCodecContext *avctx)
         return ret;
     }
 
-    bitstream_init(bc, header_start[0], header_len[0] * 8);
+    bitstream_init8(bc, header_start[0], header_len[0]);
     hdr_type = bitstream_read(bc, 8);
     if (hdr_type != 1) {
         av_log(avctx, AV_LOG_ERROR, "First header is not the id header.\n");
@@ -1041,7 +1041,7 @@ static av_cold int vorbis_decode_init(AVCodecContext *avctx)
         return ret;
     }
 
-    bitstream_init(bc, header_start[2], header_len[2] * 8);
+    bitstream_init8(bc, header_start[2], header_len[2]);
     hdr_type = bitstream_read(bc, 8);
     if (hdr_type != 5) {
         av_log(avctx, AV_LOG_ERROR, "Third header is not the setup header.\n");
@@ -1718,7 +1718,7 @@ static int vorbis_decode_frame(AVCodecContext *avctx, void *data,
         }
     }
 
-    bitstream_init(bc, buf, buf_size * 8);
+    bitstream_init8(bc, buf, buf_size);
 
     if ((len = vorbis_parse_audio_packet(vc, channel_ptrs)) <= 0)
         return len;

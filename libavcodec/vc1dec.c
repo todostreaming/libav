@@ -647,8 +647,7 @@ static int vc1_decode_frame(AVCodecContext *avctx, void *data,
                         goto err;
                     buf_size3 = vc1_unescape_buffer(start + 4, size,
                                                     slices[n_slices].buf);
-                    bitstream_init(&slices[n_slices].bc, slices[n_slices].buf,
-                                   buf_size3 << 3);
+                    bitstream_init8(&slices[n_slices].bc, slices[n_slices].buf, buf_size3);
                     /* assuming that the field marker is at the exact middle,
                        hope it's correct */
                     slices[n_slices].mby_start = s->mb_height >> 1;
@@ -672,8 +671,7 @@ static int vc1_decode_frame(AVCodecContext *avctx, void *data,
                         goto err;
                     buf_size3 = vc1_unescape_buffer(start + 4, size,
                                                     slices[n_slices].buf);
-                    bitstream_init(&slices[n_slices].bc, slices[n_slices].buf,
-                                   buf_size3 << 3);
+                    bitstream_init8(&slices[n_slices].bc, slices[n_slices].buf, buf_size3);
                     slices[n_slices].mby_start = bitstream_read(&slices[n_slices].bc, 9);
                     n_slices++;
                     break;
@@ -697,8 +695,7 @@ static int vc1_decode_frame(AVCodecContext *avctx, void *data,
                 if (!slices[n_slices].buf)
                     goto err;
                 buf_size3 = vc1_unescape_buffer(divider + 4, buf + buf_size - divider - 4, slices[n_slices].buf);
-                bitstream_init(&slices[n_slices].bc, slices[n_slices].buf,
-                               buf_size3 << 3);
+                bitstream_init8(&slices[n_slices].bc, slices[n_slices].buf, buf_size3);
                 slices[n_slices].mby_start = s->mb_height >> 1;
                 n_slices1 = n_slices - 1;
                 n_slices++;

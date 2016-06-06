@@ -433,7 +433,7 @@ static int decode_slice_plane(ProresContext *ctx, ProresThreadData *td,
 
     memset(td->blocks, 0, 8 * 4 * 64 * sizeof(*td->blocks));
 
-    bitstream_init(&bc, buf, data_size << 3);
+    bitstream_init8(&bc, buf, data_size);
 
     decode_dc_coeffs(&bc, td->blocks, blocks_per_slice);
 
@@ -534,7 +534,7 @@ static void decode_alpha_plane(ProresContext *ctx, ProresThreadData *td,
 
     memset(td->blocks, 0, 8 * 4 * 64 * sizeof(*td->blocks));
 
-    bitstream_init(&bc, buf, data_size << 3);
+    bitstream_init8(&bc, buf, data_size);
 
     if (ctx->alpha_info == 2)
         unpack_alpha(&bc, td->blocks, mbs_per_slice * 4 * 64, 16);

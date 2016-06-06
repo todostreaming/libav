@@ -46,7 +46,7 @@ static int adts_decode_extradata(AVFormatContext *s, ADTSContext *adts, uint8_t 
     MPEG4AudioConfig m4ac;
     int off;
 
-    bitstream_init(&bc, buf, size * 8);
+    bitstream_init8(&bc, buf, size);
     off = avpriv_mpeg4audio_get_config(&m4ac, buf, size * 8, 1);
     if (off < 0)
         return off;

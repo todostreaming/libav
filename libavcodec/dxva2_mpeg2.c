@@ -145,7 +145,7 @@ static void fill_slice(AVCodecContext *avctx,
     slice->wNumberMBsInSlice   = (s->mb_y >> is_field) * s->mb_width + s->mb_x;
     slice->wBadSliceChopping   = 0;
 
-    bitstream_init(&bc, &buffer[4], 8 * (size - 4));
+    bitstream_init8(&bc, &buffer[4], size - 4);
 
     slice->wQuantizerScaleCode = bitstream_read(&bc, 5);
     while (bitstream_read_bit(&bc))

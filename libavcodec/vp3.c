@@ -1989,7 +1989,7 @@ static int vp3_decode_frame(AVCodecContext *avctx,
     BitstreamContext bc;
     int i, ret;
 
-    bitstream_init(&bc, buf, buf_size * 8);
+    bitstream_init8(&bc, buf, buf_size);
 
     if (s->theora && bitstream_read_bit(&bc)) {
         av_log(avctx, AV_LOG_ERROR,
@@ -2446,7 +2446,7 @@ static av_cold int theora_decode_init(AVCodecContext *avctx)
     for (i = 0; i < 3; i++) {
         if (header_len[i] <= 0)
             continue;
-        bitstream_init(&bc, header_start[i], header_len[i] * 8);
+        bitstream_init8(&bc, header_start[i], header_len[i]);
 
         ptype = bitstream_read(&bc, 8);
 

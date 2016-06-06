@@ -67,7 +67,7 @@ read_header:
     if (buf_end - buf_ptr >= 1 << 28)
         return AVERROR_INVALIDDATA;
 
-    bitstream_init(&hbc, buf_ptr, /* buf_size */ (buf_end - buf_ptr) * 8);
+    bitstream_init8(&hbc, buf_ptr, /* buf_size */ buf_end - buf_ptr);
 
     bitstream_skip(&hbc, 32); /* reserved zeros */
 
@@ -88,7 +88,7 @@ read_header:
     av_log(avctx, AV_LOG_DEBUG, "dqt offs: 0x%"PRIx32"\n", dqt_offs);
     if (dqt_offs)
     {
-        bitstream_init(&s->bc, buf_ptr + dqt_offs, (buf_end - (buf_ptr + dqt_offs)) * 8);
+        bitstream_init8(&s->bc, buf_ptr + dqt_offs, buf_end - (buf_ptr + dqt_offs));
         s->start_code = DQT;
         if (ff_mjpeg_decode_dqt(s) < 0 &&
             (avctx->err_recognition & AV_EF_EXPLODE))
@@ -99,7 +99,7 @@ read_header:
     av_log(avctx, AV_LOG_DEBUG, "dht offs: 0x%"PRIx32"\n", dht_offs);
     if (dht_offs)
     {
-        bitstream_init(&s->bc, buf_ptr + dht_offs, (buf_end - (buf_ptr + dht_offs)) * 8);
+        bitstream_init8(&s->bc, buf_ptr + dht_offs, buf_end - (buf_ptr + dht_offs));
         s->start_code = DHT;
         ff_mjpeg_decode_dht(s);
     }
@@ -108,7 +108,7 @@ read_header:
     av_log(avctx, AV_LOG_DEBUG, "sof offs: 0x%"PRIx32"\n", sof_offs);
     if (sof_offs)
     {
-        bitstream_init(&s->bc, buf_ptr + sof_offs, (buf_end - (buf_ptr + sof_offs)) * 8);
+        bitstream_init8(&s->bc, buf_ptr + sof_offs, buf_end - (buf_ptr + sof_offs));
         s->start_code = SOF0;
         if (ff_mjpeg_decode_sof(s) < 0)
             return -1;
@@ -120,8 +120,8 @@ read_header:
     av_log(avctx, AV_LOG_DEBUG, "sod offs: 0x%"PRIx32"\n", sod_offs);
     if (sos_offs)
     {
-        bitstream_init(&s->bc, buf_ptr + sos_offs,
-                       8 * FFMIN(field_size, buf_end - buf_ptr - sos_offs));
+        bitstream_init8(&s->bc, buf_ptr + sos_offs,
+                        FFMIN(field_size, buf_end - buf_ptr - sos_offs));
         s->mjpb_skiptosod = sod_offs - sos_offs - bitstream_peek(&s->bc, 16);
         s->start_code = SOS;
         if (ff_mjpeg_decode_sos(s, NULL, NULL) < 0 &&

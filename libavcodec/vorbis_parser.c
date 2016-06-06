@@ -103,7 +103,7 @@ static int parse_setup_header(AVVorbisParseContext *s,
     }
     for (i = 0; i < buf_size; i++)
         rev_buf[i] = buf[buf_size - 1 - i];
-    bitstream_init(&bc, rev_buf, buf_size * 8);
+    bitstream_init8(&bc, rev_buf, buf_size);
 
     got_framing_bit = 0;
     while (bitstream_bits_left(&bc) > 97) {
@@ -169,7 +169,7 @@ static int parse_setup_header(AVVorbisParseContext *s,
     /* The previous window flag is the next bit after the mode */
     s->prev_mask = (s->mode_mask | 0x1) + 1;
 
-    bitstream_init(&bc, rev_buf, buf_size * 8);
+    bitstream_init8(&bc, rev_buf, buf_size);
     bitstream_skip(&bc, got_framing_bit);
     for (i = mode_count - 1; i >= 0; i--) {
         bitstream_skip(&bc, 40);

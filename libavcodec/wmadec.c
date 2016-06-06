@@ -812,7 +812,7 @@ static int wma_decode_superframe(AVCodecContext *avctx, void *data,
     }
     buf_size = avctx->block_align;
 
-    bitstream_init(&s->bc, buf, buf_size * 8);
+    bitstream_init8(&s->bc, buf, buf_size);
 
     if (s->use_bit_reservoir) {
         /* read super frame header */
@@ -872,7 +872,7 @@ static int wma_decode_superframe(AVCodecContext *avctx, void *data,
         pos = bit_offset + 4 + 4 + s->byte_offset_bits + 3;
         if (pos >= MAX_CODED_SUPERFRAME_SIZE * 8 || pos > buf_size * 8)
             return AVERROR_INVALIDDATA;
-        bitstream_init(&s->bc, buf + (pos >> 3), (buf_size - (pos >> 3)) * 8);
+        bitstream_init8(&s->bc, buf + (pos >> 3), buf_size - (pos >> 3));
         len = pos & 7;
         if (len > 0)
             bitstream_skip(&s->bc, len);

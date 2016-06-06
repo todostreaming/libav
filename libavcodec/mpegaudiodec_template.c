@@ -1366,7 +1366,7 @@ static int mp_decode_layer3(MPADecodeContext *s)
 
         memcpy(s->last_buf + s->last_buf_size, ptr, s->extrasize);
         s->in_bc = s->bc;
-        bitstream_init(&s->bc, s->last_buf, (s->last_buf_size + s->extrasize) * 8);
+        bitstream_init8(&s->bc, s->last_buf, s->last_buf_size + s->extrasize);
         s->last_buf_size <<= 3;
         for (gr = 0; gr < nb_granules && (s->last_buf_size >> 3) < main_data_begin; gr++) {
             for (ch = 0; ch < s->nb_channels; ch++) {
@@ -1529,7 +1529,7 @@ static int mp_decode_frame(MPADecodeContext *s, OUT_INT **samples,
     int i, nb_frames, ch, ret;
     OUT_INT *samples_ptr;
 
-    bitstream_init(&s->bc, buf + HEADER_SIZE, (buf_size - HEADER_SIZE) * 8);
+    bitstream_init8(&s->bc, buf + HEADER_SIZE, buf_size - HEADER_SIZE);
 
     /* skip error protection field */
     if (s->error_protection)

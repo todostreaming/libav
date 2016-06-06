@@ -108,7 +108,7 @@ static int vaapi_mpeg2_decode_slice(AVCodecContext *avctx, const uint8_t *buffer
     uint32_t quantiser_scale_code, intra_slice_flag, macroblock_offset;
 
     /* Determine macroblock_offset */
-    bitstream_init(&bc, buffer, 8 * size);
+    bitstream_init8(&bc, buffer, size);
     if (bitstream_read(&bc, 32) >> 8 != 1) /* start code */
         return AVERROR_INVALIDDATA;
     quantiser_scale_code = bitstream_read(&bc, 5);

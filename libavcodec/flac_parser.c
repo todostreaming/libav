@@ -93,7 +93,7 @@ static int frame_header_is_valid(AVCodecContext *avctx, const uint8_t *buf,
                                  FLACFrameInfo *fi)
 {
     BitstreamContext bc;
-    bitstream_init(&bc, buf, MAX_FRAME_HEADER_SIZE * 8);
+    bitstream_init8(&bc, buf, MAX_FRAME_HEADER_SIZE);
     return !ff_flac_decode_frame_header(avctx, &bc, fi, 127);
 }
 

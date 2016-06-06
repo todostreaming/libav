@@ -2987,7 +2987,7 @@ static int aac_decode_frame(AVCodecContext *avctx, void *data,
         }
     }
 
-    if ((err = bitstream_init(&bc, buf, buf_size * 8)) < 0)
+    if ((err = bitstream_init8(&bc, buf, buf_size)) < 0)
         return err;
 
     switch (ac->oc[1].m4ac.object_type) {
@@ -3244,7 +3244,7 @@ static int latm_decode_frame(AVCodecContext *avctx, void *out,
     int                 muxlength, err;
     BitstreamContext    bc;
 
-    if ((err = bitstream_init(&bc, avpkt->data, avpkt->size * 8)) < 0)
+    if ((err = bitstream_init8(&bc, avpkt->data, avpkt->size)) < 0)
         return err;
 
     // check for LOAS sync word

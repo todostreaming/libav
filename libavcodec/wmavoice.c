@@ -400,7 +400,7 @@ static av_cold int wmavoice_decode_init(AVCodecContext *ctx)
     for (n = 0; n < s->lsps; n++)
         s->prev_lsps[n] = M_PI * (n + 1.0) / (s->lsps + 1.0);
 
-    bitstream_init(&s->bc, ctx->extradata + 22, (ctx->extradata_size - 22) << 3);
+    bitstream_init8(&s->bc, ctx->extradata + 22, ctx->extradata_size - 22);
     if (decode_vbmtree(&s->bc, s->vbm_tree) < 0) {
         av_log(ctx, AV_LOG_ERROR, "Invalid VBM tree; broken extradata?\n");
         return AVERROR_INVALIDDATA;
@@ -1964,7 +1964,7 @@ static int wmavoice_decode_packet(AVCodecContext *ctx, void *data,
         *got_frame_ptr = 0;
         return 0;
     }
-    bitstream_init(&s->bc, avpkt->data, size << 3);
+    bitstream_init8(&s->bc, avpkt->data, size);
 
     /* size == ctx->block_align is used to indicate whether we are dealing with
      * a new packet or a packet of which we already read the packet header
@@ -2008,7 +2008,7 @@ static int wmavoice_decode_packet(AVCodecContext *ctx, void *data,
         return cnt >> 3;
     } else if ((s->sframe_cache_size = pos) > 0) {
         /* rewind bit reader to start of last (incomplete) superframe... */
-        bitstream_init(bc, avpkt->data, size << 3);
+        bitstream_init8(bc, avpkt->data, size);
         bitstream_skip(bc, (size << 3) - pos);
         assert(bitstream_bits_left(bc) == pos);
 
