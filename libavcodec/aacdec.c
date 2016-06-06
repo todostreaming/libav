@@ -1561,6 +1561,7 @@ static int decode_spectrum_and_dequant(AACContext *ac, float coef[1024],
     const int c = 1024 / ics->num_windows;
     const uint16_t *offsets = ics->swb_offset;
     float *coef_base = coef;
+    BitstreamContext *in_bc = bc;
 
     for (g = 0; g < ics->num_windows; g++)
         memset(coef + g * 128 + offsets[ics->max_sfb], 0,
@@ -1608,7 +1609,7 @@ static int decode_spectrum_and_dequant(AACContext *ac, float coef[1024],
                             int code;
                             unsigned cb_idx;
 
-                            code = bitstream_read_vlc(bc, vlc_tab, 8, 2);
+                            code = bitstream_read_vlc(in_bc, vlc_tab, 8, 2);
                             cb_idx = cb_vector_idx[code];
                             cf = VMUL4(cf, vq, cb_idx, sf + idx);
                         } while (len -= 4);
@@ -1626,11 +1627,11 @@ static int decode_spectrum_and_dequant(AACContext *ac, float coef[1024],
                             unsigned cb_idx;
                             uint32_t bits;
 
-                            code = bitstream_read_vlc(bc, vlc_tab, 8, 2);
+                            code = bitstream_read_vlc(in_bc, vlc_tab, 8, 2);
                             cb_idx = cb_vector_idx[code];
                             nnz = cb_idx >> 8 & 15;
-                            bits = nnz ? bitstream_peek(bc, 32) : 0;
-                            bitstream_skip(bc, nnz);
+                            bits = nnz ? bitstream_peek(in_bc, 32) : 0;
+                            bitstream_skip(in_bc, nnz);
                             cf = VMUL4S(cf, vq, cb_idx, bits, sf + idx);
                         } while (len -= 4);
                     }
@@ -1645,7 +1646,7 @@ static int decode_spectrum_and_dequant(AACContext *ac, float coef[1024],
                             int code;
                             unsigned cb_idx;
 
-                            code = bitstream_read_vlc(bc, vlc_tab, 8, 2);
+                            code = bitstream_read_vlc(in_bc, vlc_tab, 8, 2);
                             cb_idx = cb_vector_idx[code];
                             cf = VMUL2(cf, vq, cb_idx, sf + idx);
                         } while (len -= 2);
@@ -1664,10 +1665,10 @@ static int decode_spectrum_and_dequant(AACContext *ac, float coef[1024],
                             unsigned cb_idx;
                             unsigned sign;
 
-                            code = bitstream_read_vlc(bc, vlc_tab, 8, 2);
+                            code = bitstream_read_vlc(in_bc, vlc_tab, 8, 2);
                             cb_idx = cb_vector_idx[code];
                             nnz = cb_idx >> 8 & 15;
-                            sign = nnz ? bitstream_read(bc, nnz) << (cb_idx >> 12) : 0;
+                            sign = nnz ? bitstream_read(in_bc, nnz) << (cb_idx >> 12) : 0;
                             cf = VMUL2S(cf, vq, cb_idx, sign, sf + idx);
                         } while (len -= 2);
                     }
@@ -1686,7 +1687,7 @@ static int decode_spectrum_and_dequant(AACContext *ac, float coef[1024],
                             uint32_t bits;
                             int j;
 
-                            code = bitstream_read_vlc(bc, vlc_tab, 8, 2);
+                            code = bitstream_read_vlc(in_bc, vlc_tab, 8, 2);
 
                             if (!code) {
                                 *icf++ = 0;
@@ -1697,7 +1698,7 @@ static int decode_spectrum_and_dequant(AACContext *ac, float coef[1024],
                             cb_idx = cb_vector_idx[code];
                             nnz = cb_idx >> 12;
                             nzt = cb_idx >> 8;
-                            bits = bitstream_read(bc, nnz) << (32 - nnz);
+                            bits = bitstream_read(in_bc, nnz) << (32 - nnz);
 
                             for (j = 0; j < 2; j++) {
                                 if (nzt & 1<<j) {
@@ -1705,7 +1706,7 @@ static int decode_spectrum_and_dequant(AACContext *ac, float coef[1024],
                                     int n;
                                     /* The total length of escape_sequence must be < 22 bits according
                                        to the specification (i.e. max is 111111110xxxxxxxxxxxx). */
-                                    b = bitstream_peek(bc, 32);
+                                    b = bitstream_peek(in_bc, 32);
                                     b = 31 - av_log2(~b);
 
                                     if (b > 8) {
@@ -1713,9 +1714,9 @@ static int decode_spectrum_and_dequant(AACContext *ac, float coef[1024],
                                         return AVERROR_INVALIDDATA;
                                     }
 
-                                    bitstream_skip(bc, b + 1);
+                                    bitstream_skip(in_bc, b + 1);
                                     b += 4;
-                                    n = (1 << b) + bitstream_read(bc, b);
+                                    n = (1 << b) + bitstream_read(in_bc, b);
                                     *icf++ = cbrt_tab[n] | (bits & 1U<<31);
                                     bits <<= 1;
                                 } else {
@@ -1751,6 +1752,8 @@ static int decode_spectrum_and_dequant(AACContext *ac, float coef[1024],
             }
         }
     }
+
+    bc = in_bc;
 
     return 0;
 }
