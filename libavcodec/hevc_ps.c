@@ -25,7 +25,7 @@
 
 #include "libavutil/imgutils.h"
 
-#include "golomb.h"
+#include "golomb_legacy.h"
 #include "hevc.h"
 
 static const uint8_t default_scaling_list_intra[] = {

@@ -19,7 +19,7 @@
  */
 
 #include "libavcodec/get_bits.h"
-#include "libavcodec/golomb.h"
+#include "libavcodec/golomb_legacy.h"
 #include "libavcodec/hevc.h"
 #include "libavutil/intreadwrite.h"
 #include "avc.h"
