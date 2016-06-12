@@ -45,7 +45,7 @@ typedef struct BitstreamContext {
 
 static inline void refill_64(BitstreamContext *bc)
 {
-    if (av_unlikely(bc->ptr >= bc->buffer_end))
+    if (bc->ptr >= bc->buffer_end)
         return;
 
 #ifdef BITSTREAM_READER_LE
@@ -59,7 +59,7 @@ static inline void refill_64(BitstreamContext *bc)
 
 static inline void refill_32(BitstreamContext *bc)
 {
-    if (av_unlikely(bc->ptr >= bc->buffer_end))
+    if (bc->ptr >= bc->buffer_end)
         return;
 
 #ifdef BITSTREAM_READER_LE
@@ -144,7 +144,7 @@ static inline uint64_t get_val(BitstreamContext *bc, unsigned n)
 /* Return one bit from the buffer. */
 static inline unsigned bitstream_read_bit(BitstreamContext *bc)
 {
-    if (av_unlikely(!bc->bits_left))
+    if (!bc->bits_left)
         refill_64(bc);
 
     return get_val(bc, 1);
@@ -158,10 +158,10 @@ static inline uint64_t bitstream_read_63(BitstreamContext *bc, unsigned n)
     uint64_t left = 0;
 #endif
 
-    if (av_unlikely(!n))
+    if (!n)
         return 0;
 
-    if (av_unlikely(n > bc->bits_left)) {
+    if (n > bc->bits_left) {
         n -= bc->bits_left;
 #ifdef BITSTREAM_READER_LE
         left = bc->bits_left;
@@ -182,12 +182,12 @@ static inline uint64_t bitstream_read_63(BitstreamContext *bc, unsigned n)
 /* Return n bits from the buffer. n has to be in the 0-32 range. */
 static inline uint32_t bitstream_read(BitstreamContext *bc, unsigned n)
 {
-    if (av_unlikely(!n))
+    if (!n)
         return 0;
 
-    if (av_unlikely(n > bc->bits_left)) {
+    if (n > bc->bits_left) {
         refill_32(bc);
-        if (av_unlikely(bc->bits_left < 32))
+        if (bc->bits_left < 32)
             bc->bits_left = n;
     }
 
@@ -214,7 +214,7 @@ static inline unsigned show_val(const BitstreamContext *bc, unsigned n)
  * n has to be in the 0-32 range. */
 static inline unsigned bitstream_peek(BitstreamContext *bc, unsigned n)
 {
-    if (av_unlikely(n > bc->bits_left))
+    if (n > bc->bits_left)
         refill_32(bc);
 
     return show_val(bc, n);
