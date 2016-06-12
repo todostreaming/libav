@@ -45,7 +45,7 @@ typedef struct BitstreamContext {
 
 static inline void refill_64(BitstreamContext *bc)
 {
-    if (av_unlikely(bc->ptr >= bc->buffer_end || !bc->buffer))
+    if (av_unlikely(bc->ptr >= bc->buffer_end))
         return;
 
 #ifdef BITSTREAM_READER_LE
@@ -59,7 +59,7 @@ static inline void refill_64(BitstreamContext *bc)
 
 static inline void refill_32(BitstreamContext *bc)
 {
-    if (av_unlikely(bc->ptr >= bc->buffer_end || !bc->buffer))
+    if (av_unlikely(bc->ptr >= bc->buffer_end))
         return;
 
 #ifdef BITSTREAM_READER_LE
