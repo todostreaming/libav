@@ -377,4 +377,11 @@ static inline int bitstream_decode210(BitstreamContext *bc)
         return 2 - bitstream_read_bit(bc);
 }
 
+/* Read sign bit and flip the sign of the provided value accordingly. */
+static inline int bitstream_apply_sign(BitstreamContext *bc, int val)
+{
+    int sign = bitstream_read_signed(bc, 1);
+    return (val ^ sign) - sign;
+}
+
 #endif /* AVCODEC_BITSTREAM_H */
