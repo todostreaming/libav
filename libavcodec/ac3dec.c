@@ -821,15 +821,19 @@ static void spx_coordinates(AC3DecodeContext *s)
                 float spx_blend;
                 int bin, master_spx_coord;
 
+                bitstream_prefetch(bc, 7);
+
                 s->first_spx_coords[ch] = 0;
-                spx_blend        = bitstream_read(bc, 5) * (1.0f / 32);
-                master_spx_coord = bitstream_read(bc, 2) * 3;
+                spx_blend        = bitstream_read_cache(bc, 5) * (1.0f / 32);
+                master_spx_coord = bitstream_read_cache(bc, 2) * 3;
 
                 bin = s->spx_src_start_freq;
                 for (bnd = 0; bnd < s->num_spx_bands; bnd++) {
                     int bandsize;
                     int spx_coord_exp, spx_coord_mant;
                     float nratio, sblend, nblend, spx_coord;
+
+                    bitstream_prefetch(bc, 6);
 
                     /* calculate blending factors */
                     bandsize = s->spx_band_sizes[bnd];
@@ -841,8 +845,8 @@ static void spx_coordinates(AC3DecodeContext *s)
                     bin += bandsize;
 
                     /* decode spx coordinates */
-                    spx_coord_exp  = bitstream_read(bc, 4);
-                    spx_coord_mant = bitstream_read(bc, 2);
+                    spx_coord_exp  = bitstream_read_cache(bc, 4);
+                    spx_coord_mant = bitstream_read_cache(bc, 2);
                     if (spx_coord_exp == 15) spx_coord_mant <<= 1;
                     else                     spx_coord_mant += 4;
                     spx_coord_mant <<= (25 - spx_coord_exp - master_spx_coord);
@@ -866,9 +870,11 @@ static int coupling_strategy(AC3DecodeContext *s, int blk, uint8_t *bit_alloc_st
     int channel_mode = s->channel_mode;
     int ch;
 
+    bitstream_prefetch(bc, 14);
+
     memset(bit_alloc_stages, 3, AC3_MAX_CHANNELS);
     if (!s->eac3)
-        s->cpl_in_use[blk] = bitstream_read_bit(bc);
+        s->cpl_in_use[blk] = bitstream_read_cache(bc, 1);
     if (s->cpl_in_use[blk]) {
         /* coupling in use */
         int cpl_start_subband, cpl_end_subband;
@@ -879,7 +885,7 @@ static int coupling_strategy(AC3DecodeContext *s, int blk, uint8_t *bit_alloc_st
         }
 
         /* check for enhanced coupling */
-        if (s->eac3 && bitstream_read_bit(bc)) {
+        if (s->eac3 && bitstream_read_cache(bc, 1)) {
             /* TODO: parse enhanced coupling strategy info */
             avpriv_request_sample(s->avctx, "Enhanced coupling");
             return AVERROR_PATCHWELCOME;
@@ -896,12 +902,12 @@ static int coupling_strategy(AC3DecodeContext *s, int blk, uint8_t *bit_alloc_st
 
         /* phase flags in use */
         if (channel_mode == AC3_CHMODE_STEREO)
-            s->phase_flags_in_use = bitstream_read_bit(bc);
+            s->phase_flags_in_use = bitstream_read_cache(bc, 1);
 
         /* coupling frequency range */
         cpl_start_subband = bitstream_read(bc, 4);
         cpl_end_subband = s->spx_in_use ? (s->spx_src_start_freq - 37) / 12 :
-                                          bitstream_read(bc, 4) + 3;
+                                          bitstream_read_cache(bc, 4) + 3;
         if (cpl_start_subband >= cpl_end_subband) {
             av_log(s->avctx, AV_LOG_ERROR, "invalid coupling range (%d >= %d)\n",
                    cpl_start_subband, cpl_end_subband);
