@@ -715,10 +715,12 @@ static void decode_band_structure(BitstreamContext *bc, int blk, int eac3,
 
     n_subbands = end_subband - start_subband;
 
+
+    bitstream_prefetch(bc, 23);
     /* decode band structure from bitstream or use default */
-    if (!eac3 || bitstream_read_bit(bc)) {
+    if (!eac3 || bitstream_read_cache(bc, 1)) {
         for (subbnd = 0; subbnd < n_subbands - 1; subbnd++) {
-            coded_band_struct[subbnd] = bitstream_read_bit(bc);
+            coded_band_struct[subbnd] = bitstream_read_cache(bc, 1);
         }
         band_struct = coded_band_struct;
     } else if (!blk) {
