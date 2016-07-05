@@ -761,21 +761,23 @@ static int spx_strategy(AC3DecodeContext *s, int blk)
     int dst_start_freq, dst_end_freq, src_start_freq,
         start_subband, end_subband, ch;
 
+    bitstream_prefetch(bc, 15);
+
     /* determine which channels use spx */
     if (s->channel_mode == AC3_CHMODE_MONO) {
         s->channel_uses_spx[1] = 1;
     } else {
         for (ch = 1; ch <= fbw_channels; ch++)
-            s->channel_uses_spx[ch] = bitstream_read_bit(bc);
+            s->channel_uses_spx[ch] = bitstream_read_cache(bc, 1);
     }
 
     /* get the frequency bins of the spx copy region and the spx start
        and end subbands */
-    dst_start_freq = bitstream_read(bc, 2);
-    start_subband  = bitstream_read(bc, 3) + 2;
+    dst_start_freq = bitstream_read_cache(bc, 2);
+    start_subband  = bitstream_read_cache(bc, 3) + 2;
     if (start_subband > 7)
         start_subband += start_subband - 7;
-    end_subband    = bitstream_read(bc, 3) + 5;
+    end_subband    = bitstream_read_cache(bc, 3) + 5;
     if (end_subband   > 7)
         end_subband   += end_subband   - 7;
     dst_start_freq = dst_start_freq * 12 + 25;
