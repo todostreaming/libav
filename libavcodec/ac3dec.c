@@ -948,8 +948,9 @@ static int coupling_coordinates(AC3DecodeContext *s, int blk)
                 cpl_coords_exist = 1;
                 master_cpl_coord = 3 * bitstream_read(bc, 2);
                 for (bnd = 0; bnd < s->num_cpl_bands; bnd++) {
-                    cpl_coord_exp  = bitstream_read(bc, 4);
-                    cpl_coord_mant = bitstream_read(bc, 4);
+                    bitstream_prefetch(bc, 8);
+                    cpl_coord_exp  = bitstream_read_cache(bc, 4);
+                    cpl_coord_mant = bitstream_read_cache(bc, 4);
                     if (cpl_coord_exp == 15)
                         s->cpl_coords[ch][bnd] = cpl_coord_mant << 22;
                     else
