@@ -552,8 +552,8 @@ static void remove_dithering(AC3DecodeContext *s) {
     }
 }
 
-static void decode_transform_coeffs_ch(AC3DecodeContext *s, int blk, int ch,
-                                       mant_groups *m)
+static inline void decode_transform_coeffs_ch(AC3DecodeContext *s, int blk, int ch,
+                                              mant_groups *m)
 {
     if (!s->channel_uses_aht[ch]) {
         ac3_decode_transform_coeffs_ch(s, ch, m);
@@ -572,7 +572,7 @@ static void decode_transform_coeffs_ch(AC3DecodeContext *s, int blk, int ch,
 /**
  * Decode the transform coefficients.
  */
-static void decode_transform_coeffs(AC3DecodeContext *s, int blk)
+static inline void decode_transform_coeffs(AC3DecodeContext *s, int blk)
 {
     int ch, end;
     int got_cplchan = 0;
@@ -750,7 +750,7 @@ static void decode_band_structure(BitstreamContext *bc, int blk, int eac3,
         memcpy(band_sizes, bnd_sz, n_bands);
 }
 
-static int spx_strategy(AC3DecodeContext *s, int blk)
+static inline int spx_strategy(AC3DecodeContext *s, int blk)
 {
     BitstreamContext *bc = &s->bc;
     int fbw_channels = s->fbw_channels;
@@ -803,7 +803,7 @@ static int spx_strategy(AC3DecodeContext *s, int blk)
     return 0;
 }
 
-static void spx_coordinates(AC3DecodeContext *s)
+static inline void spx_coordinates(AC3DecodeContext *s)
 {
     BitstreamContext *bc = &s->bc;
     int fbw_channels = s->fbw_channels;
@@ -853,7 +853,7 @@ static void spx_coordinates(AC3DecodeContext *s)
     }
 }
 
-static int coupling_strategy(AC3DecodeContext *s, int blk, uint8_t *bit_alloc_stages)
+static inline int coupling_strategy(AC3DecodeContext *s, int blk, uint8_t *bit_alloc_stages)
 {
     BitstreamContext *bc = &s->bc;
     int fbw_channels = s->fbw_channels;
@@ -921,7 +921,7 @@ static int coupling_strategy(AC3DecodeContext *s, int blk, uint8_t *bit_alloc_st
     return 0;
 }
 
-static int coupling_coordinates(AC3DecodeContext *s, int blk)
+static inline int coupling_coordinates(AC3DecodeContext *s, int blk)
 {
     BitstreamContext *bc = &s->bc;
     int fbw_channels = s->fbw_channels;
