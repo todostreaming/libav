@@ -188,6 +188,7 @@ External library support:
   --enable-bzlib             bzip2 compression [autodetect]
   --enable-frei0r            video filtering plugins
   --enable-gnutls            crypto
+  --enable-libaom            AV1 video encoding/decoding
   --enable-libbs2b           Bauer stereophonic-to-binaural DSP
   --enable-libcdio           audio CD input
   --enable-libdc1394         IEEE 1394/Firewire camera input
@@ -1238,6 +1239,7 @@ EXTERNAL_LIBRARY_LIST="
     bzlib
     frei0r
     gnutls
+    libaom
     libbs2b
     libcdio
     libdc1394
@@ -2218,6 +2220,7 @@ vc1_parser_select="vc1dsp"
 mjpeg2jpeg_bsf_select="jpegtables"
 
 # external libraries
+libaom_av1_decoder_deps="libaom"
 libdcadec_decoder_deps="libdcadec"
 libfaac_encoder_deps="libfaac"
 libfaac_encoder_select="audio_frame_queue"
@@ -4577,6 +4580,7 @@ enabled avisynth          && { check_lib2 "avisynth/avisynth_c.h windows.h" Load
 enabled cuda              && check_lib cuda.h cuInit -lcuda
 enabled frei0r            && { check_header frei0r.h || die "ERROR: frei0r.h header not found"; }
 enabled gnutls            && require_pkg_config gnutls gnutls/gnutls.h gnutls_global_init
+enabled libaom            && require_pkg_config "aom >= 0.1.0" aom/aom_codec.h aom_codec_version
 enabled libbs2b           && require_pkg_config libbs2b bs2b.h bs2b_open
 enabled libdcadec         && require libdcadec libdcadec/dca_context.h dcadec_context_create -ldcadec
 enabled libfaac           && require2 libfaac "stdint.h faac.h" faacEncGetVersion -lfaac
