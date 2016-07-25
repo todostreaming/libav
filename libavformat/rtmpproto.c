@@ -750,6 +750,48 @@ static int gen_play(URLContext *s, RTMPContext *rt)
     return rtmp_send_packet(rt, &pkt, 1);
 }
 
+/**
+ * Generate 'play2' call and send it to the server, then ping the server
+ * to start actual playing.
+ */
+static int gen_play2(URLContext *s, RTMPContext *rt, char *playpath, double offset)
+{
+    RTMPPacket pkt;
+    uint8_t *p;
+    int ret;
+
+    av_log(s, AV_LOG_DEBUG, "Sending play2 command for '%s'\n", playpath);
+
+    if ((ret = ff_rtmp_packet_create(&pkt, RTMP_SOURCE_CHANNEL, RTMP_PT_INVOKE,
+                                     0, RTMP_PKTDATA_DEFAULT_SIZE)) < 0)
+        return ret;
+
+    pkt.extra = rt->stream_id;
+
+    p = pkt.data;
+    ff_amf_write_string(&p, "play2");
+    ff_amf_write_number(&p, ++rt->nb_invokes);
+    ff_amf_write_null(&p);
+    ff_amf_write_object_start(&p);
+    ff_amf_write_field_name(&p, "streamName");
+    ff_amf_write_string(&p, playpath);
+    ff_amf_write_field_name(&p, "transition");
+    ff_amf_write_string(&p, "switch");
+    ff_amf_write_field_name(&p, "offset");
+    ff_amf_write_number(&p, offset);
+    ff_amf_write_field_name(&p, "len");
+    ff_amf_write_number(&p, -1);
+    ff_amf_write_field_name(&p, "oldStreamName");
+    ff_amf_write_null(&p);
+    ff_amf_write_field_name(&p, "start");
+    ff_amf_write_number(&p, -1);
+    ff_amf_write_object_end(&p);
+
+    pkt.size = p - pkt.data;
+
+    return rtmp_send_packet(rt, &pkt, 1);
+}
+
 static int gen_seek(URLContext *s, RTMPContext *rt, int64_t timestamp)
 {
     RTMPPacket pkt;
