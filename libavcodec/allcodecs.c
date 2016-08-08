@@ -481,6 +481,7 @@ void avcodec_register_all(void)
     REGISTER_ENCDEC (LIBSPEEX,          libspeex);
     REGISTER_ENCODER(LIBTHEORA,         libtheora);
     REGISTER_ENCODER(LIBTWOLAME,        libtwolame);
+    REGISTER_DECODER(LIBVC2HQDECODE,    libvc2hqdecode);
     REGISTER_ENCODER(LIBVO_AACENC,      libvo_aacenc);
     REGISTER_ENCODER(LIBVO_AMRWBENC,    libvo_amrwbenc);
     REGISTER_ENCODER(LIBVORBIS,         libvorbis);

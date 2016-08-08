@@ -219,6 +219,7 @@ External library support:
   --enable-libspeex          Speex audio encoding/decoding
   --enable-libtheora         Theora video encoding/decoding
   --enable-libtwolame        MP2 audio encoding
+  --enable-libvc2hqdecode    VC-2 video decoding
   --enable-libvo-aacenc      AAC audio encoding
   --enable-libvo-amrwbenc    AMR-WB audio encoding
   --enable-libvorbis         Vorbis audio encoding/decoding
@@ -1281,6 +1282,7 @@ HWACCEL_LIBRARY_LIST="
 
 EXTERNAL_LIBRARY_GPL_LIST="
     libcdio
+    libvc2hqdecode
     libx264
     libx265
     libxavs
@@ -4749,6 +4751,7 @@ enabled libsnappy         && require libsnappy snappy-c.h snappy_compress -lsnap
 enabled libspeex          && require_pkg_config libspeex speex speex/speex.h speex_decoder_init -lspeex
 enabled libtheora         && require libtheora theora/theoraenc.h th_info_init -ltheoraenc -ltheoradec -logg
 enabled libtwolame        && require libtwolame twolame.h twolame_init -ltwolame
+enabled libvc2hqdecode    && require_pkg_config vc2hqdecode-0.1 vc2hqdecode/vc2hqdecode.h vc2decode_init
 enabled libvo_aacenc      && require libvo_aacenc vo-aacenc/voAAC.h voGetAACEncAPI -lvo-aacenc
 enabled libvo_amrwbenc    && require libvo_amrwbenc vo-amrwbenc/enc_if.h E_IF_init -lvo-amrwbenc
 enabled libvorbis         && require libvorbis vorbis/vorbisenc.h vorbis_info_init -lvorbisenc -lvorbis -logg
