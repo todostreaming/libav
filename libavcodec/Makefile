@@ -689,6 +689,7 @@ OBJS-$(CONFIG_LIBSPEEX_DECODER)           += libspeexdec.o
 OBJS-$(CONFIG_LIBSPEEX_ENCODER)           += libspeexenc.o
 OBJS-$(CONFIG_LIBTHEORA_ENCODER)          += libtheoraenc.o
 OBJS-$(CONFIG_LIBTWOLAME_ENCODER)         += libtwolame.o
+OBJS-$(CONFIG_LIBVC2HQDECODE_DECODER)     += libvc2hqdecode.o
 OBJS-$(CONFIG_LIBVO_AACENC_ENCODER)       += libvo-aacenc.o mpeg4audio.o
 OBJS-$(CONFIG_LIBVO_AMRWBENC_ENCODER)     += libvo-amrwbenc.o
 OBJS-$(CONFIG_LIBVORBIS_ENCODER)          += libvorbis.o \
