@@ -2,6 +2,7 @@ Entries are sorted chronologically from oldest to youngest within each release,
 releases are sorted from youngest to oldest.
 
 version <next>:
+- Alliance for Open Media AV1 decoding support using libaom
 
 
 version 12:
