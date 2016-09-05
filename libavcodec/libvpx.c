@@ -22,9 +22,9 @@
 
 #include "libvpx.h"
 
-enum AVPixelFormat ff_vpx_imgfmt_to_pixfmt(vpx_img_fmt_t img)
+enum AVPixelFormat ff_vpx_image_to_pixfmt(vpx_image_t *img)
 {
-    switch (img) {
+    switch (img->fmt) {
     case VPX_IMG_FMT_RGB24:     return AV_PIX_FMT_RGB24;
     case VPX_IMG_FMT_RGB565:    return AV_PIX_FMT_RGB565BE;
     case VPX_IMG_FMT_RGB555:    return AV_PIX_FMT_RGB555BE;
@@ -42,9 +42,27 @@ enum AVPixelFormat ff_vpx_imgfmt_to_pixfmt(vpx_img_fmt_t img)
     case VPX_IMG_FMT_444A:      return AV_PIX_FMT_YUVA444P;
 #if VPX_IMAGE_ABI_VERSION >= 3
     case VPX_IMG_FMT_I440:      return AV_PIX_FMT_YUV440P;
-    case VPX_IMG_FMT_I42016:    return AV_PIX_FMT_YUV420P16BE;
-    case VPX_IMG_FMT_I42216:    return AV_PIX_FMT_YUV422P16BE;
-    case VPX_IMG_FMT_I44416:    return AV_PIX_FMT_YUV444P16BE;
+    case VPX_IMG_FMT_I42016:
+        switch (img->bit_depth) {
+        case  9: return AV_PIX_FMT_YUV420P9;
+        case 10: return AV_PIX_FMT_YUV420P10;
+        case 16: return AV_PIX_FMT_YUV420P16BE;
+        default: return AV_PIX_FMT_NONE;
+        }
+    case VPX_IMG_FMT_I42216:
+        switch (img->bit_depth) {
+        case  9: return AV_PIX_FMT_YUV422P9;
+        case 10: return AV_PIX_FMT_YUV422P10;
+        case 16: return AV_PIX_FMT_YUV422P16BE;
+        default: return AV_PIX_FMT_NONE;
+        }
+    case VPX_IMG_FMT_I44416:
+        switch (img->bit_depth) {
+        case  9: return AV_PIX_FMT_YUV444P9;
+        case 10: return AV_PIX_FMT_YUV444P10;
+        case 16: return AV_PIX_FMT_YUV444P16BE;
+        default: return AV_PIX_FMT_NONE;
+        }
 #endif
     default:                    return AV_PIX_FMT_NONE;
     }

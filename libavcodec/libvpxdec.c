@@ -81,7 +81,7 @@ static int vp8_decode(AVCodecContext *avctx,
     }
 
     if ((img = vpx_codec_get_frame(&ctx->decoder, &iter))) {
-        avctx->pix_fmt = ff_vpx_imgfmt_to_pixfmt(img->fmt);
+        avctx->pix_fmt = ff_vpx_image_to_pixfmt(img);
         if (avctx->pix_fmt == AV_PIX_FMT_NONE) {
             av_log(avctx, AV_LOG_ERROR, "Unsupported output colorspace (%d)\n",
                    img->fmt);
