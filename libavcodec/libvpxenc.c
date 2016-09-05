@@ -35,6 +35,7 @@
 #include "libavutil/common.h"
 #include "libavutil/mathematics.h"
 #include "libavutil/opt.h"
+#include "libavutil/pixdesc.h"
 
 /**
  * Portion of struct vpx_codec_cx_pkt from vpx_encoder.h.
@@ -561,6 +562,12 @@ static int vp8_encode(AVCodecContext *avctx, AVPacket *pkt,
             rawimg->range = VPX_CR_FULL_RANGE;
             break;
         }
+        {
+            const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(frame->format);
+            if (desc) {
+                rawimg->bit_depth = av_get_bits_per_pixel(desc);
+            }
+        }
 #endif
         if (frame->pict_type == AV_PICTURE_TYPE_I)
             flags |= VPX_EFLAG_FORCE_KF;
@@ -698,6 +705,11 @@ AVCodec ff_libvpx_vp9_encoder = {
         AV_PIX_FMT_YUV422P,
         AV_PIX_FMT_YUV444P,
         AV_PIX_FMT_YUV440P,
+#endif
+#if VPX_IMAGE_ABI_VERSION >= 4
+        AV_PIX_FMT_YUV420P9, AV_PIX_FMT_YUV422P10, AV_PIX_FMT_YUV422P16BE,
+        AV_PIX_FMT_YUV422P9, AV_PIX_FMT_YUV422P10, AV_PIX_FMT_YUV422P16BE,
+        AV_PIX_FMT_YUV444P9, AV_PIX_FMT_YUV444P10, AV_PIX_FMT_YUV444P16BE,
 #endif
         AV_PIX_FMT_NONE,
     },

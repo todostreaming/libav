@@ -88,8 +88,14 @@ vpx_img_fmt_t ff_vpx_pixfmt_to_imgfmt(enum AVPixelFormat pix)
     case AV_PIX_FMT_YUVA444P:     return VPX_IMG_FMT_444A;
 #if VPX_IMAGE_ABI_VERSION >= 3
     case AV_PIX_FMT_YUV440P:      return VPX_IMG_FMT_I440;
+    case AV_PIX_FMT_YUV420P9:
+    case AV_PIX_FMT_YUV420P10:
     case AV_PIX_FMT_YUV420P16BE:  return VPX_IMG_FMT_I42016;
+    case AV_PIX_FMT_YUV422P9:
+    case AV_PIX_FMT_YUV422P10:
     case AV_PIX_FMT_YUV422P16BE:  return VPX_IMG_FMT_I42216;
+    case AV_PIX_FMT_YUV444P9:
+    case AV_PIX_FMT_YUV444P10:
     case AV_PIX_FMT_YUV444P16BE:  return VPX_IMG_FMT_I44416;
 #endif
     default:                      return VPX_IMG_FMT_NONE;
