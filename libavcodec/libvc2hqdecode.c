@@ -37,22 +37,22 @@ typedef struct VC2hqdecodeContext {
 
 static void vc2hqdecode_error_callback(char *msg, void *opaque)
 {
-    av_log(NULL, AV_LOG_ERROR, "%s", msg);
+    av_log(NULL, AV_LOG_ERROR, "%s\n", msg);
 }
 
 static void vc2hqdecode_warn_callback(char *msg, void *opaque)
 {
-    av_log(NULL, AV_LOG_WARNING, "%s", msg);
+    av_log(NULL, AV_LOG_WARNING, "%s\n", msg);
 }
 
 static void vc2hqdecode_info_callback(char *msg, void *opaque)
 {
-    av_log(NULL, AV_LOG_INFO, "%s", msg);
+    av_log(NULL, AV_LOG_INFO, "%s\n", msg);
 }
 
 static void vc2hqdecode_debug_callback(char *msg, void *opaque)
 {
-    av_log(NULL, AV_LOG_DEBUG, "%s", msg);
+    av_log(NULL, AV_LOG_DEBUG, "%s\n", msg);
 }
 
 
@@ -67,11 +67,12 @@ static av_cold int vc2hqdecode_decode_init(AVCodecContext *avctx)
     vcc->loggers.info  = vc2hqdecode_info_callback;
     vcc->loggers.debug = vc2hqdecode_debug_callback;
 
-    vc2decode_init_logging(vcc->loggers);
+    vc2decoder_init_logging(vcc->loggers);
 
     vcc->handle = vc2decode_create();
 
-    avctx->pix_fmt = AV_PIX_FMT_YUV422P10LE;
+    // FIXME read from the bitstream
+    avctx->pix_fmt = AV_PIX_FMT_YUV422P12LE;
 
     memset(&vcc->fmt,    0, sizeof(vcc->fmt));
     memset(&vcc->params, 0, sizeof(vcc->params));
@@ -103,15 +104,19 @@ static int vc2hqdecode_decode_frame(AVCodecContext *avctx, void *data,
 
     ff_get_buffer(avctx, avframe, 0);
 
+    vcc->ostride[0] = avframe->linesize[0] / 2;
+    vcc->ostride[1] = avframe->linesize[1] / 2;
+    vcc->ostride[2] = avframe->linesize[2] / 2;
+
     res = vc2decode_decode_one_picture(vcc->handle, (char **) &avpkt->data, avpkt->size, (uint16_t **) avframe->data, vcc->ostride, 0);
 
     switch (res) {
     case VC2DECODER_OK_EOS:
-        return 0;
     case VC2DECODER_OK_PICTURE:
-        return 0;
+        *got_frame = 1;
+        return avpkt->size;
     case VC2DECODER_OK_RECONFIGURED:
-        return AVERROR_INVALIDDATA;
+        return 0;
     default:
         return AVERROR_BUG;
     }
@@ -131,7 +136,7 @@ AVCodec ff_libvc2hqdecode_decoder = {
     .name           = "libvc2hqdecode",
     .long_name      = NULL_IF_CONFIG_SMALL("VC-2 (vc2hqdecode)"),
     .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = AV_CODEC_ID_H264,
+    .id             = AV_CODEC_ID_DIRAC,
     .priv_data_size = sizeof(VC2hqdecodeContext),
     .init           = vc2hqdecode_decode_init,
     .decode         = vc2hqdecode_decode_frame,
