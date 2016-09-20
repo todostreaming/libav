@@ -50,6 +50,8 @@ typedef struct UDPContext {
     int is_multicast;
     int local_port;
     int reuse_socket;
+    struct sockaddr_storage local_addr;
+    int local_addr_len;
     struct sockaddr_storage dest_addr;
     int dest_addr_len;
     int is_connected;
@@ -113,14 +115,14 @@ static int udp_set_multicast_ttl(int sockfd, int mcastTTL,
     return 0;
 }
 
-static int udp_join_multicast_group(int sockfd, struct sockaddr *addr)
+static int udp_join_multicast_group(int sockfd, struct sockaddr *addr, struct sockaddr *local)
 {
 #ifdef IP_ADD_MEMBERSHIP
     if (addr->sa_family == AF_INET) {
         struct ip_mreq mreq;
 
         mreq.imr_multiaddr.s_addr = ((struct sockaddr_in *)addr)->sin_addr.s_addr;
-        mreq.imr_interface.s_addr= INADDR_ANY;
+        mreq.imr_interface.s_addr = ((struct sockaddr_in *)local)->sin_addr.s_addr;
         if (setsockopt(sockfd, IPPROTO_IP, IP_ADD_MEMBERSHIP, (const void *)&mreq, sizeof(mreq)) < 0) {
             log_net_error(NULL, AV_LOG_ERROR, "setsockopt(IP_ADD_MEMBERSHIP)");
             return -1;
@@ -446,8 +448,6 @@ static int udp_open(URLContext *h, const char *uri, int flags)
     int is_output;
     const char *p;
     char buf[256];
-    struct sockaddr_storage my_addr;
-    socklen_t len;
     int i, num_include_sources = 0, num_exclude_sources = 0;
     char *include_sources[32], *exclude_sources[32];
 
@@ -531,9 +531,9 @@ static int udp_open(URLContext *h, const char *uri, int flags)
         s->local_port = port;
 
     if (localaddr[0])
-        udp_fd = udp_socket_create(h, &my_addr, &len, localaddr);
+        udp_fd = udp_socket_create(h, &s->local_addr, &s->local_addr_len, localaddr);
     else
-        udp_fd = udp_socket_create(h, &my_addr, &len, s->localaddr);
+        udp_fd = udp_socket_create(h, &s->local_addr, &s->local_addr_len, s->localaddr);
     if (udp_fd < 0)
         goto fail;
 
@@ -546,24 +546,38 @@ static int udp_open(URLContext *h, const char *uri, int flags)
             goto fail;
     }
 
+    #ifdef IP_ADD_MEMBERSHIP
+    /* We use IP_ADD_MEMBERSHIP to bind to an interface/address if we can first.
+     * If we have multiple interfaces binding to the multicast ip does not work
+     * at least on linux.
+     */
+    if (s->is_multicast) {
+        struct addrinfo *addr = udp_resolve_host(h, NULL, port,
+                                                 SOCK_DGRAM,
+                                                 ((struct sockaddr *) &s->local_addr)->sa_family,
+                                                 0);
+        bind_ret = bind(udp_fd, addr->ai_addr, addr->ai_addrlen);
+        freeaddrinfo(addr);
+    }
+    #endif
+
     /* If multicast, try binding the multicast address first, to avoid
      * receiving UDP packets from other sources aimed at the same UDP
      * port. This fails on windows. This makes sending to the same address
      * using sendto() fail, so only do it if we're opened in read-only mode. */
     if (s->is_multicast && !(h->flags & AVIO_FLAG_WRITE)) {
-        bind_ret = bind(udp_fd,(struct sockaddr *)&s->dest_addr, len);
+        bind_ret = bind(udp_fd,(struct sockaddr *)&s->dest_addr, s->dest_addr_len);
     }
     /* bind to the local address if not multicast or if the multicast
      * bind failed */
     /* the bind is needed to give a port to the socket now */
-    if (bind_ret < 0 && bind(udp_fd,(struct sockaddr *)&my_addr, len) < 0) {
+    if (bind_ret < 0 && bind(udp_fd,(struct sockaddr *)&s->local_addr, s->local_addr_len) < 0) {
         log_net_error(h, AV_LOG_ERROR, "bind failed");
         goto fail;
     }
 
-    len = sizeof(my_addr);
-    getsockname(udp_fd, (struct sockaddr *)&my_addr, &len);
-    s->local_port = udp_port(&my_addr, len);
+    getsockname(udp_fd, (struct sockaddr *)&s->local_addr, &s->local_addr_len);
+    s->local_port = udp_port(&s->local_addr, s->local_addr_len);
 
     if (s->is_multicast) {
         if (h->flags & AVIO_FLAG_WRITE) {
@@ -585,7 +599,7 @@ static int udp_open(URLContext *h, const char *uri, int flags)
                                               num_include_sources, 1) < 0)
                     goto fail;
             } else {
-                if (udp_join_multicast_group(udp_fd, (struct sockaddr *)&s->dest_addr) < 0)
+                if (udp_join_multicast_group(udp_fd, (struct sockaddr *)&s->dest_addr, (struct sockaddr *)&s->local_addr) < 0)
                     goto fail;
             }
             if (num_exclude_sources) {
