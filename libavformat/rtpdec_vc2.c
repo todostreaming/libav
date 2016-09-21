@@ -29,12 +29,14 @@
 #include "rtpdec.h"
 #include "rtpdec_formats.h"
 
-#define RTP_VC2_PAYLOAD_HEADER_SIZE (2 + 1 + 1)
+#define VC2_PAYLOAD_HEADER_SIZE  (2 + 1 + 1)
+#define VC2_FRAGMENT_HEADER_SIZE (4 + 2 + 2)
 
 #define VC2_SEQUENCE_HEADER  0x00
 #define VC2_END_OF_SEQUENCE  0x01
 #define VC2_PICTURE_FRAGMENT 0xEC
 #define VC2_HQ_PICTURE       0xE8
+
 
 struct PayloadContext {
     AVIOContext *buf;
@@ -73,6 +75,14 @@ static int vc2_parse_sequence_header(AVFormatContext *s, PayloadContext *vc2,
 
 static int vc2_parse_end_of_sequence(AVFormatContext *s, PayloadContext *vc2)
 {
+    int ret;
+
+    if (!vc2->buf) {
+        ret = avio_open_dyn_buf(&vc2->buf);
+        if (ret < 0)
+            return ret;
+    }
+
     avio_write(vc2->buf, startcode, sizeof(startcode));
     avio_w8(vc2->buf, VC2_END_OF_SEQUENCE);
     avio_wb32(vc2->buf, 0);
@@ -85,16 +95,24 @@ static int vc2_parse_picture_fragment(AVFormatContext *s, PayloadContext *vc2,
                                       const uint8_t *buf, int len, int last,
                                       AVPacket *pkt, int index)
 {
-    int picture_number   = AV_RB32(buf +  4);
-    int fragment_length  = AV_RB16(buf +  8);
-    int number_of_slices = AV_RB16(buf + 12);
+    int picture_number   = AV_RB32(buf);
+    int fragment_length  = AV_RB16(buf + 4);
+    int number_of_slices = AV_RB16(buf + 6);
     int ret;
 
+    buf += VC2_FRAGMENT_HEADER_SIZE;
+    len -= VC2_FRAGMENT_HEADER_SIZE;
+
     // TODO more sanity checks)
-//    if (fragment_length > len), last
-//        return AVERROR_INVALIDDATA;
+    if (fragment_length > len)
+        return AVERROR_INVALIDDATA;
 
     if (!number_of_slices) {
+        if (!vc2->buf) {
+            ret = avio_open_dyn_buf(&vc2->buf);
+            if (ret < 0)
+                return ret;
+        }
         avio_write(vc2->buf, startcode, sizeof(startcode));
         avio_w8(vc2->buf, VC2_HQ_PICTURE);
         avio_wb32(vc2->buf, 0);
@@ -104,7 +122,7 @@ static int vc2_parse_picture_fragment(AVFormatContext *s, PayloadContext *vc2,
         vc2->size = 0;
     }
 
-    avio_write(vc2->buf, buf + 12, fragment_length);
+    avio_write(vc2->buf, buf, fragment_length);
 
     vc2->size += fragment_length;
 
@@ -134,7 +152,7 @@ static int vc2_handle_packet(AVFormatContext *s, PayloadContext *vc2,
     int ret = 0;
 
     /* sanity check for size of input packet: 1 byte payload at least */
-    if (len < RTP_VC2_PAYLOAD_HEADER_SIZE + 1) {
+    if (len < VC2_PAYLOAD_HEADER_SIZE) {
         av_log(s, AV_LOG_ERROR, "Too short RTP/VC2 packet, got %d bytes\n", len);
         return AVERROR_INVALIDDATA;
     }
@@ -181,6 +199,9 @@ static int vc2_handle_packet(AVFormatContext *s, PayloadContext *vc2,
 
     av_log(s, AV_LOG_INFO, "seq %d, %d/%d, parse code 0x%x\n",
            extended_seq << 16 | seq, first_field, second_field, parse_code);
+
+    buf += VC2_PAYLOAD_HEADER_SIZE;
+    len -= VC2_PAYLOAD_HEADER_SIZE;
 
     switch (parse_code) {
     case VC2_SEQUENCE_HEADER:
