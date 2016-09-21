@@ -134,7 +134,7 @@ static int udp_join_multicast_group(int sockfd, struct sockaddr *addr, struct so
         struct ipv6_mreq mreq6;
 
         memcpy(&mreq6.ipv6mr_multiaddr, &(((struct sockaddr_in6 *)addr)->sin6_addr), sizeof(struct in6_addr));
-        mreq6.ipv6mr_interface= 0;
+        mreq6.ipv6mr_interface = 0;
         if (setsockopt(sockfd, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq6, sizeof(mreq6)) < 0) {
             log_net_error(NULL, AV_LOG_ERROR, "setsockopt(IPV6_ADD_MEMBERSHIP)");
             return -1;
@@ -144,14 +144,14 @@ static int udp_join_multicast_group(int sockfd, struct sockaddr *addr, struct so
     return 0;
 }
 
-static int udp_leave_multicast_group(int sockfd, struct sockaddr *addr)
+static int udp_leave_multicast_group(int sockfd, struct sockaddr *addr, struct sockaddr *local)
 {
 #ifdef IP_DROP_MEMBERSHIP
     if (addr->sa_family == AF_INET) {
         struct ip_mreq mreq;
 
         mreq.imr_multiaddr.s_addr = ((struct sockaddr_in *)addr)->sin_addr.s_addr;
-        mreq.imr_interface.s_addr= INADDR_ANY;
+        mreq.imr_interface.s_addr = ((struct sockaddr_in *)local)->sin_addr.s_addr;
         if (setsockopt(sockfd, IPPROTO_IP, IP_DROP_MEMBERSHIP, (const void *)&mreq, sizeof(mreq)) < 0) {
             log_net_error(NULL, AV_LOG_ERROR, "setsockopt(IP_DROP_MEMBERSHIP)");
             return -1;
@@ -163,7 +163,7 @@ static int udp_leave_multicast_group(int sockfd, struct sockaddr *addr)
         struct ipv6_mreq mreq6;
 
         memcpy(&mreq6.ipv6mr_multiaddr, &(((struct sockaddr_in6 *)addr)->sin6_addr), sizeof(struct in6_addr));
-        mreq6.ipv6mr_interface= 0;
+        mreq6.ipv6mr_interface = 0;
         if (setsockopt(sockfd, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq6, sizeof(mreq6)) < 0) {
             log_net_error(NULL, AV_LOG_ERROR, "setsockopt(IPV6_DROP_MEMBERSHIP)");
             return -1;
@@ -546,21 +546,6 @@ static int udp_open(URLContext *h, const char *uri, int flags)
             goto fail;
     }
 
-    #ifdef IP_ADD_MEMBERSHIP
-    /* We use IP_ADD_MEMBERSHIP to bind to an interface/address if we can first.
-     * If we have multiple interfaces binding to the multicast ip does not work
-     * at least on linux.
-     */
-    if (s->is_multicast) {
-        struct addrinfo *addr = udp_resolve_host(h, NULL, port,
-                                                 SOCK_DGRAM,
-                                                 ((struct sockaddr *) &s->local_addr)->sa_family,
-                                                 0);
-        bind_ret = bind(udp_fd, addr->ai_addr, addr->ai_addrlen);
-        freeaddrinfo(addr);
-    }
-    #endif
-
     /* If multicast, try binding the multicast address first, to avoid
      * receiving UDP packets from other sources aimed at the same UDP
      * port. This fails on windows. This makes sending to the same address
@@ -694,7 +679,9 @@ static int udp_close(URLContext *h)
     UDPContext *s = h->priv_data;
 
     if (s->is_multicast && (h->flags & AVIO_FLAG_READ))
-        udp_leave_multicast_group(s->udp_fd, (struct sockaddr *)&s->dest_addr);
+        udp_leave_multicast_group(s->udp_fd,
+                                  (struct sockaddr *)&s->dest_addr,
+                                  (struct sockaddr *)&s->local_addr);
     closesocket(s->udp_fd);
     return 0;
 }
