@@ -42,8 +42,9 @@ struct PayloadContext {
     AVIOContext *buf;
     uint32_t     timestamp;
     uint32_t     last_offset;
-    uint32_t     picture_number;
+    int64_t      picture_number;
     uint32_t     size;
+    int          parsing_fragment;
 };
 
 static uint8_t startcode[4] = { 0x42, 0x42, 0x43, 0x44 };
@@ -107,7 +108,12 @@ static int vc2_parse_picture_fragment(AVFormatContext *s, PayloadContext *vc2,
     if (fragment_length > len)
         return AVERROR_INVALIDDATA;
 
+    // Discard spurious slices
+    if (!vc2->parsing_fragment && number_of_slices)
+        return AVERROR(EAGAIN);
+
     if (!number_of_slices) {
+        vc2->parsing_fragment = 1;
         if (!vc2->buf) {
             ret = avio_open_dyn_buf(&vc2->buf);
             if (ret < 0)
@@ -128,6 +134,7 @@ static int vc2_parse_picture_fragment(AVFormatContext *s, PayloadContext *vc2,
 
     if (last) {
         int64_t pos = avio_tell(vc2->buf);
+        vc2->parsing_fragment = 0;
         // patch up the values
         avio_seek(vc2->buf, 5, SEEK_SET);
         avio_wb32(vc2->buf, vc2->size);
