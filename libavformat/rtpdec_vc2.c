@@ -32,8 +32,10 @@
 #define VC2_PAYLOAD_HEADER_SIZE  (2 + 1 + 1)
 #define VC2_FRAGMENT_HEADER_SIZE (4 + 2 + 2)
 
+#define VC2_BITSTREAM_HEADER_SIZE (4 + 1 + 4 + 4)
+
 #define VC2_SEQUENCE_HEADER  0x00
-#define VC2_END_OF_SEQUENCE  0x01
+#define VC2_END_OF_SEQUENCE  0x10
 #define VC2_PICTURE_FRAGMENT 0xEC
 #define VC2_HQ_PICTURE       0xE8
 
@@ -45,6 +47,8 @@ struct PayloadContext {
     int64_t      picture_number;
     uint32_t     size;
     int          parsing_fragment;
+    int          parsed_sequence_header;
+    int64_t      start_pos;
 };
 
 static uint8_t startcode[4] = { 0x42, 0x42, 0x43, 0x44 };
@@ -54,7 +58,7 @@ static int vc2_parse_sequence_header(AVFormatContext *s, PayloadContext *vc2,
                                      const uint8_t *buf, int len)
 {
     int ret;
-    uint32_t offset = len + 13 - 3;
+    uint32_t offset = len + VC2_BITSTREAM_HEADER_SIZE;
 
     if (!vc2->buf) {
         ret = avio_open_dyn_buf(&vc2->buf);
@@ -71,12 +75,17 @@ static int vc2_parse_sequence_header(AVFormatContext *s, PayloadContext *vc2,
 
     vc2->last_offset = offset;
 
+    vc2->parsed_sequence_header = 1;
+
     return AVERROR(EAGAIN);
 }
 
 static int vc2_parse_end_of_sequence(AVFormatContext *s, PayloadContext *vc2)
 {
     int ret;
+
+    if (!vc2->parsed_sequence_header)
+        return AVERROR(EAGAIN);
 
     if (!vc2->buf) {
         ret = avio_open_dyn_buf(&vc2->buf);
@@ -88,6 +97,8 @@ static int vc2_parse_end_of_sequence(AVFormatContext *s, PayloadContext *vc2)
     avio_w8(vc2->buf, VC2_END_OF_SEQUENCE);
     avio_wb32(vc2->buf, 0);
     avio_wb32(vc2->buf, vc2->last_offset);
+
+    vc2->parsed_sequence_header = 0;
 
     return AVERROR(EAGAIN);
 }
@@ -111,6 +122,8 @@ static int vc2_parse_picture_fragment(AVFormatContext *s, PayloadContext *vc2,
     // Discard spurious slices
     if (!vc2->parsing_fragment && number_of_slices)
         return AVERROR(EAGAIN);
+    if (!vc2->parsed_sequence_header)
+        return AVERROR(EAGAIN);
 
     if (!number_of_slices) {
         vc2->parsing_fragment = 1;
@@ -121,11 +134,13 @@ static int vc2_parse_picture_fragment(AVFormatContext *s, PayloadContext *vc2,
         }
         avio_write(vc2->buf, startcode, sizeof(startcode));
         avio_w8(vc2->buf, VC2_HQ_PICTURE);
+        vc2->start_pos = avio_tell(vc2->buf);
+        // Placeholder
         avio_wb32(vc2->buf, 0);
         avio_wb32(vc2->buf, vc2->last_offset);
         avio_wb32(vc2->buf, picture_number);
 
-        vc2->size = 0;
+        vc2->size = VC2_BITSTREAM_HEADER_SIZE + 4;
     }
 
     avio_write(vc2->buf, buf, fragment_length);
@@ -134,12 +149,15 @@ static int vc2_parse_picture_fragment(AVFormatContext *s, PayloadContext *vc2,
 
     if (last) {
         int64_t pos = avio_tell(vc2->buf);
+
         vc2->parsing_fragment = 0;
         // patch up the values
-        avio_seek(vc2->buf, 5, SEEK_SET);
+        avio_seek(vc2->buf, vc2->start_pos, SEEK_SET);
         avio_wb32(vc2->buf, vc2->size);
         // seek back to the right position to correctly pad the packet on close
         avio_seek(vc2->buf, pos, SEEK_SET);
+
+        vc2->last_offset = vc2->size;
 
         ret = ff_rtp_finalize_packet(pkt, &vc2->buf, index);
     } else {
@@ -204,7 +222,7 @@ static int vc2_handle_packet(AVFormatContext *s, PayloadContext *vc2,
     parse_code   = buf[3];
     last         = !!(flags & RTP_FLAG_MARKER);
 
-    av_log(s, AV_LOG_INFO, "seq %d, %d/%d, parse code 0x%x\n",
+    av_log(s, AV_LOG_DEBUG, "seq %d, %d/%d, parse code 0x%x\n",
            extended_seq << 16 | seq, first_field, second_field, parse_code);
 
     buf += VC2_PAYLOAD_HEADER_SIZE;
@@ -215,7 +233,7 @@ static int vc2_handle_packet(AVFormatContext *s, PayloadContext *vc2,
         ret = vc2_parse_sequence_header(s, vc2, buf, len);
         if (ret < 0)
             return ret;
-        return AVERROR(EAGAIN);
+        break;
     case VC2_END_OF_SEQUENCE:
         ret = vc2_parse_end_of_sequence(s, vc2);
         if (ret < 0)
@@ -243,7 +261,7 @@ RTPDynamicProtocolHandler ff_vc2_dynamic_handler = {
     .enc_name         = "VC2",
     .codec_type       = AVMEDIA_TYPE_VIDEO,
     .codec_id         = AV_CODEC_ID_DIRAC,
-    .need_parsing     = AVSTREAM_PARSE_FULL,
+    .need_parsing     = AVSTREAM_PARSE_NONE,
     .priv_data_size   = sizeof(PayloadContext),
     .close            = vc2_close_context,
     .parse_packet     = vc2_handle_packet,
