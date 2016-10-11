@@ -744,6 +744,7 @@ int av_opt_set_dict(void *obj, AVDictionary **options)
             av_dict_set(&tmp, t->key, t->value, 0);
         else if (ret < 0) {
             av_log(obj, AV_LOG_ERROR, "Error setting option %s to value %s.\n", t->key, t->value);
+            abort();
             break;
         }
         ret = 0;
