@@ -77,6 +77,9 @@ static int parse_header(AVFormatContext *s)
            next_off,
            prev_off);
 
+    if (parse_code == VC2_END_OF_SEQUENCE)
+        return AVERROR_EOF;
+
     avio_skip(s->pb, next_off - VC2_HEADER_SIZE);
 
     return parse_code;
@@ -97,6 +100,8 @@ static int dirac_read_packet(AVFormatContext *s, AVPacket *pkt)
     end = avio_tell(s->pb);
 
     avio_seek(s->pb, pos, SEEK_SET);
+
+    av_log(s, AV_LOG_VERBOSE, "Packet out %"PRId64"\n", end - pos);
 
     return av_get_packet(s->pb, pkt, end - pos);
 }
