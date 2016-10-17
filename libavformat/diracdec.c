@@ -59,6 +59,9 @@ static int parse_header(AVFormatContext *s)
     uint32_t next_off   = avio_rb32(s->pb);
     uint32_t prev_off   = avio_rb32(s->pb);
 
+    if (s->pb->eof_reached)
+        return AVERROR_EOF;
+
     if (start_code != MKTAG('B', 'B', 'C', 'D')) {
         av_log(NULL, AV_LOG_ERROR, "Bogus start_code %d\n",
                start_code);
@@ -79,7 +82,6 @@ static int parse_header(AVFormatContext *s)
     return parse_code;
 }
 
-
 static int dirac_read_packet(AVFormatContext *s, AVPacket *pkt)
 {
     int64_t pos = avio_tell(s->pb);
@@ -88,8 +90,6 @@ static int dirac_read_packet(AVFormatContext *s, AVPacket *pkt)
 
     // TODO resync
     while ((ret = parse_header(s)) != VC2_HQ_PICTURE) {
-        if (s->pb->eof_reached)
-            return AVERROR_EOF;
         if (ret < 0)
             return ret;
     }
