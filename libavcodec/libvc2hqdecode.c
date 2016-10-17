@@ -89,13 +89,19 @@ static int vc2hqdecode_decode_frame(AVCodecContext *avctx, void *data,
 {
     VC2hqdecodeContext *vcc = avctx->priv_data;
     AVFrame *avframe = data;
+    uint8_t *dp = avpkt->data;
+    int size = avpkt->size;
     VC2DecoderResult res;
 
-    res = vc2decode_synchronise(vcc->handle, (char **) &avpkt->data, avpkt->size, 0);
-    if (res != VC2DECODER_OK_RECONFIGURED)
-        return AVERROR_INVALIDDATA;
+    res = vc2decode_synchronise(vcc->handle, (char **) &dp, size, 0);
 
-    /* FIXME: Let's assume no reconfiguration for now. */
+    if (res == VC2DECODER_OK_RECONFIGURED) { // Update the size
+        size -= dp - avpkt->data;
+    } else { // Rewind the pointer.
+        dp = avpkt->data;
+    }
+
+    /* FIXME: Let's assume no reconfiguration is needed for now. */
     res = vc2decode_get_output_format(vcc->handle, &vcc->fmt);
     if (res != VC2DECODER_OK)
         return AVERROR_INVALIDDATA;
@@ -108,7 +114,10 @@ static int vc2hqdecode_decode_frame(AVCodecContext *avctx, void *data,
     vcc->ostride[1] = avframe->linesize[1] / 2;
     vcc->ostride[2] = avframe->linesize[2] / 2;
 
-    res = vc2decode_decode_one_picture(vcc->handle, (char **) &avpkt->data, avpkt->size, (uint16_t **) avframe->data, vcc->ostride, 0);
+    res = vc2decode_decode_one_picture(vcc->handle,
+                                       (char **) &dp, size,
+                                       (uint16_t **) avframe->data,
+                                       vcc->ostride, 0);
 
     switch (res) {
     case VC2DECODER_OK_EOS:
@@ -116,7 +125,7 @@ static int vc2hqdecode_decode_frame(AVCodecContext *avctx, void *data,
         *got_frame = 1;
         return avpkt->size;
     case VC2DECODER_OK_RECONFIGURED:
-        return 0;
+        // vc2decode_synchronise would had swallowed it before.
     default:
         return AVERROR_BUG;
     }
