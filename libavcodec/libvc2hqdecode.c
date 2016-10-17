@@ -121,6 +121,7 @@ static int vc2hqdecode_decode_frame(AVCodecContext *avctx, void *data,
 
     switch (res) {
     case VC2DECODER_OK_EOS:
+        return AVERROR_EOF;
     case VC2DECODER_OK_PICTURE:
         *got_frame = 1;
         return avpkt->size;
