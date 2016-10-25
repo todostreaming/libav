@@ -112,18 +112,14 @@ static int vc2_parse_picture_fragment(AVFormatContext *s, PayloadContext *vc2,
     int number_of_slices = AV_RB16(buf + 6);
     int ret;
 
-    buf += VC2_FRAGMENT_HEADER_SIZE;
-    len -= VC2_FRAGMENT_HEADER_SIZE;
-
-    // TODO more sanity checks)
-    if (fragment_length > len)
-        return AVERROR_INVALIDDATA;
-
     // Discard spurious slices
     if (!vc2->parsing_fragment && number_of_slices)
         return AVERROR(EAGAIN);
     if (!vc2->parsed_sequence_header)
         return AVERROR(EAGAIN);
+
+    buf += VC2_FRAGMENT_HEADER_SIZE;
+    len -= VC2_FRAGMENT_HEADER_SIZE;
 
     if (!number_of_slices) {
         vc2->parsing_fragment = 1;
@@ -141,7 +137,14 @@ static int vc2_parse_picture_fragment(AVFormatContext *s, PayloadContext *vc2,
         avio_wb32(vc2->buf, picture_number);
 
         vc2->size = VC2_BITSTREAM_HEADER_SIZE + 4;
+    } else { // Drop the slice coordinates
+        buf += 4;
+        len -= 4;
     }
+
+    // TODO more sanity checks)
+    if (fragment_length > len)
+        return AVERROR_INVALIDDATA;
 
     avio_write(vc2->buf, buf, fragment_length);
 
