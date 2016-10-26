@@ -86,9 +86,9 @@ static int parse_header(AVFormatContext *s)
            next_off,
            prev_off);
 
-    // TODO skip end of sequence
+    // Skip end of sequence
     if (parse_code == VC2_END_OF_SEQUENCE)
-        return AVERROR_EOF;
+        return parse_code;
 
     // TODO make less wasteful
     avio_wl32(drc->buf, start_code);
