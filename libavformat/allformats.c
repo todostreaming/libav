@@ -102,6 +102,7 @@ void av_register_all(void)
     REGISTER_MUXDEMUX(FLV,              flv);
     REGISTER_DEMUXER (FOURXM,           fourxm);
     REGISTER_MUXER   (FRAMECRC,         framecrc);
+    REGISTER_MUXER   (FRAMEINFO,        frameinfo);
     REGISTER_MUXER   (FRAMEMD5,         framemd5);
     REGISTER_MUXDEMUX(G722,             g722);
     REGISTER_MUXDEMUX(G723_1,           g723_1);

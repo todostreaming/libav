@@ -135,6 +135,7 @@ OBJS-$(CONFIG_FLV_DEMUXER)               += flvdec.o
 OBJS-$(CONFIG_FLV_MUXER)                 += flvenc.o avc.o
 OBJS-$(CONFIG_FOURXM_DEMUXER)            += 4xm.o
 OBJS-$(CONFIG_FRAMECRC_MUXER)            += framecrcenc.o framehash.o
+OBJS-$(CONFIG_FRAMECRC_MUXER)            += frameinfo.o
 OBJS-$(CONFIG_FRAMEMD5_MUXER)            += md5enc.o framehash.o
 OBJS-$(CONFIG_G722_DEMUXER)              += g722.o rawdec.o
 OBJS-$(CONFIG_G722_MUXER)                += rawenc.o
