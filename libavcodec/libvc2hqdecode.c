@@ -76,7 +76,7 @@ static av_cold int vc2hqdecode_decode_init(AVCodecContext *avctx)
 
     memset(&vcc->fmt,    0, sizeof(vcc->fmt));
     memset(&vcc->params, 0, sizeof(vcc->params));
-    vcc->params.threads = 1;
+    vcc->params.threads = avctx->thread_count;
 
     if (vc2decode_set_parameters(vcc->handle, vcc->params) != VC2DECODER_OK)
         return AVERROR(EINVAL);
