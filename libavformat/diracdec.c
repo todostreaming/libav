@@ -53,7 +53,7 @@ static int dirac_read_header(AVFormatContext *s)
     st->codecpar->codec_id   = AV_CODEC_ID_DIRAC;
 
     // TODO parse the reported framerate
-    avpriv_set_pts_info(st, 64, 50, 1);
+    avpriv_set_pts_info(st, 64, 1, 50);
 
     return 0;
 }
