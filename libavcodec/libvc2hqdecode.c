@@ -151,7 +151,7 @@ AVCodec ff_libvc2hqdecode_decoder = {
     .init           = vc2hqdecode_decode_init,
     .decode         = vc2hqdecode_decode_frame,
     .close          = vc2hqdecode_decode_close,
-    .capabilities   = AV_CODEC_CAP_DELAY | AV_CODEC_CAP_DR1,
+    .capabilities   = AV_CODEC_CAP_DELAY | AV_CODEC_CAP_DR1 | AV_CODEC_CAP_AUTO_THREADS,
     .caps_internal  = FF_CODEC_CAP_SETS_PKT_DTS | FF_CODEC_CAP_INIT_THREADSAFE |
                       FF_CODEC_CAP_INIT_CLEANUP,
 };
