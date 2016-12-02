@@ -383,12 +383,18 @@ static void export_stream_params(AVCodecContext *avctx, const HEVCParamSets *ps,
 
 static enum AVPixelFormat get_format(HEVCContext *s, const HEVCSPS *sps)
 {
-    #define HWACCEL_MAX (CONFIG_HEVC_DXVA2_HWACCEL + CONFIG_HEVC_D3D11VA_HWACCEL + \
-                         CONFIG_HEVC_VAAPI_HWACCEL + CONFIG_HEVC_VDPAU_HWACCEL)
+    #define HWACCEL_MAX (CONFIG_HEVC_CUVID_HWACCEL +   \
+                         CONFIG_HEVC_DXVA2_HWACCEL +   \
+                         CONFIG_HEVC_D3D11VA_HWACCEL + \
+                         CONFIG_HEVC_VAAPI_HWACCEL +   \
+                         CONFIG_HEVC_VDPAU_HWACCEL)
     enum AVPixelFormat pix_fmts[HWACCEL_MAX + 2], *fmt = pix_fmts;
 
     if (sps->pix_fmt == AV_PIX_FMT_YUV420P || sps->pix_fmt == AV_PIX_FMT_YUVJ420P ||
         sps->pix_fmt == AV_PIX_FMT_YUV420P10) {
+#if CONFIG_HEVC_CUVID_HWACCEL
+        *fmt++ = AV_PIX_FMT_CUDA;
+#endif
 #if CONFIG_HEVC_D3D11VA_HWACCEL
         *fmt++ = AV_PIX_FMT_D3D11VA_VLD;
 #endif
