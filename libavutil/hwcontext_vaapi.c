@@ -111,6 +111,8 @@ static const struct {
   //MAP(XBGR, RGB32,   0BGR),
     MAP(ARGB, RGB32,   ARGB),
   //MAP(XRGB, RGB32,   0RGB),
+    // Special scratch buffer format
+    { VA_FOURCC_P208, VA_FOURCC_P208, AV_PIX_FMT_PAL8 },
 };
 #undef MAP
 
