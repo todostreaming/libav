@@ -1,5 +1,5 @@
 /*
- * RTP parser for VC2 payload format (draft version 0)
+ * RTP parser for VC2 payload format (draft version 1)
  * Copyright (c) 2016 Luca Barbato <lu_zero@gentoo.org>
  *
  * This file is part of Libav.
@@ -30,8 +30,7 @@
 #include "rtpdec_formats.h"
 
 #define VC2_PAYLOAD_HEADER_SIZE  (2 + 1 + 1)
-#define VC2_FRAGMENT_HEADER_SIZE (4 + 2 + 2)
-
+#define VC2_FRAGMENT_HEADER_SIZE (4 + 2 + 2 + 2 + 2)
 #define VC2_BITSTREAM_HEADER_SIZE (4 + 1 + 4 + 4)
 
 #define VC2_SEQUENCE_HEADER  0x00
@@ -103,14 +102,66 @@ static int vc2_parse_end_of_sequence(AVFormatContext *s, PayloadContext *vc2)
     return AVERROR(EAGAIN);
 }
 
+/*
+ * decode the VC2 payload header according to section 4 of draft version 1:
+ *
+ *   0                   1                   2                   3
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *  |   Extended Sequence Number    |  Reserved |I|F|  Parse Code   |
+ *  +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
+ *  |                       Picture Number                          |
+ *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+ *  |       Slice Prefix Bytes      |        Slice Size Scaler      |
+ *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+ *  |       Fragment Length         |         No. of Slices         |
+ *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+ *
+ *  Extended Sequence Number:
+ *      Most significant 16bit of a 32bit sequence, the least significant
+ *      16bit are stored in the standard Sequence Number field.
+ *  Reserved/I:
+ *      Set if the packet contains coded picture parameters or slice data
+ *      from a field in an interlaced frame, unset otherwise.
+ *  Reserved/F:
+ *      Set if the packet contains coded picture parameters or slice data
+ *      from the second field in an interlaced frame, unset otherwise.
+ *  Parse Code:
+ *      8 bits  Contains a Parse Code which MUST be the value indicated
+ *      for the type of data in the packet.
+ *  Picture Number:
+ *      Same a Section 12.1 of the VC-2 specification.
+ *  Slice Prefix Bytes: 16 bits  MUST contain the Slice Prefix Bytes
+ *      value for the coded picture this packet contains data for, as
+ *      described in Section 12.3.4 of the VC-2 specification [VC2].
+ *
+ *      In the VC-2 specification this value is not restricted to 16
+ *      bits, but in practice this is unlikely to ever be too large.
+ *  Slice Size Scaler: 16 bits  MUST contain the Slice Size Scaler value
+ *      for the coded picture this packet contains data for, as
+ *      described in Section 12.3.4 of the VC-2 specification [VC2].
+ *
+ *      In the VC-2 specification this value is not restricted to 16
+ *      bits, but in practice this is unlikely to ever be too large.
+ *  Frame Length:
+ *      Number of bytes of data
+ *  No. of Slices:
+ *      The number of coded slices contained in this packet, which MUST
+ *      be 0 for a packet containing transform parameters.
+ */
 static int vc2_parse_picture_fragment(AVFormatContext *s, PayloadContext *vc2,
                                       const uint8_t *buf, int len, int last,
                                       AVPacket *pkt, int index)
 {
-    int picture_number   = AV_RB32(buf);
-    int fragment_length  = AV_RB16(buf + 4);
-    int number_of_slices = AV_RB16(buf + 6);
-    int ret;
+    int ret, picture_number, fragment_length, number_of_slices;
+
+    if (len < VC2_FRAGMENT_HEADER_SIZE)
+        return AVERROR_INVALIDDATA;
+
+    picture_number   = AV_RB32(buf);
+    // skip Slice Prefix Bytes and Slice Size Scaler
+    fragment_length  = AV_RB16(buf + 8);
+    number_of_slices = AV_RB16(buf + 10);
 
     // Discard spurious slices
     if (!vc2->parsing_fragment && number_of_slices)
@@ -179,45 +230,11 @@ static int vc2_handle_packet(AVFormatContext *s, PayloadContext *vc2,
     int extended_seq, first_field, second_field, parse_code;
     int ret = 0;
 
-    /* sanity check for size of input packet: 1 byte payload at least */
+    /* sanity check for size of input packet */
     if (len < VC2_PAYLOAD_HEADER_SIZE) {
         av_log(s, AV_LOG_ERROR, "Too short RTP/VC2 packet, got %d bytes\n", len);
         return AVERROR_INVALIDDATA;
     }
-
-    /*
-     * decode the VC2 payload header according to section 4 of draft version 0:
-     *
-     *   0                   1                   2                   3
-     *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     *  |   Extended Sequence Number    |  Reserved |I|F|  Parse Code   |
-     *  +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
-     *  |                       Picture Number                          |
-     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
-     *  |       Fragment Length         |         No. of Slices         |
-     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
-     *
-     *  Extended Sequence Number:
-     *      Most significant 16bit of a 32bit sequence, the least significant
-     *      16bit are stored in the standard Sequence Number field.
-     *  Reserved/I:
-     *      Set if the packet contains coded picture parameters or slice data
-     *      from a field in an interlaced frame, unset otherwise.
-     *  Reserved/F:
-     *      Set if the packet contains coded picture parameters or slice data
-     *      from the second field in an interlaced frame, unset otherwise.
-     *  Parse Code:
-     *      8 bits  Contains a Parse Code which MUST be the value indicated
-     *      for the type of data in the packet.
-     *  Picture Number:
-     *      Same a Section 12.1 of the VC-2 specification.
-     *  Frame Length:
-     *      Number of bytes of data
-     *  No. of Slices:
-     *      The number of coded slices contained in this packet, which MUST
-     *      be 0 for a packet containing transform parameters.
-     */
 
     extended_seq = AV_RB16(buf);
     first_field  = !!(buf[1] & 1);
