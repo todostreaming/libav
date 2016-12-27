@@ -47,6 +47,7 @@ int ff_h264_handle_frag_packet(AVPacket *pkt, const uint8_t *buf, int len,
                                int nal_header_len);
 void ff_h264_parse_framesize(AVCodecParameters *par, const char *p);
 
+extern RTPDynamicProtocolHandler ff_aes3_rtp_dynamic_handler;
 extern RTPDynamicProtocolHandler ff_ac3_dynamic_handler;
 extern RTPDynamicProtocolHandler ff_amr_nb_dynamic_handler;
 extern RTPDynamicProtocolHandler ff_amr_wb_dynamic_handler;
