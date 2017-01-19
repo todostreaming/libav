@@ -29,6 +29,7 @@
 #include "httpauth.h"
 
 #include "libavutil/log.h"
+#include "libavutil/thread.h"
 #include "libavutil/opt.h"
 
 /**
@@ -209,6 +210,8 @@ enum RTSPServerType {
     RTSP_SERVER_WMS,  /**< Windows Media server */
     RTSP_SERVER_NB
 };
+
+struct UDPPacketQueue;
 
 /**
  * Private data for the RTSP demuxer.
@@ -398,6 +401,10 @@ typedef struct RTSPState {
 
     char default_lang[4];
     int buffer_size;
+
+    struct UDPPacketQueue *pq;
+    pthread_t udp_th;
+    int stop;
 
     const URLProtocol **protocols;
 } RTSPState;

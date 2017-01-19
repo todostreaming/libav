@@ -28,6 +28,7 @@
 #include "libavutil/dict.h"
 #include "libavutil/opt.h"
 #include "libavutil/time.h"
+#include "libavutil/fifo.h"
 #include "avformat.h"
 #include "avio_internal.h"
 
@@ -756,6 +757,11 @@ void ff_rtsp_close_streams(AVFormatContext *s)
     RTSPStream *rtsp_st;
 
     ff_rtsp_undo_setup(s, 0);
+
+    // TODO better cleanup
+    rt->stop = 1;
+    pthread_join(rt->udp_th, NULL);
+
     for (i = 0; i < rt->nb_rtsp_streams; i++) {
         rtsp_st = rt->rtsp_streams[i];
         if (rtsp_st) {
@@ -1910,6 +1916,83 @@ redirect:
 #endif /* CONFIG_RTSP_DEMUXER || CONFIG_RTSP_MUXER */
 
 #if CONFIG_RTPDEC
+typedef struct UDPPacket {
+    struct RTSPStream *rtsp_stream; // stream
+    uint8_t data[RECVBUF_SIZE];
+    int len;
+} UDPPacket;
+
+typedef struct UDPPacketQueue {
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
+    AVFifoBuffer *fifo;
+    int nb_packets;
+} UDPPacketQueue;
+
+static UDPPacketQueue *udppacket_queue_alloc(void)
+{
+    UDPPacketQueue *pq = av_mallocz(sizeof(UDPPacketQueue));
+    if (!pq)
+        return NULL;
+
+    pq->fifo = av_fifo_alloc(100);
+    if (!pq->fifo) {
+        av_free(pq);
+        return NULL;
+    }
+
+    ff_mutex_init(&pq->mutex, NULL);
+    pthread_cond_init(&pq->cond, NULL);
+
+    return pq;
+}
+
+static int udppacket_queue_put(UDPPacketQueue *pq, UDPPacket *p)
+{
+    int ret;
+
+    ff_mutex_lock(&pq->mutex);
+
+    if (av_fifo_space(pq->fifo) < sizeof(p)) {
+        ret = av_fifo_realloc2(pq->fifo, av_fifo_size(pq->fifo) * 2);
+        if (ret < 0)
+            goto out;
+    }
+
+    ret = av_fifo_generic_write(pq->fifo, &p, sizeof(p), NULL);
+    if (ret < 0)
+        goto out;
+
+    pthread_cond_signal(&pq->cond);
+out:
+
+    ff_mutex_unlock(&pq->mutex);
+
+    return ret;
+}
+
+static int udppacket_queue_get(UDPPacketQueue *pq, UDPPacket **p)
+{
+    int ret;
+
+    ff_mutex_lock(&pq->mutex);
+
+    if (av_fifo_size(pq->fifo) <= 0) {
+        pthread_cond_wait(&pq->cond, &pq->mutex);
+    }
+
+    ret = av_fifo_generic_read(pq->fifo, p, sizeof(*p), NULL);
+
+    ff_mutex_unlock(&pq->mutex);
+
+    return ret;
+}
+
+static void udppacket_queue_free(UDPPacketQueue **p)
+{
+    // TODO
+}
+
 static int udp_read_packet(AVFormatContext *s, RTSPStream **prtsp_st,
                            uint8_t *buf, int buf_size, int64_t wait_end)
 {
@@ -1979,16 +2062,20 @@ static int udp_read_packet(AVFormatContext *s, RTSPStream **prtsp_st,
                         else
                             av_log(s, AV_LOG_WARNING,
                                    "Unable to answer to TEARDOWN\n");
-                    } else
+                    } else {
+                        av_log(NULL, AV_LOG_INFO, "BLAH");
                         return 0;
+                    }
                 } else {
                     RTSPMessageHeader reply;
                     ret = ff_rtsp_read_reply(s, &reply, NULL, 0, NULL);
                     if (ret < 0)
                         return ret;
                     /* XXX: parse message */
-                    if (rt->state != RTSP_STATE_STREAMING)
+                    if (rt->state != RTSP_STATE_STREAMING) {
+                        av_log(s, AV_LOG_INFO, "BLEAH");
                         return 0;
+                    }
                 }
             }
 #endif
@@ -1998,6 +2085,57 @@ static int udp_read_packet(AVFormatContext *s, RTSPStream **prtsp_st,
             return AVERROR(errno);
     }
 }
+
+static void *udp_worker(void *arg)
+{
+    AVFormatContext *s = arg;
+    RTSPState *rt = s->priv_data;
+    int ret;
+
+    while (!rt->stop) {
+        UDPPacket *p = av_mallocz(sizeof(UDPPacket));
+
+        ret = udp_read_packet(s, &p->rtsp_stream, p->data, RECVBUF_SIZE, 0);
+        if (ret < 0) {
+            av_free(p);
+        } else {
+            p->len = ret;
+            udppacket_queue_put(rt->pq, p);
+        }
+    }
+
+    return NULL;
+}
+
+static int udp_get_packet(AVFormatContext *s, RTSPStream **prtsp_st,
+                          uint8_t *buf)
+{
+    RTSPState *rt = s->priv_data;
+    UDPPacket *p;
+    int ret;
+
+    if (!rt->pq) {
+        rt->pq = udppacket_queue_alloc();
+
+        pthread_create(&rt->udp_th, NULL, udp_worker, s);
+    }
+
+    ret = udppacket_queue_get(rt->pq, &p);
+    if (ret < 0)
+        return ret;
+
+    // TODO not murder
+    memcpy(buf, p->data, RECVBUF_SIZE);
+
+    *prtsp_st = p->rtsp_stream;
+
+    ret = p->len;
+
+    av_free(p);
+
+    return ret;
+}
+
 
 static int pick_stream(AVFormatContext *s, RTSPStream **rtsp_st,
                        const uint8_t *buf, int len)
@@ -2116,7 +2254,8 @@ redo:
 #endif
     case RTSP_LOWER_TRANSPORT_UDP:
     case RTSP_LOWER_TRANSPORT_UDP_MULTICAST:
-        len = udp_read_packet(s, &rtsp_st, rt->recvbuf, RECVBUF_SIZE, wait_end);
+        // len = udp_read_packet(s, &rtsp_st, rt->recvbuf, RECVBUF_SIZE, wait_end);
+        len = udp_get_packet(s, &rtsp_st, rt->recvbuf);
         if (len > 0 && rtsp_st->transport_priv && rt->transport == RTSP_TRANSPORT_RTP)
             ff_rtp_check_and_send_back_rr(rtsp_st->transport_priv, rtsp_st->rtp_handle, NULL, len);
         break;
