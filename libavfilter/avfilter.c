@@ -586,7 +586,7 @@ int avfilter_init_dict(AVFilterContext *ctx, AVDictionary **options)
         return ret;
     }
 
-    if (ctx->filter->flags & AVFILTER_FLAG_SLICE_THREADS &&
+    if (0 && ctx->filter->flags & AVFILTER_FLAG_SLICE_THREADS &&
         ctx->thread_type & ctx->graph->thread_type & AVFILTER_THREAD_SLICE &&
         ctx->graph->internal->thread_execute) {
         ctx->thread_type       = AVFILTER_THREAD_SLICE;
