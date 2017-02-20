@@ -1921,33 +1921,33 @@ static int udp_read_packet(AVFormatContext *s, RTSPStream **prtsp_st,
         p = rt->p = av_malloc_array(2 * (rt->nb_rtsp_streams + 1), sizeof(struct pollfd));
         if (!p)
             return AVERROR(ENOMEM);
-    }
 
-    if (rt->rtsp_hd) {
-        tcp_fd = ffurl_get_file_handle(rt->rtsp_hd);
-        p[max_p].fd = tcp_fd;
-        p[max_p++].events = POLLIN;
-    } else {
-        tcp_fd = -1;
-    }
-    for (i = 0; i < rt->nb_rtsp_streams; i++) {
-        rtsp_st = rt->rtsp_streams[i];
-        if (rtsp_st->rtp_handle) {
-            if (ret = ffurl_get_multi_file_handle(rtsp_st->rtp_handle,
-                                                  &fds, &fdsnum)) {
-                av_log(s, AV_LOG_ERROR, "Unable to recover rtp ports\n");
-                return ret;
+        if (rt->rtsp_hd) {
+            tcp_fd = ffurl_get_file_handle(rt->rtsp_hd);
+            p[max_p].fd = tcp_fd;
+            p[max_p++].events = POLLIN;
+        } else {
+            tcp_fd = -1;
+        }
+        for (i = 0; i < rt->nb_rtsp_streams; i++) {
+            rtsp_st = rt->rtsp_streams[i];
+            if (rtsp_st->rtp_handle) {
+                if (ret = ffurl_get_multi_file_handle(rtsp_st->rtp_handle,
+                                                      &fds, &fdsnum)) {
+                    av_log(s, AV_LOG_ERROR, "Unable to recover rtp ports\n");
+                    return ret;
+                }
+                if (fdsnum != 2) {
+                    av_log(s, AV_LOG_ERROR,
+                           "Number of fds %d not supported\n", fdsnum);
+                    return AVERROR_INVALIDDATA;
+                }
+                for (fdsidx = 0; fdsidx < fdsnum; fdsidx++) {
+                    p[max_p].fd       = fds[fdsidx];
+                    p[max_p++].events = POLLIN;
+                }
+                av_free(fds);
             }
-            if (fdsnum != 2) {
-                av_log(s, AV_LOG_ERROR,
-                       "Number of fds %d not supported\n", fdsnum);
-                return AVERROR_INVALIDDATA;
-            }
-            for (fdsidx = 0; fdsidx < fdsnum; fdsidx++) {
-                p[max_p].fd       = fds[fdsidx];
-                p[max_p++].events = POLLIN;
-            }
-            av_free(fds);
         }
     }
 
