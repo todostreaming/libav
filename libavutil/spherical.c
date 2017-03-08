@@ -33,6 +33,11 @@ AVSphericalMapping *av_spherical_alloc(size_t *size)
     return spherical;
 }
 
+size_t av_spherical_size()
+{
+    return sizeof(AVSphericalMapping);
+}
+
 void av_spherical_tile_bounds(AVSphericalMapping *map,
                               size_t width, size_t height,
                               size_t *left, size_t *top,

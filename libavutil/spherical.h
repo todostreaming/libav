@@ -191,6 +191,13 @@ typedef struct AVSphericalMapping {
 AVSphericalMapping *av_spherical_alloc(size_t *size);
 
 /**
+ * Return the size of the AVSphericalMapping
+ *
+ * @return the size of the AVSphericalMapping struct
+ */
+size_t av_spherical_size();
+
+/**
  * Convert the @ref bounding fields from an AVSphericalVideo
  * from 0.32 fixed point to pixels.
  *
