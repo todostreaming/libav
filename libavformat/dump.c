@@ -312,7 +312,7 @@ static void dump_spherical(void *ctx, AVCodecParameters *par, AVPacketSideData *
     AVSphericalMapping *spherical = (AVSphericalMapping *)sd->data;
     double yaw, pitch, roll;
 
-    if (sd->size < sizeof(*spherical)) {
+    if (sd->size < av_spherical_size()) {
         av_log(ctx, AV_LOG_INFO, "invalid data");
         return;
     }
