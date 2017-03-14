@@ -30,6 +30,7 @@
 #include "network.h"
 #include "httpauth.h"
 
+#include "libavutil/fifo.h"
 #include "libavutil/log.h"
 #include "libavutil/opt.h"
 #include "libavutil/thread.h"
@@ -408,6 +409,9 @@ typedef struct RTSPState {
 
     pthread_t th;
     atomic_int thread_start;
+    pthread_mutex_t lock;
+    pthread_cond_t cond;
+    AVFifoBuffer *fifo;
 } RTSPState;
 
 #define RTSP_FLAG_FILTER_SRC  0x1    /**< Filter incoming UDP packets -

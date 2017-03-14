@@ -1916,19 +1916,83 @@ redirect:
 
 #if CONFIG_RTPDEC
 
+typedef struct UDPPacket {
+    uint8_t buf[RTP_MAX_PACKET_LENGTH]; // FIXME use something less crude
+    int len;
+    RTSPStream *rtsp;
+} UDPPacket;
+
+static int udp_packet_send(RTSPState *rt, UDPPacket *p)
+{
+    int ret = 0;
+    pthread_mutex_lock(&rt->lock);
+    if (av_fifo_space(rt->fifo) < sizeof(UDPPacket *)) {
+        ret = av_fifo_realloc2(rt->fifo, av_fifo_size(rt->fifo) * 2);
+        if (ret < 0)
+            goto fail;
+    }
+    ret = av_fifo_generic_write(rt->fifo, &p, sizeof(p), NULL);
+
+    pthread_cond_signal(&rt->cond); // TODO: handle the failure
+fail:
+    pthread_mutex_unlock(&rt->lock);
+    return ret;
+}
+
+static int udp_packet_receive(RTSPState *rt, UDPPacket **p)
+{
+    int ret = 0;
+
+    pthread_mutex_lock(&rt->lock);
+    if (av_fifo_size(rt->fifo) < sizeof(UDPPacket *)) {
+        pthread_cond_wait(&rt->cond, &rt->lock);
+    }
+
+    av_fifo_generic_read(rt->fifo, p, sizeof(*p), NULL);
+
+    pthread_mutex_unlock(&rt->lock);
+
+    return ret;
+}
+
 static void *udp_read_loop(void *arg)
 {
     RTSPState *rt = arg;
+    struct pollfd *p = rt->p;
 
     atomic_store(&rt->thread_start, 1);
 
-    av_log(NULL, AV_LOG_INFO, "Thread start\n");
+    av_log(NULL, AV_LOG_INFO|AV_LOG_C(122), "Thread start\n");
 
     while (atomic_load(&rt->thread_start)) {
+        int n = poll(p, rt->max_p, POLL_TIMEOUT_MS);
+        if (n > 0) {
+            int j = 0, i;
+            for (i = 0; i < rt->nb_rtsp_streams; i++) {
+                RTSPStream *rtsp_st = rt->rtsp_streams[i];
+                if (rtsp_st->rtp_handle) {
+                    if (p[j].revents & POLLIN || p[j+1].revents & POLLIN) {
+                        int ret;
+                        UDPPacket *pkt = av_malloc(sizeof(UDPPacket));
+                        if (!pkt) {
+                            // TODO exit?
+                            return NULL;
+                        }
 
+                        ret = ffurl_read(rtsp_st->rtp_handle, pkt->buf, RTP_MAX_PACKET_LENGTH);
+                        if (ret > 0) {
+                            pkt->rtsp = rtsp_st;
+                            pkt->len  = ret;
+                            udp_packet_send(rt, pkt); // TODO check for errors.
+                        }
+                    }
+                    j+=2;
+                }
+            }
+        }
     }
 
-    av_log(NULL, AV_LOG_INFO, "Thread stopped\n");
+    av_log(NULL, AV_LOG_INFO|AV_LOG_C(122), "Thread stopped\n");
 
     return NULL;
 }
@@ -1965,23 +2029,22 @@ static int udp_read_packet(AVFormatContext *s, RTSPStream **prtsp_st,
 {
     RTSPState *rt = s->priv_data;
     RTSPStream *rtsp_st;
-    int n, i, ret, timeout_cnt = 0;
+    int i, ret;
+    struct pollfd rtsp_p[1];
     struct pollfd *p = rt->p;
     int *fds = NULL, fdsnum, fdsidx;
+    UDPPacket *pkt;
 
     if (!p) {
-        if ((ret = pthread_create(&rt->th, NULL, udp_read_loop, rt)) < 0) {
-            return AVERROR(ret);
-        }
-
         p = rt->p = av_malloc_array(2 * (rt->nb_rtsp_streams + 1), sizeof(struct pollfd));
         if (!p)
             return AVERROR(ENOMEM);
 
         if (rt->rtsp_hd) {
-            p[rt->max_p].fd = ffurl_get_file_handle(rt->rtsp_hd);
-            p[rt->max_p++].events = POLLIN;
+            rtsp_p[rt->max_p].fd = ffurl_get_file_handle(rt->rtsp_hd);
+            rtsp_p[rt->max_p++].events = POLLIN;
         }
+
         for (i = 0; i < rt->nb_rtsp_streams; i++) {
             rtsp_st = rt->rtsp_streams[i];
             if (rtsp_st->rtp_handle) {
@@ -2002,40 +2065,40 @@ static int udp_read_packet(AVFormatContext *s, RTSPStream **prtsp_st,
                 av_free(fds);
             }
         }
+
+        if (!(rt->fifo = av_fifo_alloc(sizeof(UDPPacket *) * 10)))
+            return AVERROR(ENOMEM);
+
+        pthread_cond_init(&rt->cond, NULL);
+        pthread_mutex_init(&rt->lock, NULL);
+
+        if ((ret = pthread_create(&rt->th, NULL, udp_read_loop, rt)) < 0) {
+            return AVERROR(ret);
+        }
     }
 
-    for (;;) {
-        if (ff_check_interrupt(&s->interrupt_callback))
-            return AVERROR_EXIT;
-        if (wait_end && wait_end - av_gettime_relative() < 0)
-            return AVERROR(EAGAIN);
-        n = poll(p, rt->max_p, POLL_TIMEOUT_MS);
-        if (n > 0) {
-            int j = 1 - (!!rt->rtsp_hd);
-            timeout_cnt = 0;
-            for (i = 0; i < rt->nb_rtsp_streams; i++) {
-                rtsp_st = rt->rtsp_streams[i];
-                if (rtsp_st->rtp_handle) {
-                    if (p[j].revents & POLLIN || p[j+1].revents & POLLIN) {
-                        ret = ffurl_read(rtsp_st->rtp_handle, buf, buf_size);
-                        if (ret > 0) {
-                            *prtsp_st = rtsp_st;
-                            return ret;
-                        }
-                    }
-                    j+=2;
-                }
-            }
+    /* TODO: Move it somewhere
+    if (ff_check_interrupt(&s->interrupt_callback))
+        return AVERROR_EXIT;
+    */
 #if CONFIG_RTSP_DEMUXER
-            if (rt->rtsp_hd && p[0].revents & POLLIN) {
-                return parse_rtsp_message(s);
-            }
-#endif
-        } else if (n == 0 && ++timeout_cnt >= MAX_TIMEOUTS) {
-            return AVERROR(ETIMEDOUT);
-        } else if (n < 0 && errno != EINTR)
-            return AVERROR(errno);
+    if (rt->rtsp_hd) {
+        if (poll(rtsp_p, 1, POLL_TIMEOUT_MS) > 0 &&
+            rtsp_p[0].revents & POLLIN) {
+            return parse_rtsp_message(s);
+        }
     }
+#endif
+    udp_packet_receive(rt, &pkt);
+
+    if (pkt->len > 0) {
+        *prtsp_st = pkt->rtsp;
+        memcpy(buf, pkt->buf, pkt->len);
+    } else {
+        abort();
+    }
+
+    return pkt->len;
 }
 
 static int pick_stream(AVFormatContext *s, RTSPStream **rtsp_st,
