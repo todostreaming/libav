@@ -2082,7 +2082,7 @@ static int udp_read_packet(AVFormatContext *s, RTSPStream **prtsp_st,
     */
 #if CONFIG_RTSP_DEMUXER
     if (rt->rtsp_hd) {
-        if (poll(rtsp_p, 1, POLL_TIMEOUT_MS) > 0 &&
+        if (poll(rtsp_p, 1, 0) > 0 &&
             rtsp_p[0].revents & POLLIN) {
             return parse_rtsp_message(s);
         }
