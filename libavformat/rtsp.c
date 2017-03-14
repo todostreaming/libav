@@ -752,6 +752,14 @@ void ff_rtsp_close_streams(AVFormatContext *s)
     int i, j;
     RTSPStream *rtsp_st;
 
+    if (atomic_load(&rt->thread_start)) {
+        atomic_store(&rt->thread_start, 0);
+
+        av_log(NULL, AV_LOG_INFO, "Thread stopping\n");
+        pthread_join(rt->th, NULL);
+        av_log(NULL, AV_LOG_INFO, "Thread join\n");
+    }
+
     ff_rtsp_undo_setup(s, 0);
     for (i = 0; i < rt->nb_rtsp_streams; i++) {
         rtsp_st = rt->rtsp_streams[i];
@@ -1934,6 +1942,23 @@ static int parse_rtsp_message(AVFormatContext *s)
     return 0;
 }
 
+static void *udp_read_loop(void *arg)
+{
+    RTSPState *rt = arg;
+
+    atomic_store(&rt->thread_start, 1);
+
+    av_log(NULL, AV_LOG_INFO, "Thread start\n");
+
+    while (atomic_load(&rt->thread_start)) {
+
+    }
+
+    av_log(NULL, AV_LOG_INFO, "Thread stopped\n");
+
+    return NULL;
+}
+
 static int udp_read_packet(AVFormatContext *s, RTSPStream **prtsp_st,
                            uint8_t *buf, int buf_size, int64_t wait_end)
 {
@@ -1944,6 +1969,10 @@ static int udp_read_packet(AVFormatContext *s, RTSPStream **prtsp_st,
     int *fds = NULL, fdsnum, fdsidx;
 
     if (!p) {
+        if ((ret = pthread_create(&rt->th, NULL, udp_read_loop, rt)) < 0) {
+            return AVERROR(ret);
+        }
+
         p = rt->p = av_malloc_array(2 * (rt->nb_rtsp_streams + 1), sizeof(struct pollfd));
         if (!p)
             return AVERROR(ENOMEM);

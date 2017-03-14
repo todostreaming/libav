@@ -21,7 +21,9 @@
 #ifndef AVFORMAT_RTSP_H
 #define AVFORMAT_RTSP_H
 
+#include <stdatomic.h>
 #include <stdint.h>
+
 #include "avformat.h"
 #include "rtspcodes.h"
 #include "rtpdec.h"
@@ -30,6 +32,8 @@
 
 #include "libavutil/log.h"
 #include "libavutil/opt.h"
+#include "libavutil/thread.h"
+
 
 /**
  * Network layer over which RTP/etc packet data will be transported.
@@ -401,6 +405,9 @@ typedef struct RTSPState {
     int buffer_size;
 
     const URLProtocol **protocols;
+
+    pthread_t th;
+    atomic_int thread_start;
 } RTSPState;
 
 #define RTSP_FLAG_FILTER_SRC  0x1    /**< Filter incoming UDP packets -
