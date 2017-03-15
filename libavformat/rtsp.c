@@ -1944,11 +1944,14 @@ static int udp_packet_receive(RTSPState *rt, UDPPacket **p)
 
     pthread_mutex_lock(&rt->lock);
     if (av_fifo_size(rt->fifo) < sizeof(UDPPacket *)) {
-        pthread_cond_wait(&rt->cond, &rt->lock);
+//        pthread_cond_wait(&rt->cond, &rt->lock);
+        ret = AVERROR(EAGAIN);
+        goto fail;
     }
 
     av_fifo_generic_read(rt->fifo, p, sizeof(*p), NULL);
 
+fail:
     pthread_mutex_unlock(&rt->lock);
 
     return ret;
@@ -1958,6 +1961,8 @@ static void *udp_read_loop(void *arg)
 {
     RTSPState *rt = arg;
     struct pollfd *p = rt->p;
+    int timeout_cnt = 0;
+    int ret = 0;
 
     atomic_store(&rt->thread_start, 1);
 
@@ -1967,6 +1972,7 @@ static void *udp_read_loop(void *arg)
         int n = poll(p, rt->max_p, POLL_TIMEOUT_MS);
         if (n > 0) {
             int j = 0, i;
+            timeout_cnt = 0;
             for (i = 0; i < rt->nb_rtsp_streams; i++) {
                 RTSPStream *rtsp_st = rt->rtsp_streams[i];
                 if (rtsp_st->rtp_handle) {
@@ -1974,7 +1980,6 @@ static void *udp_read_loop(void *arg)
                         int ret;
                         UDPPacket *pkt = av_malloc(sizeof(UDPPacket));
                         if (!pkt) {
-                            // TODO exit?
                             return NULL;
                         }
 
@@ -1988,6 +1993,22 @@ static void *udp_read_loop(void *arg)
                     j+=2;
                 }
             }
+        } else if (n == 0 && ++timeout_cnt >= MAX_TIMEOUTS) {
+            ret = AVERROR(ETIMEDOUT);
+        } else if (n < 0 && errno != EINTR) {
+            ret = AVERROR(errno);
+        }
+
+        if (ret < 0) {
+            UDPPacket *pkt = av_malloc(sizeof(UDPPacket));
+            if (!pkt) {
+                return NULL;
+            }
+
+            pkt->len = ret;
+            pkt->rtsp = NULL;
+
+            udp_packet_send(rt, pkt);
         }
     }
 
@@ -2088,16 +2109,19 @@ static int udp_read_packet(AVFormatContext *s, RTSPStream **prtsp_st,
         }
     }
 #endif
-    udp_packet_receive(rt, &pkt);
+    if ((ret = udp_packet_receive(rt, &pkt)) < 0)
+        return ret;
 
     if (pkt->len > 0) {
         *prtsp_st = pkt->rtsp;
         memcpy(buf, pkt->buf, pkt->len);
-    } else {
-        abort();
     }
 
-    return pkt->len;
+    ret = pkt->len;
+
+    av_freep(&pkt);
+
+    return ret;
 }
 
 static int pick_stream(AVFormatContext *s, RTSPStream **rtsp_st,
