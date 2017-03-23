@@ -373,6 +373,7 @@ static void output_packet(OutputFile *of, AVPacket *pkt, OutputStream *ost)
 
         idx = 1;
         while (idx) {
+
             /* get a packet from the previous filter up the chain */
             ret = av_bsf_receive_packet(ost->bsf_ctx[idx - 1], pkt);
             if (ret == AVERROR(EAGAIN)) {

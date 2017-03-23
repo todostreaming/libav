@@ -745,6 +745,108 @@ void ff_rtsp_undo_setup(AVFormatContext *s, int send_packets)
     }
 }
 
+typedef struct UDPPacket {
+    uint8_t buf[RTP_MAX_PACKET_LENGTH]; // FIXME use something less crude
+    int len;
+    RTSPStream *rtsp;
+} UDPPacket;
+
+static int udp_packet_send(RTSPState *rt, UDPPacket *p)
+{
+    int ret = 0;
+    pthread_mutex_lock(&rt->lock);
+    if (av_fifo_space(rt->fifo) < sizeof(UDPPacket *)) {
+        ret = av_fifo_realloc2(rt->fifo, av_fifo_size(rt->fifo) * 2);
+        if (ret < 0)
+            goto fail;
+    }
+    ret = av_fifo_generic_write(rt->fifo, &p, sizeof(p), NULL);
+
+    pthread_cond_signal(&rt->cond); // TODO: handle the failure
+fail:
+    pthread_mutex_unlock(&rt->lock);
+    return ret;
+}
+
+static int udp_packet_receive(RTSPState *rt, UDPPacket **p)
+{
+    int ret = 0;
+
+    pthread_mutex_lock(&rt->lock);
+    if (av_fifo_size(rt->fifo) < sizeof(UDPPacket *)) {
+//        pthread_cond_wait(&rt->cond, &rt->lock);
+        ret = AVERROR(EAGAIN);
+        goto fail;
+    }
+
+    av_fifo_generic_read(rt->fifo, p, sizeof(*p), NULL);
+
+fail:
+    pthread_mutex_unlock(&rt->lock);
+
+    return ret;
+}
+
+static void *udp_read_loop(void *arg)
+{
+    RTSPState *rt = arg;
+    struct pollfd *p = rt->p;
+    int timeout_cnt = 0;
+    int ret = 0;
+
+    atomic_store(&rt->thread_start, 1);
+
+    av_log(NULL, AV_LOG_INFO|AV_LOG_C(122), "Thread start\n");
+
+    while (atomic_load(&rt->thread_start)) {
+        int n = poll(p, rt->max_p, POLL_TIMEOUT_MS);
+        if (n > 0) {
+            int j = 0, i;
+            timeout_cnt = 0;
+            for (i = 0; i < rt->nb_rtsp_streams; i++) {
+                RTSPStream *rtsp_st = rt->rtsp_streams[i];
+                if (rtsp_st->rtp_handle) {
+                    if (p[j].revents & POLLIN || p[j+1].revents & POLLIN) {
+                        int ret;
+                        UDPPacket *pkt = av_malloc(sizeof(UDPPacket));
+                        if (!pkt) {
+                            return NULL;
+                        }
+
+                        ret = ffurl_read(rtsp_st->rtp_handle, pkt->buf, RTP_MAX_PACKET_LENGTH);
+                        if (ret > 0) {
+                            pkt->rtsp = rtsp_st;
+                            pkt->len  = ret;
+                            udp_packet_send(rt, pkt); // TODO check for errors.
+                        }
+                    }
+                    j+=2;
+                }
+            }
+        } else if (n == 0 && ++timeout_cnt >= MAX_TIMEOUTS) {
+            ret = AVERROR(ETIMEDOUT);
+        } else if (n < 0 && errno != EINTR) {
+            ret = AVERROR(errno);
+        }
+
+        if (ret < 0) {
+            UDPPacket *pkt = av_malloc(sizeof(UDPPacket));
+            if (!pkt) {
+                return NULL;
+            }
+
+            pkt->len = ret;
+            pkt->rtsp = NULL;
+
+            udp_packet_send(rt, pkt);
+        }
+    }
+
+    av_log(NULL, AV_LOG_INFO|AV_LOG_C(122), "Thread stopped\n");
+
+    return NULL;
+}
+
 /* close and free RTSP streams */
 void ff_rtsp_close_streams(AVFormatContext *s)
 {
@@ -753,11 +855,16 @@ void ff_rtsp_close_streams(AVFormatContext *s)
     RTSPStream *rtsp_st;
 
     if (atomic_load(&rt->thread_start)) {
+        UDPPacket *pkt;
         atomic_store(&rt->thread_start, 0);
 
         av_log(NULL, AV_LOG_INFO, "Thread stopping\n");
         pthread_join(rt->th, NULL);
         av_log(NULL, AV_LOG_INFO, "Thread join\n");
+        while (udp_packet_receive(rt, &pkt) != AVERROR(EAGAIN)) {
+            av_freep(&pkt);
+        }
+        av_fifo_free(rt->fifo);
     }
 
     ff_rtsp_undo_setup(s, 0);
@@ -1915,108 +2022,6 @@ redirect:
 #endif /* CONFIG_RTSP_DEMUXER || CONFIG_RTSP_MUXER */
 
 #if CONFIG_RTPDEC
-typedef struct UDPPacket {
-    uint8_t buf[RTP_MAX_PACKET_LENGTH]; // FIXME use something less crude
-    int len;
-    RTSPStream *rtsp;
-} UDPPacket;
-
-static int udp_packet_send(RTSPState *rt, UDPPacket *p)
-{
-    int ret = 0;
-    pthread_mutex_lock(&rt->lock);
-    if (av_fifo_space(rt->fifo) < sizeof(UDPPacket *)) {
-        ret = av_fifo_realloc2(rt->fifo, av_fifo_size(rt->fifo) * 2);
-        if (ret < 0)
-            goto fail;
-    }
-    ret = av_fifo_generic_write(rt->fifo, &p, sizeof(p), NULL);
-
-    pthread_cond_signal(&rt->cond); // TODO: handle the failure
-fail:
-    pthread_mutex_unlock(&rt->lock);
-    return ret;
-}
-
-static int udp_packet_receive(RTSPState *rt, UDPPacket **p)
-{
-    int ret = 0;
-
-    pthread_mutex_lock(&rt->lock);
-    if (av_fifo_size(rt->fifo) < sizeof(UDPPacket *)) {
-//        pthread_cond_wait(&rt->cond, &rt->lock);
-        ret = AVERROR(EAGAIN);
-        goto fail;
-    }
-
-    av_fifo_generic_read(rt->fifo, p, sizeof(*p), NULL);
-
-fail:
-    pthread_mutex_unlock(&rt->lock);
-
-    return ret;
-}
-
-static void *udp_read_loop(void *arg)
-{
-    RTSPState *rt = arg;
-    struct pollfd *p = rt->p;
-    int timeout_cnt = 0;
-    int ret = 0;
-
-    atomic_store(&rt->thread_start, 1);
-
-    av_log(NULL, AV_LOG_INFO|AV_LOG_C(122), "Thread start\n");
-
-    while (atomic_load(&rt->thread_start)) {
-        int n = poll(p, rt->max_p, POLL_TIMEOUT_MS);
-        if (n > 0) {
-            int j = 0, i;
-            timeout_cnt = 0;
-            for (i = 0; i < rt->nb_rtsp_streams; i++) {
-                RTSPStream *rtsp_st = rt->rtsp_streams[i];
-                if (rtsp_st->rtp_handle) {
-                    if (p[j].revents & POLLIN || p[j+1].revents & POLLIN) {
-                        int ret;
-                        UDPPacket *pkt = av_malloc(sizeof(UDPPacket));
-                        if (!pkt) {
-                            return NULL;
-                        }
-
-                        ret = ffurl_read(rtsp_st->rtp_handle, pkt->buf, RTP_MAX_PACKET_LENGTH);
-                        if (ret > 0) {
-                            pkt->rtsp = rtsp_st;
-                            pkt->len  = ret;
-                            udp_packet_send(rt, pkt); // TODO check for errors.
-                        }
-                    }
-                    j+=2;
-                }
-            }
-        } else if (n == 0 && ++timeout_cnt >= MAX_TIMEOUTS) {
-            ret = AVERROR(ETIMEDOUT);
-        } else if (n < 0 && errno != EINTR) {
-            ret = AVERROR(errno);
-        }
-
-        if (ret < 0) {
-            UDPPacket *pkt = av_malloc(sizeof(UDPPacket));
-            if (!pkt) {
-                return NULL;
-            }
-
-            pkt->len = ret;
-            pkt->rtsp = NULL;
-
-            udp_packet_send(rt, pkt);
-        }
-    }
-
-    av_log(NULL, AV_LOG_INFO|AV_LOG_C(122), "Thread stopped\n");
-
-    return NULL;
-}
-
 static int parse_rtsp_message(AVFormatContext *s)
 {
     RTSPState *rt = s->priv_data;
